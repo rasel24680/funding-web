@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Funding Results - Pellopay</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .results-section {
+            min-height: auto;
+            padding: 2rem 1rem;
+            background-color: #f9f9f9;
+        }
+
+        .results-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .results-header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .results-header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .results-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .results-content {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .results-message {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .results-message:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            transform: translateY(-4px);
+        }
+
+        .results-message h2 {
+            color: var(--primary-dark);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .results-message p {
+            color: var(--text-light);
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+        }
+
+        .adjust-button {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-red) 0%, #ff8c42 100%);
+            color: white;
+            padding: 0.8rem 1.8rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .adjust-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 90, 0.3);
+        }
+
+        .contact-section {
+            background: var(--primary-dark);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(26, 43, 61, 0.15);
+        }
+
+        .contact-section:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(26, 43, 61, 0.25);
+        }
+
+        .contact-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .contact-section p {
+            opacity: 0.9;
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-details {
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-detail {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .contact-detail .icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-red);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .contact-detail a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .contact-detail a:hover {
+            color: var(--accent-red);
+        }
+
+        .contact-form-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .contact-form-section:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            transform: translateY(-4px);
+        }
+
+        .contact-form-section h3 {
+            color: var(--primary-dark);
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .contact-form-section input,
+        .contact-form-section textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid var(--gray-medium);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .contact-form-section input:focus,
+        .contact-form-section textarea:focus {
+            outline: none;
+            border-color: var(--accent-red);
+            box-shadow: 0 0 0 3px rgba(255, 107, 90, 0.1);
+        }
+
+        .contact-form-section textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .submit-button {
+            width: 100%;
+            background: linear-gradient(135deg, var(--accent-red) 0%, #ff8c42 100%);
+            color: white;
+            padding: 0.9rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 90, 0.3);
+        }
+
+        .form-summary {
+            background: var(--gray-light);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .form-summary:hover {
+            border-color: var(--accent-red);
+            box-shadow: 0 4px 12px rgba(255, 107, 90, 0.15);
+        }
+
+        .form-summary h3 {
+            color: var(--primary-dark);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .summary-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .summary-item {
+            padding: 0.8rem;
+            background: white;
+            border-radius: 6px;
+            border-left: 3px solid var(--accent-red);
+        }
+
+        .summary-item label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 0.3rem;
+        }
+
+        .summary-item span {
+            display: block;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        @media (max-width: 900px) {
+            .results-content {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .results-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .contact-section {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .results-section {
+                padding: 1rem;
+            }
+
+            .results-header {
+                padding: 1.5rem;
+            }
+
+            .results-header h1 {
+                font-size: 1.3rem;
+            }
+
+            .contact-section,
+            .results-message,
+            .contact-form-section {
+                padding: 1.5rem;
+            }
+
+            .summary-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo-link">
+                <img src="assets/logo.png" alt="Pellopay" class="logo-img">
+            </a>
+            <button class="login-button">Login</button>
+        </div>
+    </nav>
+
+    <!-- Results Section -->
+    <section class="results-section">
+        <div class="results-container">
+            <div class="results-header">
+                <h1>Your Funding Results</h1>
+                <p>Based on your application details, here are your personalised funding options</p>
+            </div>
+
+            <!-- Main Content - Results Message First -->
+            <div class="results-content" style="margin-bottom: 2rem;">
+                <!-- Results Message -->
+                <div class="results-message">
+                    <h2>We Found Matching Funding Options</h2>
+                    <p>We've reviewed your application and identified several funding products that match your requirements. Our team is now analysing the best options for your business.</p>
+                    <p>You should receive personalised funding recommendations via email within 2 business hours.</p>
+                    <button class="adjust-button" onclick="window.location.href='funding-form.html'">Adjust Your Search</button>
+                </div>
+
+                <!-- Contact Section -->
+                <div class="contact-section">
+                    <h2>Need Immediate Assistance?</h2>
+                    <p>Our funding specialists are ready to discuss your requirements and answer any questions you may have.</p>
+                    <div class="contact-details">
+                        <div class="contact-detail">
+                            <div class="icon">✉</div>
+                            <div>
+                                <strong>Email</strong><br>
+                                <a href="mailto:funding@pellopay.co.uk">funding@pellopay.co.uk</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Form -->
+            <div class="contact-form-section">
+                <h3>Send us a Message</h3>
+                <form id="contactForm">
+                    <div class="form-row">
+                        <input type="text" placeholder="Full Name" required>
+                        <input type="email" placeholder="Email Address" required>
+                    </div>
+                    <div class="form-row">
+                        <input type="tel" placeholder="Phone Number" required>
+                        <input type="text" placeholder="Business Name" required>
+                    </div>
+                    <div class="form-row full">
+                        <input type="text" placeholder="Subject" required>
+                    </div>
+                    <div class="form-row full">
+                        <textarea placeholder="How can we help?" required></textarea>
+                    </div>
+                    <button type="submit" class="submit-button">Send Message →</button>
+                </form>
+            </div>
+
+            <!-- Form Summary -->
+            <div class="form-summary" style="margin-top: 3rem;">
+                <h3>Your Application Details</h3>
+                <div class="summary-row">
+                    <div class="summary-item">
+                        <label>Funding Amount Required</label>
+                        <span id="summaryAmount">£—</span>
+                    </div>
+                    <div class="summary-item">
+                        <label>Purpose of Funding</label>
+                        <span id="summaryPurpose">—</span>
+                    </div>
+                </div>
+                <div class="summary-row">
+                    <div class="summary-item">
+                        <label>Annual Turnover</label>
+                        <span id="summaryTurnover">£—</span>
+                    </div>
+                    <div class="summary-item">
+                        <label>Trading Experience</label>
+                        <span id="summaryTrading">—</span>
+                    </div>
+                </div>
+                <div class="summary-row">
+                    <div class="summary-item">
+                        <label>Most Important Factor</label>
+                        <span id="summaryImportance">—</span>
+                    </div>
+                    <div class="summary-item">
+                        <label>UK Homeowner</label>
+                        <span id="summaryHomeowner">—</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2026 Pellopay. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Load and display form data from localStorage
+        document.addEventListener('DOMContentLoaded', function() {
+            const formData = JSON.parse(localStorage.getItem('fundingFormData') || '{}');
+            
+            // Populate summary
+            if (formData.fundingAmount) {
+                document.getElementById('summaryAmount').textContent = '£' + parseFloat(formData.fundingAmount).toLocaleString();
+            }
+            if (formData.fundingPurpose) {
+                document.getElementById('summaryPurpose').textContent = formData.fundingPurpose;
+            }
+            if (formData.annualTurnover) {
+                document.getElementById('summaryTurnover').textContent = '£' + parseFloat(formData.annualTurnover).toLocaleString();
+            }
+            if (formData.tradingYears) {
+                const tradingText = formData.tradingYears === 'Yes' 
+                    ? '3+ years' 
+                    : (formData.tradingMonths && formData.tradingMonths !== 'N/A' ? formData.tradingMonths + ' months' : 'Less than 3 years');
+                document.getElementById('summaryTrading').textContent = tradingText;
+            }
+            if (formData.importance) {
+                document.getElementById('summaryImportance').textContent = formData.importance;
+            }
+            if (formData.homeowner) {
+                document.getElementById('summaryHomeowner').textContent = formData.homeowner;
+            }
+
+            // Handle contact form submission
+            const contactForm = document.getElementById('contactForm');
+            if (contactForm) {
+                contactForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    alert('Thank you for your message! Our team will be in touch shortly.');
+                    contactForm.reset();
+                });
+            }
+        });
+    </script>
+</body>
+</html>
