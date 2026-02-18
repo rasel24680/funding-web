@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Find Your Funding - Funding Web</title>
+    <title>Find Your Funding - Pellopay</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -13,14 +13,7 @@
             <a href="index.html" class="logo-link">
                 <img src="assets/logo.png" alt="Pellopay" class="logo-img">
             </a>
-            <div class="nav-menu">
-                <a href="#loans" class="nav-link">Loans</a>
-                <a href="#guides" class="nav-link">Guides</a>
-                <a href="#contact" class="nav-link">Contact</a>
-                <a href="#blog" class="nav-link">Blog</a>
-            </div>
             <div class="nav-actions">
-                <a href="funding-form.html" class="find-funding-btn">Find Funding</a>
                 
                 <!-- User Profile Dropdown -->
                 <div class="user-profile-dropdown" id="userProfileDropdown" style="display: none;">
@@ -51,15 +44,16 @@
                                 <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
                                 <polyline points="13 2 13 9 20 9"/>
                             </svg>
-                            Documents
+                            Add Documents
                         </a>
-                        <a href="admin.html" class="dropdown-item admin-link">
+                        <a href="dashboard.html#connected-apps" class="dropdown-item connected-apps-link">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="1"/>
-                                <path d="M12 1v6m0 6v6"/>
-                                <path d="M4.22 4.22l4.24 4.24m3.08 3.08l4.24 4.24M1 12h6m6 0h6"/>
+                                <circle cx="19" cy="12" r="1"/>
+                                <circle cx="5" cy="12" r="1"/>
+                                <path d="M6 12h12M12 6v12"/>
                             </svg>
-                            Admin
+                            Connected Apps
                         </a>
                         <hr class="dropdown-divider">
                         <a href="#logout" class="dropdown-item logout-link" id="logoutBtn">

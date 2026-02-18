@@ -99,6 +99,9 @@ function validateStep3() {
 
 // ===== Button Event Listeners =====
 document.addEventListener('DOMContentLoaded', function() {
+    // Only run funding form logic if on the funding form page
+    if (!document.getElementById('fundingForm')) return;
+
     // Setup number input formatting
     setupNumberInputFormatting();
     
@@ -293,9 +296,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ===== Update Progress Bars =====
 function updateProgressBars() {
-    const progressBar1 = document.getElementById('progressBar1').querySelector('.progress-fill');
-    const progressBar2 = document.getElementById('progressBar2').querySelector('.progress-fill');
-    const progressBar3 = document.getElementById('progressBar3').querySelector('.progress-fill');
+    const bar1El = document.getElementById('progressBar1');
+    const bar2El = document.getElementById('progressBar2');
+    const bar3El = document.getElementById('progressBar3');
+    
+    // Only run on pages that have progress bars (funding-form.html)
+    if (!bar1El || !bar2El || !bar3El) return;
+    
+    const progressBar1 = bar1El.querySelector('.progress-fill');
+    const progressBar2 = bar2El.querySelector('.progress-fill');
+    const progressBar3 = bar3El.querySelector('.progress-fill');
     
     if (currentStep >= 1) {
         progressBar1.style.width = '100%';
@@ -478,12 +488,45 @@ document.head.appendChild(style);
 
 // Check if we're on the login page
 function initializeAuthPage() {
+    const authTabs = document.querySelectorAll('.auth-tab');
     const toggleButtons = document.querySelectorAll('.toggle-btn');
     const loginForm = document.getElementById('loginForm');
     const signupForm = document.getElementById('signupForm');
     const socialButtons = document.querySelectorAll('.social-btn');
 
-    // Toggle between login and signup forms
+    // Tab switcher (new design)
+    if (authTabs.length > 0) {
+        authTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const formType = this.getAttribute('data-toggle');
+
+                // Update tab active state
+                authTabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                // Hide all forms
+                document.querySelectorAll('.auth-form-new').forEach(form => {
+                    form.classList.remove('active');
+                });
+
+                // Show selected form
+                if (formType === 'signup') {
+                    document.getElementById('signupForm').classList.add('active');
+                } else {
+                    document.getElementById('loginForm').classList.add('active');
+                }
+
+                // Clear messages
+                const message = document.getElementById('authMessage');
+                if (message) {
+                    message.classList.remove('success', 'error');
+                    message.textContent = '';
+                }
+            });
+        });
+    }
+
+    // Toggle between login and signup forms (legacy toggle buttons)
     if (toggleButtons.length > 0) {
         toggleButtons.forEach(button => {
             button.addEventListener('click', function(e) {
@@ -498,13 +541,21 @@ function initializeAuthPage() {
                     p.style.display = 'none';
                 });
 
+                // Update tabs if they exist
+                authTabs.forEach(t => {
+                    t.classList.remove('active');
+                    if (t.getAttribute('data-toggle') === formType) t.classList.add('active');
+                });
+
                 // Show selected form
                 if (formType === 'signup') {
                     document.getElementById('signupForm').classList.add('active');
-                    document.querySelectorAll('.auth-toggle p')[1].style.display = 'block';
+                    const toggleP = document.querySelectorAll('.auth-toggle p');
+                    if (toggleP[1]) toggleP[1].style.display = 'block';
                 } else {
                     document.getElementById('loginForm').classList.add('active');
-                    document.querySelectorAll('.auth-toggle p')[0].style.display = 'block';
+                    const toggleP = document.querySelectorAll('.auth-toggle p');
+                    if (toggleP[0]) toggleP[0].style.display = 'block';
                 }
 
                 // Clear messages
@@ -556,6 +607,25 @@ function initializeAuthPage() {
             handleSignup(this);
         });
     }
+
+    // Toggle password visibility
+    document.querySelectorAll('.toggle-password-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const wrapper = this.closest('.input-wrapper');
+            const input = wrapper.querySelector('input');
+            const eyeOpen = this.querySelector('.eye-open');
+            const eyeClosed = this.querySelector('.eye-closed');
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (eyeOpen) eyeOpen.style.display = 'none';
+                if (eyeClosed) eyeClosed.style.display = 'block';
+            } else {
+                input.type = 'password';
+                if (eyeOpen) eyeOpen.style.display = 'block';
+                if (eyeClosed) eyeClosed.style.display = 'none';
+            }
+        });
+    });
 }
 
 // Update password strength indicator
@@ -612,14 +682,36 @@ function handleLogin(form) {
 
     // Simulate API call
     setTimeout(() => {
-        // Get company name from stored user data if available
-        let companyName = 'User';
-        const userData = localStorage.getItem('userData');
-        if (userData) {
-            const parsedData = JSON.parse(userData);
-            if (parsedData.companyName) {
-                companyName = parsedData.companyName;
-            }
+        // Get company name from stored signup data
+        let companyName = '';
+        let firstName = '';
+        let lastName = '';
+        const existingData = localStorage.getItem('userData');
+        if (existingData) {
+            try {
+                const parsedData = JSON.parse(existingData);
+                companyName = parsedData.companyName || '';
+                firstName = parsedData.firstName || '';
+                lastName = parsedData.lastName || '';
+                if (!companyName) {
+                    companyName = (firstName + ' ' + lastName).trim();
+                }
+            } catch(e) {}
+        }
+        if (!companyName) {
+            companyName = email.split('@')[0];
+        }
+
+        // Ensure userData always exists in localStorage
+        if (!existingData) {
+            const newUserData = {
+                firstName: companyName,
+                lastName: '',
+                email: email,
+                companyName: companyName,
+                createdAt: new Date().toISOString()
+            };
+            localStorage.setItem('userData', JSON.stringify(newUserData));
         }
         
         // Store user session (in real app, this would be a server call)
@@ -630,7 +722,10 @@ function handleLogin(form) {
         showAuthMessage('Login successful! Redirecting...', 'success', messageEl);
         
         setTimeout(() => {
-            window.location.href = 'funding-form.html';
+            // Redirect to the page the user came from, or default to funding-form
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectPage = urlParams.get('redirect') || 'funding-form.html';
+            window.location.href = redirectPage;
         }, 1500);
     }, 500);
 }
@@ -758,6 +853,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Only initialize if on auth page
     if (document.querySelector('.auth-section-new')) {
+        // Redirect logged-in users away from login page
+        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+        if (isLoggedIn) {
+            window.location.href = 'dashboard.html';
+            return;
+        }
+        
         initializeAuthPage();
         
         // Add forgot password handler
@@ -769,23 +871,48 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ===== User Navbar Functions =====
+let _navbarEventsInitialized = false;
+
 function initializeUserNavbar() {
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
     const userEmail = localStorage.getItem('userEmail');
-    const companyName = localStorage.getItem('userCompanyName') || 'User';
+    // Get company name from signup info, fallback to email prefix
+    let companyName = localStorage.getItem('userCompanyName');
+    if (!companyName) {
+        const userData = localStorage.getItem('userData');
+        if (userData) {
+            try {
+                const parsed = JSON.parse(userData);
+                companyName = parsed.companyName || 
+                              ((parsed.firstName || '') + ' ' + (parsed.lastName || '')).trim();
+            } catch(e) {}
+        }
+        if (!companyName && userEmail) {
+            companyName = userEmail.split('@')[0];
+        }
+        if (!companyName) companyName = 'My Account';
+    }
     
     const userProfileDropdown = document.getElementById('userProfileDropdown');
     const companyNameDisplay = document.getElementById('companyNameDisplay');
     const userProfileHeader = document.querySelector('.user-profile-header');
     const userDropdownMenu = document.getElementById('userDropdownMenu');
     
-    // Show user profile dropdown
+    // Only show user profile dropdown when logged in
     if (userProfileDropdown) {
-        userProfileDropdown.style.display = 'block';
-        if (companyNameDisplay) {
-            companyNameDisplay.textContent = companyName;
+        if (isLoggedIn) {
+            userProfileDropdown.style.display = 'block';
+            if (companyNameDisplay) {
+                companyNameDisplay.textContent = companyName;
+            }
+        } else {
+            userProfileDropdown.style.display = 'none';
         }
     }
+    
+    // Only bind event listeners once to prevent duplicate handlers
+    if (_navbarEventsInitialized) return;
+    _navbarEventsInitialized = true;
     
     // Toggle dropdown on header click
     if (userProfileHeader) {
@@ -825,6 +952,7 @@ function initializeUserNavbar() {
     const documentsLink = document.querySelector('.documents-link');
     const searchLink = document.querySelector('.search-link');
     const adminLink = document.querySelector('.admin-link');
+    const connectedAppsLink = document.querySelector('.connected-apps-link');
     
     if (dashboardLink) {
         dashboardLink.addEventListener('click', function(e) {
@@ -853,16 +981,123 @@ function initializeUserNavbar() {
             window.location.href = 'admin.html';
         });
     }
+    
+    if (connectedAppsLink) {
+        connectedAppsLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.location.href = 'dashboard.html#connected-apps';
+        });
+    }
 }
 
 function handleLogout() {
-    // Clear user data
+    // Clear all user data
     localStorage.removeItem('userEmail');
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('fundingFormData');
+    localStorage.removeItem('userCompanyName');
+    localStorage.removeItem('userData');
+    localStorage.removeItem('isPhoneVerified');
+    localStorage.removeItem('userPhone');
+    localStorage.removeItem('userProfilePicture');
     
     // Redirect to login page
     window.location.href = 'login.html';
+}
+
+// ===== Sidebar User Info & Avatar Helper =====
+function initializeSidebarUserInfo() {
+    const userData = localStorage.getItem('userData');
+    const userFullNameSidebar = document.getElementById('userFullNameSidebar');
+    const userCompanyInfoSidebar = document.getElementById('userCompanyInfoSidebar');
+    const avatarImg = document.getElementById('userAvatarImg');
+    const avatarInitials = document.getElementById('userAvatarInitials');
+    const avatarSmall = document.getElementById('userAvatarSmall');
+    const avatarUploadInput = document.getElementById('avatarUploadInput');
+
+    let firstName = '';
+    let lastName = '';
+    let companyName = '';
+
+    if (userData) {
+        try {
+            const parsedData = JSON.parse(userData);
+            firstName = parsedData.firstName || '';
+            lastName = parsedData.lastName || '';
+            companyName = parsedData.companyName || '';
+        } catch(e) {}
+    }
+
+    // Fallback to userCompanyName from localStorage
+    if (!companyName) {
+        companyName = localStorage.getItem('userCompanyName') || '';
+    }
+    // Fallback to email prefix
+    if (!companyName) {
+        const email = localStorage.getItem('userEmail') || '';
+        if (email) companyName = email.split('@')[0];
+    }
+
+    // Fallback full name from company name if no first/last
+    const fullName = (firstName + ' ' + lastName).trim();
+
+    // h3 = Company Name, p = Full Name
+    if (userFullNameSidebar) {
+        userFullNameSidebar.textContent = companyName || 'Company';
+    }
+    if (userCompanyInfoSidebar) {
+        userCompanyInfoSidebar.textContent = fullName || companyName || 'User';
+    }
+
+    // Show initials in avatar
+    if (avatarInitials) {
+        let initials = ((firstName.charAt(0) || '') + (lastName.charAt(0) || '')).toUpperCase();
+        if (!initials && companyName) initials = companyName.charAt(0).toUpperCase();
+        avatarInitials.textContent = initials || 'U';
+    }
+
+    // Load saved profile picture
+    const savedAvatar = localStorage.getItem('userProfilePicture');
+    if (savedAvatar && avatarImg) {
+        avatarImg.src = savedAvatar;
+        avatarImg.style.display = 'block';
+        if (avatarInitials) avatarInitials.style.display = 'none';
+    }
+
+    // Handle avatar click to trigger file upload
+    if (avatarSmall && avatarUploadInput) {
+        avatarSmall.addEventListener('click', function() {
+            avatarUploadInput.click();
+        });
+
+        avatarUploadInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                showAlert('Please select an image file', 'error');
+                return;
+            }
+
+            if (file.size > 2 * 1024 * 1024) {
+                showAlert('Image must be under 2MB', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const dataUrl = ev.target.result;
+                localStorage.setItem('userProfilePicture', dataUrl);
+                if (avatarImg) {
+                    avatarImg.src = dataUrl;
+                    avatarImg.style.display = 'block';
+                }
+                if (avatarInitials) avatarInitials.style.display = 'none';
+                showAlert('Profile picture updated!', 'success');
+            };
+            reader.readAsDataURL(file);
+        });
+    }
 }
 
 // ===== Dashboard Functions =====
@@ -878,18 +1113,8 @@ function initializeDashboard() {
     const userData = localStorage.getItem('userData');
     const userEmail = localStorage.getItem('userEmail');
     
-    if (userData) {
-        const parsedData = JSON.parse(userData);
-        const userFullNameSidebar = document.getElementById('userFullNameSidebar');
-        const userCompanyInfoSidebar = document.getElementById('userCompanyInfoSidebar');
-        
-        if (userFullNameSidebar) {
-            userFullNameSidebar.textContent = `${parsedData.firstName} ${parsedData.lastName}`;
-        }
-        if (userCompanyInfoSidebar) {
-            userCompanyInfoSidebar.textContent = parsedData.companyName || 'Company';
-        }
-    }
+    // Initialize sidebar user info, avatar & profile picture
+    initializeSidebarUserInfo();
     
     // Initialize sidebar navigation
     const sidebarItems = document.querySelectorAll('.sidebar-item');
@@ -949,6 +1174,24 @@ function initializeDashboard() {
             }
         });
     });
+    
+    // Handle hash-based section navigation (e.g. dashboard.html#connected-apps)
+    const hash = window.location.hash.replace('#', '');
+    if (hash) {
+        const targetSidebarItem = document.querySelector(`.sidebar-item[data-section="${hash}"]`);
+        if (targetSidebarItem) {
+            // Remove active from all sidebar items and sections
+            sidebarItems.forEach(i => i.classList.remove('active'));
+            dashboardSections.forEach(s => s.style.display = 'none');
+            
+            // Activate the target
+            targetSidebarItem.classList.add('active');
+            const targetSection = document.getElementById(`section-${hash}`);
+            if (targetSection) {
+                targetSection.style.display = 'block';
+            }
+        }
+    }
 }
 
 // ===== Search Results Functions =====
@@ -981,8 +1224,17 @@ function initializeSearchResults() {
         }
     }
     
-    // Generate funding cards
-    generateFundingCards();
+    // Initialize sort functionality
+    const sortSelect = document.getElementById('sortSelect');
+    
+    // Generate funding cards with default sort
+    generateFundingCards(sortSelect ? sortSelect.value : 'personal-touch');
+    
+    if (sortSelect) {
+        sortSelect.addEventListener('change', function() {
+            generateFundingCards(this.value);
+        });
+    }
     
     // Initialize modal handlers
     initializePhoneVerificationModal();
@@ -996,91 +1248,57 @@ function initializeSearchResults() {
     }
 }
 
-function generateFundingCards() {
+// Parse currency string to number (e.g. '£50,000' -> 50000)
+function parseCurrency(str) {
+    return parseFloat(str.replace(/[^0-9.]/g, '')) || 0;
+}
+
+// Parse percentage string to number (e.g. '4.5%' -> 4.5)
+function parseRate(str) {
+    return parseFloat(str.replace('%', '')) || 0;
+}
+
+// Parse approval time to days (takes first number, e.g. '2-3 days' -> 2)
+function parseApprovalDays(str) {
+    const match = str.match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : 999;
+}
+
+const _fundersData = [
+    { id: 1, name: 'Fast Capital', loanAmount: '£50,000', interestRate: '4.5%', term: '36 months', apprTime: '2-3 days', personalTouch: 7, acceptsImpairedCredit: false },
+    { id: 2, name: 'Prime Lenders', loanAmount: '£100,000', interestRate: '5.2%', term: '48 months', apprTime: '5-7 days', personalTouch: 9, acceptsImpairedCredit: false },
+    { id: 3, name: 'Growth Finance', loanAmount: '£75,000', interestRate: '4.8%', term: '42 months', apprTime: '3-4 days', personalTouch: 8, acceptsImpairedCredit: true },
+    { id: 4, name: 'Business Capital', loanAmount: '£60,000', interestRate: '5.5%', term: '36 months', apprTime: '4-5 days', personalTouch: 6, acceptsImpairedCredit: true },
+    { id: 5, name: 'Enterprise Loans', loanAmount: '£150,000', interestRate: '4.2%', term: '60 months', apprTime: '7-10 days', personalTouch: 10, acceptsImpairedCredit: false },
+    { id: 6, name: 'Quick Finance', loanAmount: '£45,000', interestRate: '6.0%', term: '24 months', apprTime: '1-2 days', personalTouch: 4, acceptsImpairedCredit: true },
+    { id: 7, name: 'Smart Funding', loanAmount: '£80,000', interestRate: '5.0%', term: '48 months', apprTime: '3-4 days', personalTouch: 8, acceptsImpairedCredit: false },
+    { id: 8, name: 'Venture Capital', loanAmount: '£200,000', interestRate: '3.8%', term: '72 months', apprTime: '10-14 days', personalTouch: 9, acceptsImpairedCredit: false },
+    { id: 9, name: 'Credit Solutions', loanAmount: '£55,000', interestRate: '5.7%', term: '36 months', apprTime: '2-3 days', personalTouch: 5, acceptsImpairedCredit: true },
+    { id: 10, name: 'Rapid Lenders', loanAmount: '£70,000', interestRate: '5.3%', term: '42 months', apprTime: '3-5 days', personalTouch: 7, acceptsImpairedCredit: true }
+];
+
+function generateFundingCards(sortBy) {
     const fundingCardsContainer = document.getElementById('fundingCardsContainer');
+    if (!fundingCardsContainer) return;
     
-    const funders = [
-        {
-            id: 1,
-            name: 'Fast Capital',
-            loanAmount: '£50,000',
-            interestRate: '4.5%',
-            term: '36 months',
-            apprTime: '2-3 days'
-        },
-        {
-            id: 2,
-            name: 'Prime Lenders',
-            loanAmount: '£100,000',
-            interestRate: '5.2%',
-            term: '48 months',
-            apprTime: '5-7 days'
-        },
-        {
-            id: 3,
-            name: 'Growth Finance',
-            loanAmount: '£75,000',
-            interestRate: '4.8%',
-            term: '42 months',
-            apprTime: '3-4 days'
-        },
-        {
-            id: 4,
-            name: 'Business Capital',
-            loanAmount: '£60,000',
-            interestRate: '5.5%',
-            term: '36 months',
-            apprTime: '4-5 days'
-        },
-        {
-            id: 5,
-            name: 'Enterprise Loans',
-            loanAmount: '£150,000',
-            interestRate: '4.2%',
-            term: '60 months',
-            apprTime: '7-10 days'
-        },
-        {
-            id: 6,
-            name: 'Quick Finance',
-            loanAmount: '£45,000',
-            interestRate: '6.0%',
-            term: '24 months',
-            apprTime: '1-2 days'
-        },
-        {
-            id: 7,
-            name: 'Smart Funding',
-            loanAmount: '£80,000',
-            interestRate: '5.0%',
-            term: '48 months',
-            apprTime: '3-4 days'
-        },
-        {
-            id: 8,
-            name: 'Venture Capital',
-            loanAmount: '£200,000',
-            interestRate: '3.8%',
-            term: '72 months',
-            apprTime: '10-14 days'
-        },
-        {
-            id: 9,
-            name: 'Credit Solutions',
-            loanAmount: '£55,000',
-            interestRate: '5.7%',
-            term: '36 months',
-            apprTime: '2-3 days'
-        },
-        {
-            id: 10,
-            name: 'Rapid Lenders',
-            loanAmount: '£70,000',
-            interestRate: '5.3%',
-            term: '42 months',
-            apprTime: '3-5 days'
-        }
-    ];
+    // Copy array so original order is preserved
+    const funders = [..._fundersData];
+    
+    // Sort based on selected option
+    switch (sortBy) {
+        case 'personal-touch':
+            funders.sort((a, b) => (b.personalTouch || 0) - (a.personalTouch || 0));
+            break;
+        case 'fastest-decision':
+            funders.sort((a, b) => parseApprovalDays(a.apprTime) - parseApprovalDays(b.apprTime));
+            break;
+        case 'lowest-rates':
+            funders.sort((a, b) => parseRate(a.interestRate) - parseRate(b.interestRate));
+            break;
+        case 'accepts-impaired-credit':
+            funders.sort((a, b) => (b.acceptsImpairedCredit ? 1 : 0) - (a.acceptsImpairedCredit ? 1 : 0));
+            break;
+    }
     
     fundingCardsContainer.innerHTML = funders.map(funder => `
         <div class="funding-card">
@@ -1110,13 +1328,20 @@ function generateFundingCards() {
                 <button class="more-details-btn">
                     More details
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
                     </svg>
                 </button>
                 <button class="apply-btn">Apply Now</button>
             </div>
         </div>
     `).join('');
+
+    // Update banner funder count
+    const bannerCount = document.getElementById('bannerFunderCount');
+    const funderCountEl = document.getElementById('funderCount');
+    const count = funders.length;
+    if (bannerCount) bannerCount.textContent = count;
+    if (funderCountEl) funderCountEl.textContent = count;
 }
 
 function initializePhoneVerificationModal() {
@@ -1131,7 +1356,9 @@ function initializePhoneVerificationModal() {
     // Close modal on close button
     if (closeModalBtn) {
         closeModalBtn.addEventListener('click', function() {
-            // Don't close the modal, just show skip option
+            if (phoneVerificationModal) {
+                phoneVerificationModal.style.display = 'none';
+            }
         });
     }
     
@@ -1265,18 +1492,8 @@ function initializeAdminPage() {
     // Get user data from localStorage
     const userData = localStorage.getItem('userData');
     
-    if (userData) {
-        const parsedData = JSON.parse(userData);
-        const userFullNameSidebar = document.getElementById('userFullNameSidebar');
-        const userCompanyInfoSidebar = document.getElementById('userCompanyInfoSidebar');
-        
-        if (userFullNameSidebar) {
-            userFullNameSidebar.textContent = `${parsedData.firstName} ${parsedData.lastName}`;
-        }
-        if (userCompanyInfoSidebar) {
-            userCompanyInfoSidebar.textContent = parsedData.companyName || 'Company';
-        }
-    }
+    // Initialize sidebar user info, avatar & profile picture
+    initializeSidebarUserInfo();
     
     // Initialize sidebar navigation
     const sidebarItems = document.querySelectorAll('.sidebar-item');
@@ -1299,22 +1516,36 @@ function initializeAdminPage() {
     if (copyLinkBtn) {
         copyLinkBtn.addEventListener('click', function() {
             const referralLink = document.getElementById('referralLink');
+            const linkValue = referralLink.value;
             
-            // Copy to clipboard
-            referralLink.select();
-            document.execCommand('copy');
-            
-            // Show feedback
-            const originalText = this.textContent;
-            this.textContent = 'Copied!';
-            this.classList.add('copied');
-            
-            setTimeout(() => {
-                this.textContent = originalText;
-                this.classList.remove('copied');
-            }, 2000);
+            // Copy to clipboard using modern API with fallback
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(linkValue).then(() => {
+                    showCopyFeedback(copyLinkBtn);
+                }).catch(() => {
+                    // Fallback for older browsers
+                    referralLink.select();
+                    document.execCommand('copy');
+                    showCopyFeedback(copyLinkBtn);
+                });
+            } else {
+                referralLink.select();
+                document.execCommand('copy');
+                showCopyFeedback(copyLinkBtn);
+            }
         });
     }
+}
+
+function showCopyFeedback(button) {
+    const originalHTML = button.innerHTML;
+    button.textContent = 'Copied!';
+    button.classList.add('copied');
+    
+    setTimeout(() => {
+        button.innerHTML = originalHTML;
+        button.classList.remove('copied');
+    }, 2000);
 }
 
 // ===== Logout Handler =====

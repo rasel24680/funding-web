@@ -173,9 +173,394 @@
             }
         }
 
+        /* ===== Login Modal ===== */
+        .login-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.25s ease;
+        }
+        .login-modal-card {
+            background: #fff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            padding: 2.5rem 2rem 2rem;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+            animation: slideInUp 0.35s ease;
+        }
+        .login-modal-close {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            background: none;
+            border: none;
+            font-size: 1.6rem;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+        .login-modal-close:hover { color: #333; }
+        .login-modal-title {
+            text-align: center;
+            font-size: 1.5rem;
+            color: var(--primary-dark);
+            margin-bottom: 1.5rem;
+        }
+        .login-modal-group {
+            margin-bottom: 1.1rem;
+        }
+        .login-modal-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 0.35rem;
+        }
+        .login-modal-group input {
+            width: 100%;
+            padding: 0.75rem 0.9rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        .login-modal-group input:focus {
+            outline: none;
+            border-color: var(--accent-red);
+            box-shadow: 0 0 0 3px rgba(255,107,90,0.12);
+        }
+        .login-modal-message {
+            font-size: 0.85rem;
+            min-height: 1.2em;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+        .login-modal-message.error { color: #e74c3c; }
+        .login-modal-message.success { color: #10b981; }
+        .login-modal-submit {
+            width: 100%;
+            padding: 0.85rem;
+            border: none;
+            border-radius: 30px;
+            background: linear-gradient(135deg, var(--accent-red) 0%, #ff8c42 100%);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255,107,90,0.3);
+        }
+        .login-modal-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,107,90,0.45);
+        }
+        .login-modal-footer {
+            text-align: center;
+            margin-top: 1.2rem;
+            font-size: 0.9rem;
+            color: #777;
+        }
+        .login-modal-footer a {
+            color: var(--accent-red);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .login-modal-footer a:hover { text-decoration: underline; }
+
+        /* ===== Phone Verification Modal ===== */
+        .phone-verify-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 9998;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.25s ease;
+        }
+        .phone-verify-card {
+            background: #fff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 420px;
+            padding: 2.5rem 2rem 2rem;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+            animation: slideInUp 0.35s ease;
+            text-align: center;
+        }
+        .phone-verify-card h2 {
+            font-size: 1.5rem;
+            color: var(--primary-dark);
+            margin-bottom: 0.4rem;
+        }
+        .phone-verify-card .verify-subtitle {
+            font-size: 0.9rem;
+            color: #777;
+            margin-bottom: 1.8rem;
+        }
+        .phone-verify-group {
+            text-align: left;
+            margin-bottom: 1.3rem;
+        }
+        .phone-verify-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.4rem;
+        }
+        .phone-verify-group input {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+            background: #fafafa;
+        }
+        .phone-verify-group input:focus {
+            outline: none;
+            border-color: var(--accent-red);
+            box-shadow: 0 0 0 3px rgba(255,107,90,0.12);
+            background: #fff;
+        }
+        .phone-verify-group input::placeholder {
+            color: #aaa;
+        }
+        .phone-verify-message {
+            font-size: 0.85rem;
+            min-height: 1.2em;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+        .phone-verify-message.error { color: #e74c3c; }
+        .phone-verify-message.success { color: #10b981; }
+        .phone-verify-btn {
+            width: 100%;
+            padding: 0.9rem;
+            border: none;
+            border-radius: 30px;
+            background: linear-gradient(135deg, #FFB6C1 0%, #FF69B4 100%);
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255,105,180,0.3);
+        }
+        .phone-verify-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,105,180,0.45);
+        }
+        .phone-verify-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .phone-verify-skip {
+            display: inline-block;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: #999;
+            cursor: pointer;
+            border: none;
+            background: none;
+            transition: color 0.2s;
+        }
+        .phone-verify-skip:hover {
+            color: #555;
+            text-decoration: underline;
+        }
+
+        /* ===== Matched Fund List (blurred until verified) ===== */
+        .matched-funds-section {
+            display: none;
+            margin-bottom: 2rem;
+        }
+        .matched-funds-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .matched-funds-header h2 {
+            color: var(--primary-dark);
+            font-size: 1.4rem;
+            margin: 0;
+        }
+        .matched-funds-header .results-sort {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .matched-funds-header .results-sort label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+        .matched-funds-header .results-sort select {
+            padding: 0.5rem 0.8rem;
+            border: 2px solid var(--gray-medium);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: var(--primary-dark);
+            cursor: pointer;
+            background: #fff;
+            transition: border-color 0.3s;
+        }
+        .matched-funds-header .results-sort select:focus {
+            outline: none;
+            border-color: var(--accent-red);
+        }
+        .matched-funds-container {
+            display: grid;
+            gap: 1.2rem;
+            transition: filter 0.4s ease;
+        }
+        .matched-funds-container.blurred {
+            filter: blur(6px);
+            pointer-events: none;
+            user-select: none;
+        }
+        .matched-fund-card {
+            background: #fff;
+            border: 2px solid var(--gray-medium);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            animation: slideInUp 0.5s ease-out both;
+        }
+        .matched-fund-card:hover {
+            border-color: var(--accent-red);
+            box-shadow: 0 8px 24px rgba(255,107,90,0.15);
+            transform: translateY(-3px);
+        }
+        .matched-fund-card .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .matched-fund-card .funder-name {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+        .matched-fund-card .funder-badge {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .matched-fund-card .card-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .matched-fund-card .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+        .matched-fund-card .detail-label {
+            font-size: 0.78rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        .matched-fund-card .detail-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+        .matched-fund-card .detail-value.highlight {
+            color: var(--accent-red);
+        }
+        .matched-fund-card .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid #f0f0f0;
+        }
+        .matched-fund-card .more-details-btn {
+            background: none;
+            border: none;
+            color: var(--accent-red);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.9rem;
+            transition: gap 0.3s;
+        }
+        .matched-fund-card .more-details-btn:hover {
+            gap: 0.7rem;
+        }
+        .matched-fund-card .apply-btn {
+            background: linear-gradient(135deg, var(--accent-red) 0%, #ff8c42 100%);
+            color: #fff;
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(255,107,90,0.25);
+        }
+        .matched-fund-card .apply-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(255,107,90,0.4);
+        }
+        .blur-notice {
+            text-align: center;
+            padding: 1rem;
+            background: linear-gradient(135deg, #fff8f7, #fff);
+            border: 2px dashed var(--accent-red);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        .blur-notice p {
+            color: var(--primary-dark);
+            font-weight: 600;
+            margin: 0 0 0.5rem;
+        }
+        .blur-notice button {
+            background: linear-gradient(135deg, #FFB6C1 0%, #FF69B4 100%);
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        .blur-notice button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255,105,180,0.4);
+        }
+        /* No match view */
+        .no-match-view {}
+
         .results-section {
-            min-height: auto;
-            padding: 3rem 1rem 2rem 1rem;
             background: linear-gradient(135deg, #f9f9f9 0%, #ffffff 100%);
             position: relative;
             overflow: hidden;
@@ -788,17 +1173,101 @@
             <a href="index.html" class="logo-link">
                 <img src="assets/logo.png" alt="Pellopay" class="logo-img">
             </a>
-            <div class="nav-menu">
-                <a href="#loans" class="nav-link">Loans</a>
-                <a href="#guides" class="nav-link">Guides</a>
-                <a href="#contact" class="nav-link">Contact</a>
-                <a href="#blog" class="nav-link">Blog</a>
-            </div>
             <div class="nav-actions">
-                <a href="funding-form.html" class="find-funding-btn">Find Funding</a>
+                <a href="#" class="login-btn" id="navLoginBtn" onclick="document.getElementById('loginModal').style.display='flex'; return false;">Login</a>
+                
+                <!-- User Profile Dropdown -->
+                <div class="user-profile-dropdown" id="userProfileDropdown" style="display: none;">
+                    <div class="user-profile-header">
+                        <span class="company-name" id="companyNameDisplay"></span>
+                        <svg class="dropdown-arrow" width="12" height="8" viewBox="0 0 12 8" fill="none">
+                            <path d="M1 1L6 6L11 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="user-dropdown-menu" id="userDropdownMenu">
+                        <a href="dashboard.html" class="dropdown-item dashboard-link">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <path d="M9 11h6v6H9z"/>
+                                <path d="M3 9h18M9 3v6"/>
+                            </svg>
+                            Dashboard
+                        </a>
+                        <a href="search-results.html" class="dropdown-item search-link">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="m21 21-4.35-4.35"/>
+                            </svg>
+                            Search
+                        </a>
+                        <a href="documents.html" class="dropdown-item documents-link">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                                <polyline points="13 2 13 9 20 9"/>
+                            </svg>
+                            Add Documents
+                        </a>
+                        <a href="dashboard.html#connected-apps" class="dropdown-item connected-apps-link">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="1"/>
+                                <circle cx="19" cy="12" r="1"/>
+                                <circle cx="5" cy="12" r="1"/>
+                                <path d="M6 12h12M12 6v12"/>
+                            </svg>
+                            Connected Apps
+                        </a>
+                        <hr class="dropdown-divider">
+                        <a href="#logout" class="dropdown-item logout-link" id="logoutBtn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 4l4 4m0 0l-4 4m4-4H9m7 8v-2"/>
+                            </svg>
+                            Logout
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
+
+    <!-- Login Popup Modal -->
+    <div class="login-modal-overlay" id="loginModal" style="display:none;">
+        <div class="login-modal-card">
+            <button class="login-modal-close" id="loginModalClose">&times;</button>
+            <h2 class="login-modal-title">Sign In</h2>
+            <form id="loginModalForm">
+                <div class="login-modal-group">
+                    <label for="modalLoginEmail">Email Address</label>
+                    <input type="email" id="modalLoginEmail" placeholder="your@email.com" required>
+                </div>
+                <div class="login-modal-group">
+                    <label for="modalLoginPassword">Password</label>
+                    <input type="password" id="modalLoginPassword" placeholder="••••••••" required>
+                </div>
+                <div class="login-modal-message" id="loginModalMessage"></div>
+                <button type="submit" class="login-modal-submit">Continue</button>
+            </form>
+            <div class="login-modal-footer">
+                <p>Don't have an account? <a href="login.html">Sign Up</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phone Verification Modal -->
+    <div class="phone-verify-overlay" id="phoneVerifyModal" style="display:none;">
+        <div class="phone-verify-card">
+            <h2>Mobile Verification</h2>
+            <p class="verify-subtitle">We'll text you a verification code.</p>
+            <form id="phoneVerifyForm">
+                <div class="phone-verify-group">
+                    <label>Mobile number</label>
+                    <input type="tel" id="phoneVerifyInput" placeholder="Mobile Phone" maxlength="15">
+                </div>
+                <div class="phone-verify-message" id="phoneVerifyMessage"></div>
+                <button type="submit" class="phone-verify-btn" id="phoneVerifyBtn">Get code</button>
+            </form>
+            <button class="phone-verify-skip" id="phoneVerifySkip">Skip for now</button>
+        </div>
+    </div>
 
     <!-- Results Section -->
     <section class="results-section">
@@ -825,6 +1294,58 @@
                 <p>Based on your application details, here are your personalised funding options</p>
             </div>
 
+            <!-- ===== Matched Funds View (shown when funds match) ===== -->
+            <div class="matched-funds-section" id="matchedFundsSection">
+                <div class="matched-funds-header">
+                    <h2>We found <span id="matchedFundCount">0</span> matching funders for you!</h2>
+                    <div class="results-sort">
+                        <label for="resultsSortSelect">Sort:</label>
+                        <select id="resultsSortSelect">
+                            <option value="personal-touch" selected>Personal Touch</option>
+                            <option value="fastest-decision">Fastest Decision</option>
+                            <option value="lowest-rates">Lowest Rates</option>
+                            <option value="accepts-impaired-credit">Accepts Impaired Credit</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Blur notice -->
+                <div class="blur-notice" id="blurNotice" style="display:none;">
+                    <p>🔒 Verify your mobile number to view fund details</p>
+                    <button id="blurVerifyBtn">Verify Now</button>
+                </div>
+                <div class="matched-funds-container" id="matchedFundsContainer">
+                    <!-- Cards generated by JS -->
+                </div>
+
+                <!-- Great News Banner -->
+                <div class="great-news-banner">
+                    <div class="banner-content">
+                        <div class="banner-text">
+                            <h2>Great news! <span>We've found <strong class="funder-count-highlight" id="bannerMatchedCount">0</strong> funders.</span></h2>
+                            <p>See your matched funders below, their rates, product, and what they offer to you. Click more details to read our unique and detailed lender profiles for even more information.</p>
+                            <div class="base-rate-box">
+                                <div class="base-rate-icon">
+                                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+                                        <circle cx="12" cy="12" r="11" stroke="#c9a84c" stroke-width="1.5" fill="none"/>
+                                        <text x="12" y="16" text-anchor="middle" fill="#c9a84c" font-size="8" font-weight="bold">BoE</text>
+                                    </svg>
+                                </div>
+                                <div class="base-rate-info">
+                                    <span class="base-rate-label">Bank of England<br>Base Rate:</span>
+                                </div>
+                                <div class="base-rate-value">3.75%</div>
+                            </div>
+                            <p class="base-rate-updated">Last updated: February 5th 2026.</p>
+                        </div>
+                        <div class="banner-image">
+                            <img src="assets/banner.png" alt="Funding specialist">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== No Match View (shown when no funds match) ===== -->
+            <div class="no-match-view" id="noMatchView">
             <!-- Main Content - Results Message First -->
             <div class="results-content" style="margin-bottom: 2rem;">
                 <!-- Results Message -->
@@ -872,6 +1393,7 @@
                     <button type="submit" class="submit-button">Send Message →</button>
                 </form>
             </div>
+            </div><!-- /noMatchView -->
 
             <!-- Form Summary -->
             <div class="form-summary" style="margin-top: 3rem;">
@@ -965,6 +1487,23 @@
 
         // Load and display form data from localStorage
         document.addEventListener('DOMContentLoaded', function() {
+            // Hide login button and show dropdown if already logged in
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            const navLoginBtn = document.getElementById('navLoginBtn');
+            if (isLoggedIn) {
+                if (navLoginBtn) navLoginBtn.style.display = 'none';
+                if (typeof initializeUserNavbar === 'function') {
+                    initializeUserNavbar();
+                }
+            }
+
+            // Show phone verification modal if logged in but not verified
+            var isPhoneVerified = localStorage.getItem('isPhoneVerified') === 'true';
+            if (isLoggedIn && !isPhoneVerified) {
+                var phoneModal = document.getElementById('phoneVerifyModal');
+                if (phoneModal) phoneModal.style.display = 'flex';
+            }
+
             // Add fade-in animation to page
             document.body.style.animation = 'fadeIn 0.6s ease-out';
 
@@ -1013,6 +1552,296 @@
 
             if (formData.homeowner) {
                 document.getElementById('summaryHomeowner').textContent = formData.homeowner;
+            }
+
+            // ===== Fund Matching System =====
+            // Available funds from fund owners (in production, this comes from backend/API)
+            // For now empty — fund owners will add funds after deployment
+            var availableFunds = [];
+            // Example of what fund owners would add:
+            // availableFunds = [
+            //     { id: 1, name: 'Fast Capital', loanAmount: 50000, maxAmount: 100000, interestRate: 4.5, term: '36 months', apprTime: '2-3 days', purposes: ['Working Capital','Growth'], minTurnover: 50000, minTradingYears: 1 },
+            //     { id: 2, name: 'Prime Lenders', loanAmount: 100000, maxAmount: 200000, interestRate: 5.2, term: '48 months', apprTime: '5-7 days', purposes: ['Asset Finance','Working Capital'], minTurnover: 100000, minTradingYears: 3 },
+            // ];
+
+            // Match funds against user's form data
+            function getMatchedFunds(formData, funds) {
+                if (!funds || funds.length === 0) return [];
+                var userAmount = parseFloat(formData.fundingAmount) || 0;
+                var userPurpose = formData.fundingPurpose || '';
+                var userTurnover = parseFloat(formData.annualTurnover) || 0;
+                var userTradingYears = formData.tradingYears === 'Yes' ? 3 : 0;
+
+                return funds.filter(function(fund) {
+                    var amountOk = userAmount <= (fund.maxAmount || Infinity);
+                    var purposeOk = !fund.purposes || fund.purposes.length === 0 || fund.purposes.indexOf(userPurpose) !== -1;
+                    var turnoverOk = userTurnover >= (fund.minTurnover || 0);
+                    var tradingOk = userTradingYears >= (fund.minTradingYears || 0);
+                    return amountOk && purposeOk && turnoverOk && tradingOk;
+                });
+            }
+
+            // Render matched fund cards
+            function renderMatchedFunds(funds, sortBy) {
+                var container = document.getElementById('matchedFundsContainer');
+                if (!container) return;
+
+                // Sort
+                var sorted = funds.slice();
+                switch (sortBy) {
+                    case 'personal-touch':
+                        sorted.sort(function(a,b){ return (b.personalTouch||0) - (a.personalTouch||0); });
+                        break;
+                    case 'fastest-decision':
+                        sorted.sort(function(a,b){
+                            var aD = parseInt((a.apprTime||'999').match(/\d+/)?.[0]||'999');
+                            var bD = parseInt((b.apprTime||'999').match(/\d+/)?.[0]||'999');
+                            return aD - bD;
+                        });
+                        break;
+                    case 'lowest-rates':
+                        sorted.sort(function(a,b){ return a.interestRate - b.interestRate; });
+                        break;
+                    case 'accepts-impaired-credit':
+                        sorted.sort(function(a,b){ return (b.acceptsImpairedCredit?1:0) - (a.acceptsImpairedCredit?1:0); });
+                        break;
+                }
+
+                container.innerHTML = sorted.map(function(f, i) {
+                    var displayAmount = typeof f.maxAmount === 'number' ? '£' + f.maxAmount.toLocaleString() : '£' + (f.loanAmount||0).toLocaleString();
+                    return '<div class="matched-fund-card" style="animation-delay:' + (i*0.1) + 's">' +
+                        '<div class="card-header">' +
+                            '<h3 class="funder-name">' + f.name + '</h3>' +
+                            '<span class="funder-badge">Verified</span>' +
+                        '</div>' +
+                        '<div class="card-details">' +
+                            '<div class="detail-item"><span class="detail-label">Amount</span><span class="detail-value highlight">' + displayAmount + '</span></div>' +
+                            '<div class="detail-item"><span class="detail-label">Interest Rate</span><span class="detail-value">' + f.interestRate + '%</span></div>' +
+                            '<div class="detail-item"><span class="detail-label">Loan Term</span><span class="detail-value">' + f.term + '</span></div>' +
+                            '<div class="detail-item"><span class="detail-label">Approval Time</span><span class="detail-value">' + f.apprTime + '</span></div>' +
+                        '</div>' +
+                        '<div class="card-footer">' +
+                            '<button class="more-details-btn">More details <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>' +
+                            '<button class="apply-btn">Apply Now</button>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+            }
+
+            // Run matching
+            var matchedFunds = getMatchedFunds(formData, availableFunds);
+            var matchedFundsSection = document.getElementById('matchedFundsSection');
+            var noMatchView = document.getElementById('noMatchView');
+            var matchedFundsContainer = document.getElementById('matchedFundsContainer');
+            var blurNotice = document.getElementById('blurNotice');
+            var resultsSortSelect = document.getElementById('resultsSortSelect');
+
+            if (matchedFunds.length > 0) {
+                // Show matched funds view, hide no-match view
+                if (matchedFundsSection) matchedFundsSection.style.display = 'block';
+                if (noMatchView) noMatchView.style.display = 'none';
+                document.getElementById('matchedFundCount').textContent = matchedFunds.length;
+                const bannerMatchedEl = document.getElementById('bannerMatchedCount');
+                if (bannerMatchedEl) bannerMatchedEl.textContent = matchedFunds.length;
+
+                // Blur if not phone verified
+                if (!isPhoneVerified && matchedFundsContainer) {
+                    matchedFundsContainer.classList.add('blurred');
+                    if (blurNotice) blurNotice.style.display = 'block';
+                }
+
+                // Render cards
+                renderMatchedFunds(matchedFunds, resultsSortSelect ? resultsSortSelect.value : 'personal-touch');
+
+                // Sort handler
+                if (resultsSortSelect) {
+                    resultsSortSelect.addEventListener('change', function() {
+                        renderMatchedFunds(matchedFunds, this.value);
+                        // Re-apply blur if needed
+                        if (localStorage.getItem('isPhoneVerified') !== 'true' && matchedFundsContainer) {
+                            matchedFundsContainer.classList.add('blurred');
+                        }
+                    });
+                }
+
+                // Blur notice verify button
+                var blurVerifyBtn = document.getElementById('blurVerifyBtn');
+                if (blurVerifyBtn) {
+                    blurVerifyBtn.addEventListener('click', function() {
+                        var phoneModal = document.getElementById('phoneVerifyModal');
+                        if (phoneModal) phoneModal.style.display = 'flex';
+                    });
+                }
+            } else {
+                // No matches — show current results page
+                if (matchedFundsSection) matchedFundsSection.style.display = 'none';
+                if (noMatchView) noMatchView.style.display = 'block';
+            }
+
+            // --- Login Modal Logic ---
+            const loginModal = document.getElementById('loginModal');
+            const loginModalClose = document.getElementById('loginModalClose');
+            const loginModalForm = document.getElementById('loginModalForm');
+            const loginModalMessage = document.getElementById('loginModalMessage');
+
+            // Close modal
+            if (loginModalClose) {
+                loginModalClose.addEventListener('click', function() {
+                    loginModal.style.display = 'none';
+                });
+            }
+            // Close on overlay click
+            if (loginModal) {
+                loginModal.addEventListener('click', function(e) {
+                    if (e.target === loginModal) loginModal.style.display = 'none';
+                });
+            }
+            // Handle login submit
+            if (loginModalForm) {
+                loginModalForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const email = document.getElementById('modalLoginEmail').value.trim();
+                    const password = document.getElementById('modalLoginPassword').value;
+
+                    loginModalMessage.classList.remove('success', 'error');
+                    loginModalMessage.textContent = '';
+
+                    if (!email || !password) {
+                        loginModalMessage.textContent = 'Please fill in all fields';
+                        loginModalMessage.classList.add('error');
+                        return;
+                    }
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                        loginModalMessage.textContent = 'Please enter a valid email';
+                        loginModalMessage.classList.add('error');
+                        return;
+                    }
+                    if (password.length < 6) {
+                        loginModalMessage.textContent = 'Password must be at least 6 characters';
+                        loginModalMessage.classList.add('error');
+                        return;
+                    }
+
+                    const submitBtn = loginModalForm.querySelector('.login-modal-submit');
+                    submitBtn.textContent = 'Signing in...';
+                    submitBtn.disabled = true;
+
+                    setTimeout(function() {
+                        let companyName = '';
+                        const userData = localStorage.getItem('userData');
+                        if (userData) {
+                            try {
+                                const p = JSON.parse(userData);
+                                companyName = p.companyName || 
+                                    ((p.firstName || '') + ' ' + (p.lastName || '')).trim();
+                            } catch(ex) {}
+                        }
+                        if (!companyName) {
+                            companyName = email.split('@')[0];
+                        }
+                        localStorage.setItem('userEmail', email);
+                        localStorage.setItem('userCompanyName', companyName);
+                        localStorage.setItem('isLoggedIn', 'true');
+
+                        loginModalMessage.textContent = 'Login successful!';
+                        loginModalMessage.classList.add('success');
+                        submitBtn.textContent = '✓ Done';
+
+                        setTimeout(function() {
+                            loginModal.style.display = 'none';
+                            // Hide login button and show dropdown after successful login
+                            var navLoginBtn = document.getElementById('navLoginBtn');
+                            if (navLoginBtn) navLoginBtn.style.display = 'none';
+                            if (typeof initializeUserNavbar === 'function') {
+                                initializeUserNavbar();
+                            }
+                            // Reset form
+                            loginModalForm.reset();
+                            loginModalMessage.textContent = '';
+                            loginModalMessage.classList.remove('success','error');
+                            submitBtn.textContent = 'Continue';
+                            submitBtn.disabled = false;
+
+                            // Show phone verification modal if not yet verified
+                            var isPhoneVerified = localStorage.getItem('isPhoneVerified') === 'true';
+                            if (!isPhoneVerified) {
+                                var phoneModal = document.getElementById('phoneVerifyModal');
+                                if (phoneModal) phoneModal.style.display = 'flex';
+                            }
+                        }, 800);
+                    }, 600);
+                });
+            }
+
+            // ===== Phone Verification Modal Logic =====
+            var phoneVerifyModal = document.getElementById('phoneVerifyModal');
+            var phoneVerifyForm = document.getElementById('phoneVerifyForm');
+            var phoneVerifyInput = document.getElementById('phoneVerifyInput');
+            var phoneVerifyMessage = document.getElementById('phoneVerifyMessage');
+            var phoneVerifyBtn = document.getElementById('phoneVerifyBtn');
+            var phoneVerifySkip = document.getElementById('phoneVerifySkip');
+
+            // Skip verification — close modal
+            if (phoneVerifySkip) {
+                phoneVerifySkip.addEventListener('click', function() {
+                    if (phoneVerifyModal) phoneVerifyModal.style.display = 'none';
+                });
+            }
+
+            // Close on overlay click
+            if (phoneVerifyModal) {
+                phoneVerifyModal.addEventListener('click', function(e) {
+                    if (e.target === phoneVerifyModal) phoneVerifyModal.style.display = 'none';
+                });
+            }
+
+            // Handle phone verification
+            if (phoneVerifyForm) {
+                phoneVerifyForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    var phone = phoneVerifyInput.value.trim();
+                    phoneVerifyMessage.classList.remove('success','error');
+                    phoneVerifyMessage.textContent = '';
+
+                    if (!phone) {
+                        phoneVerifyMessage.textContent = 'Please enter your mobile number';
+                        phoneVerifyMessage.classList.add('error');
+                        return;
+                    }
+                    if (!/^\d{7,15}$/.test(phone.replace(/\D/g, ''))) {
+                        phoneVerifyMessage.textContent = 'Please enter a valid mobile number';
+                        phoneVerifyMessage.classList.add('error');
+                        return;
+                    }
+
+                    phoneVerifyBtn.disabled = true;
+                    phoneVerifyBtn.textContent = 'Sending code...';
+
+                    // Simulate sending verification code
+                    setTimeout(function() {
+                        phoneVerifyMessage.textContent = 'Phone verified successfully!';
+                        phoneVerifyMessage.classList.add('success');
+                        phoneVerifyBtn.textContent = '✓ Verified';
+
+                        localStorage.setItem('isPhoneVerified', 'true');
+                        localStorage.setItem('userPhone', phone);
+
+                        setTimeout(function() {
+                            if (phoneVerifyModal) phoneVerifyModal.style.display = 'none';
+                            // Unblur matched funds
+                            var mfc = document.getElementById('matchedFundsContainer');
+                            if (mfc) mfc.classList.remove('blurred');
+                            var bn = document.getElementById('blurNotice');
+                            if (bn) bn.style.display = 'none';
+                            
+                            phoneVerifyForm.reset();
+                            phoneVerifyMessage.textContent = '';
+                            phoneVerifyMessage.classList.remove('success','error');
+                            phoneVerifyBtn.textContent = 'Get code';
+                            phoneVerifyBtn.disabled = false;
+                        }, 1000);
+                    }, 800);
+                });
             }
 
             // Handle contact form submission with more effects
@@ -1084,5 +1913,6 @@
             }
         });
     </script>
+    <script src="script.js"></script>
 </body>
 </html>
