@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Funding Web</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo-link">
+                <img src="assets/logo.png" alt="Pellopay" class="logo-img">
+            </a>
+            <div class="nav-menu">
+                <a href="#loans" class="nav-link">Loans</a>
+                <a href="#guides" class="nav-link">Guides</a>
+                <a href="#contact" class="nav-link">Contact</a>
+                <a href="#blog" class="nav-link">Blog</a>
+            </div>
+            <div class="nav-actions">
+                <a href="funding-form.html" class="find-funding-btn">Find Funding</a>
+                
+                <!-- User Profile Dropdown -->
+                <div class="user-profile-dropdown" id="userProfileDropdown" style="display: none;">
+                    <div class="user-profile-header">
+                        <span class="company-name" id="companyNameDisplay"></span>
+                        <svg class="dropdown-arrow" width="12" height="8" viewBox="0 0 12 8" fill="none">
+                            <path d="M1 1L6 6L11 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="user-dropdown-menu" id="userDropdownMenu">
+                        <a href="dashboard.html" class="dropdown-item dashboard-link">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <path d="M9 11h6v6H9z"/>
+                                <path d="M3 9h18M9 3v6"/>
+                            </svg>
+                            Dashboard
+                        </a>
+                        <a href="search-results.html" class="dropdown-item search-link">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="m21 21-4.35-4.35"/>
+                            </svg>
+                            Search
+                        </a>
+                        <a href="documents.html" class="dropdown-item documents-link">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                                <polyline points="13 2 13 9 20 9"/>
+                            </svg>
+                            Documents
+                        </a>
+                        <a href="admin.html" class="dropdown-item admin-link">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="1"/>
+                                <path d="M12 1v6m0 6v6"/>
+                                <path d="M4.22 4.22l4.24 4.24m3.08 3.08l4.24 4.24M1 12h6m6 0h6"/>
+                            </svg>
+                            Admin
+                        </a>
+                        <hr class="dropdown-divider">
+                        <a href="#logout" class="dropdown-item logout-link" id="logoutBtn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 4l4 4m0 0l-4 4m4-4H9m7 8v-2"/>
+                            </svg>
+                            Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Admin Dashboard Container -->
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="dashboard-sidebar">
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="sidebar-item" data-section="applications">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <folder-open/>
+                    </svg>
+                    Applications
+                </a>
+                <a href="search-results.html" class="sidebar-item" data-section="search-funding">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    Search funding
+                </a>
+                <a href="documents.html" class="sidebar-item" data-section="documents">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                    </svg>
+                    Your documents
+                </a>
+                <a href="#connected-apps" class="sidebar-item" data-section="connected-apps">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="1"/>
+                        <circle cx="19" cy="12" r="1"/>
+                        <circle cx="5" cy="12" r="1"/>
+                        <path d="M6 12h12M12 6v12"/>
+                    </svg>
+                    Connected apps
+                </a>
+                <a href="admin.html" class="sidebar-item active" data-section="admin">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="1"/>
+                        <path d="M12 1v6m0 6v6"/>
+                        <path d="M4.22 4.22l4.24 4.24m3.08 3.08l4.24 4.24M1 12h6m6 0h6"/>
+                    </svg>
+                    Admin
+                </a>
+            </nav>
+            
+            <!-- User Info Card in Sidebar -->
+            <div class="sidebar-user-info">
+                <div class="user-avatar-small"></div>
+                <h3 id="userFullNameSidebar">User</h3>
+                <p id="userCompanyInfoSidebar" class="user-company">Company</p>
+                <p class="support-text">Need some help? Give your account manager a call.</p>
+                <p class="contact-info"><a href="tel:02081232841">02081232841</a> or email at <a href="#">support@company.com</a></p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <h1>Funding Dashboard</h1>
+
+            <!-- Referral Code Section -->
+            <section class="admin-section">
+                <h2>Referral Link</h2>
+                <p class="section-intro">We're excited to launch Predictive Capital, our new financial insights product built for business owners.</p>
+                
+                <p class="section-text">Using your Open Banking data and real-time industry benchmarks, Predictive Capital reveals powerful insights into your cashflow, spending patterns, and financial position—so you can stay ahead of the curve.</p>
+                
+                <p class="section-text">To celebrate the launch, we're rewarding you for sharing the value:</p>
+                
+                <div class="reward-item">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 11l3 3L22 4"></path>
+                        <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span><strong>Get a £75 Amazon voucher</strong> for every fellow business owner you refer.</span>
+                </div>
+                
+                <div class="reward-item secondary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8s-9-3.582-9-8 4.03-8 9-8 9 3.582 9 8z"></path>
+                    </svg>
+                    <span>We'll send it straight to your inbox once they have connected Open Banking</span>
+                </div>
+
+                <div class="reward-item secondary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    <span>Simply share this link with them:</span>
+                </div>
+
+                <div class="referral-link-card">
+                    <div class="link-content">
+                        <input type="text" class="referral-link-input" id="referralLink" value="https://app.fundonion.com/predictive_capital&r=218371" readonly>
+                    </div>
+                    <button class="copy-link-btn" id="copyLinkBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                        </svg>
+                        Copy
+                    </button>
+                </div>
+
+                <p class="section-text">Start referring today—and help others unlock their financial edge too.</p>
+            </section>
+
+            <!-- Your Linked Company Section -->
+            <section class="admin-section">
+                <h2>Your Linked Company</h2>
+                <div class="company-input-box">
+                    <input type="text" placeholder="Enter company details..." class="company-input">
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

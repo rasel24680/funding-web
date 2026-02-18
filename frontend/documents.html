@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Documentation - Funding Web</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo-link">
+                <img src="assets/logo.png" alt="Pellopay" class="logo-img">
+            </a>
+            <div class="nav-menu">
+                <a href="#loans" class="nav-link">Loans</a>
+                <a href="#guides" class="nav-link">Guides</a>
+                <a href="#contact" class="nav-link">Contact</a>
+                <a href="#blog" class="nav-link">Blog</a>
+            </div>
+            <div class="nav-actions">
+                <a href="funding-form.html" class="find-funding-btn">Find Funding</a>
+                
+                <!-- User Profile Dropdown -->
+                <div class="user-profile-dropdown" id="userProfileDropdown" style="display: none;">
+                    <div class="user-profile-header">
+                        <span class="company-name" id="companyNameDisplay"></span>
+                        <svg class="dropdown-arrow" width="12" height="8" viewBox="0 0 12 8" fill="none">
+                            <path d="M1 1L6 6L11 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="user-dropdown-menu" id="userDropdownMenu">
+                        <a href="dashboard.html" class="dropdown-item dashboard-link">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <path d="M9 11h6v6H9z"/>
+                                <path d="M3 9h18M9 3v6"/>
+                            </svg>
+                            Dashboard
+                        </a>
+                        <a href="search-results.html" class="dropdown-item search-link">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="m21 21-4.35-4.35"/>
+                            </svg>
+                            Search
+                        </a>
+                        <a href="documents.html" class="dropdown-item documents-link">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                                <polyline points="13 2 13 9 20 9"/>
+                            </svg>
+                            Documents
+                        </a>
+                        <a href="admin.html" class="dropdown-item admin-link">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="1"/>
+                                <path d="M12 1v6m0 6v6"/>
+                                <path d="M4.22 4.22l4.24 4.24m3.08 3.08l4.24 4.24M1 12h6m6 0h6"/>
+                            </svg>
+                            Admin
+                        </a>
+                        <hr class="dropdown-divider">
+                        <a href="#logout" class="dropdown-item logout-link" id="logoutBtn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 4l4 4m0 0l-4 4m4-4H9m7 8v-2"/>
+                            </svg>
+                            Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Documents Section -->
+    <section class="documents-section">
+        <!-- Back to results link -->
+        <a href="search-results.html" class="back-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to results
+        </a>
+
+        <div class="documents-main">
+            <!-- Left Content -->
+            <div class="documents-content">
+                <h1>Your Documentation</h1>
+                <p class="documents-intro">Speed up your applications and improve your chances of receiving strong offers from our lending partners by uploading the following documentation.</p>
+
+                <!-- Documentation Sections -->
+                <div class="documentation-sections">
+                    <!-- Section 1: Bank Statements -->
+                    <div class="doc-section">
+                        <button class="section-header" data-section="bank-statements">
+                            <span class="section-number">1</span>
+                            <h2>Bank Statements</h2>
+                            <svg class="section-toggle" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="section-content active" id="section-bank-statements">
+                            <p class="section-description">Please supply your last 6 months' business bank statements</p>
+                            <div class="upload-options">
+                                <button class="upload-button upload-files-btn">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                    Upload files
+                                </button>
+                                <button class="upload-button connect-banking-btn">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="1"></circle>
+                                        <path d="M12 1v6m0 6v6"></path>
+                                        <circle cx="12" cy="12" r="9"></circle>
+                                    </svg>
+                                    Connect open banking
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Financial Accounts -->
+                    <div class="doc-section">
+                        <button class="section-header" data-section="financial-accounts">
+                            <span class="section-number">2</span>
+                            <h2>Financial Accounts</h2>
+                            <svg class="section-toggle" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="section-content" id="section-financial-accounts">
+                            <p class="section-description">Please provide your financial account information</p>
+                            <div class="upload-options">
+                                <button class="upload-button upload-files-btn">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                    Upload files
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Applicant Information -->
+                    <div class="doc-section">
+                        <button class="section-header" data-section="applicant-info">
+                            <span class="section-number">3</span>
+                            <h2>Applicant Information</h2>
+                            <svg class="section-toggle" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="section-content" id="section-applicant-info">
+                            <p class="section-description">Please provide your applicant information documents</p>
+                            <div class="upload-options">
+                                <button class="upload-button upload-files-btn">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                    Upload files
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar -->
+            <aside class="documents-sidebar">
+                <div class="account-manager-card">
+                    <h3>Your FundOnion Account Manager</h3>
+                    <div class="manager-info">
+                        <div class="manager-name">Niall Gannn</div>
+                        <div class="manager-title">Commercial Finance Analyst</div>
+                    </div>
+                    <p class="help-text">Need some help? Give your account manager a call.</p>
+                    <p class="contact-details">
+                        <a href="tel:02081232841">02081232841</a> or email them at <a href="mailto:niall@fundonion.com">niall@fundonion.com</a>
+                    </p>
+                </div>
+            </aside>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="documents-footer">
+        <div class="footer-content">
+            <p>Need some help? Give your account manager, Niall, a call on <a href="tel:02081232841">02081232841</a> or email them at <a href="mailto:niall@fundonion.com">niall@fundonion.com</a></p>
+            <p class="copyright">Copyright © FundOnion Limited, 2026 | Registered in England & Wales (co. number 12743839)</p>
+            <div class="rating-stars">
+                <span class="star">★</span>
+                <span class="star">★</span>
+                <span class="star">★</span>
+                <span class="star">★</span>
+                <span class="star">★</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
