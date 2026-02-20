@@ -241,11 +241,8 @@ document.addEventListener("DOMContentLoaded", function () {
           );
 
           setTimeout(() => {
-            // Guest users go to results (blurred), logged-in users go to dashboard
-            const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-            window.location.href = isLoggedIn
-              ? "dashboard.html"
-              : "results.html";
+            // Always go to results page to show matched funders
+            window.location.href = "results.html";
           }, 1000);
         } catch (error) {
           console.error("Submission error:", error);
@@ -254,10 +251,7 @@ document.addEventListener("DOMContentLoaded", function () {
           showAlert("Application saved! Redirecting...", "success");
 
           setTimeout(() => {
-            const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-            window.location.href = isLoggedIn
-              ? "dashboard.html"
-              : "results.html";
+            window.location.href = "results.html";
           }, 1000);
         }
       }
@@ -859,6 +853,8 @@ async function handleSignup(form) {
   const password = form.querySelector("#signupPassword").value;
   const confirmPassword = form.querySelector("#confirmPassword").value;
   const companyName = form.querySelector("#companyName").value.trim();
+  const businessTypeEl = form.querySelector("#businessType");
+  const businessType = businessTypeEl ? businessTypeEl.value : null;
   const agreeTerms = form.querySelector("#agreeTerms").checked;
   const messageEl = document.getElementById("authMessage");
   const submitBtn = form.querySelector('button[type="submit"]');
@@ -931,6 +927,7 @@ async function handleSignup(form) {
         email,
         password,
         businessName: companyName,
+        businessType: businessType || null,
         sessionId,
       }),
     });

@@ -158,10 +158,39 @@
                     </div>
 
                     <div class="form-group-new">
-                        <label for="companyName" class="form-label-new">Company Name</label>
+                        <label for="businessType" class="form-label-new">Business Type</label>
                         <div class="input-wrapper">
                             <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                            <input type="text" id="companyName" name="companyName" placeholder="Your company name" required>
+                            <select id="businessType" name="businessType" required style="width:100%;padding:0.65rem 0.85rem 0.65rem 2.75rem;border:1.5px solid #e0e3ea;border-radius:10px;font-size:0.88rem;color:var(--text-dark);background:#fff;appearance:auto;cursor:pointer;">
+                                <option value="" disabled selected>Business Type</option>
+                                <option value="Limited company">Limited company</option>
+                                <option value="Limited partnership">Limited partnership</option>
+                                <option value="Partnership">Partnership</option>
+                                <option value="Sole trader">Sole trader</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group-new" id="businessNameGroup">
+                        <label for="companyName" class="form-label-new">Business Name</label>
+                        <div style="display:flex;gap:0.6rem;align-items:stretch;">
+                            <div class="input-wrapper" style="flex:1;">
+                                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                                <input type="text" id="companyName" name="companyName" placeholder="Business Name" required>
+                            </div>
+                            <button type="button" id="findBusinessBtn" onclick="findBusiness()" style="background:linear-gradient(135deg,#1a73e8,#0d5bbd);color:#fff;border:none;padding:0.5rem 1rem;border-radius:10px;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:0.3rem;transition:all 0.3s ease;">
+                                Find Business <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group-new" id="selectBusinessGroup" style="display:none;">
+                        <label for="selectBusiness" class="form-label-new">Select Business</label>
+                        <div class="input-wrapper" style="position:relative;">
+                            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                            <input type="text" id="businessSearchInput" placeholder="Type to search businesses..." autocomplete="off" style="width:100%;padding:0.65rem 0.85rem 0.65rem 2.75rem;border:1.5px solid #e0e3ea;border-radius:10px;font-size:0.88rem;color:var(--text-dark);background:#fff;">
+                            <div id="businessSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #e0e3ea;border-top:none;border-radius:0 0 10px 10px;max-height:180px;overflow-y:auto;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.08);"></div>
                         </div>
                     </div>
 
@@ -194,5 +223,98 @@
     </section>
 
     <script src="script.js"></script>
+    <script>
+    // === Business Type Logic ===
+    const businessTypeSelect = document.getElementById('businessType');
+    const findBusinessBtn = document.getElementById('findBusinessBtn');
+    const selectBusinessGroup = document.getElementById('selectBusinessGroup');
+    const businessSearchInput = document.getElementById('businessSearchInput');
+    const businessSuggestions = document.getElementById('businessSuggestions');
+
+    // Hide Find Business button when Sole Trader is selected
+    businessTypeSelect.addEventListener('change', function() {
+        const isSoleTrader = this.value === 'Sole trader';
+        findBusinessBtn.style.display = isSoleTrader ? 'none' : 'flex';
+        // Also hide the select business dropdown when changing type
+        selectBusinessGroup.style.display = 'none';
+        businessSearchInput.value = '';
+    });
+
+    // Sample business data for suggestions (simulating Companies House API)
+    const sampleBusinesses = [
+        { name: 'ABC Trading Ltd', number: '12345678', type: 'Limited company', address: 'London, UK' },
+        { name: 'ABC Solutions Limited', number: '23456789', type: 'Limited company', address: 'Manchester, UK' },
+        { name: 'Acme Corporation Ltd', number: '34567890', type: 'Limited company', address: 'Birmingham, UK' },
+        { name: 'Alpha Business Services LLP', number: '45678901', type: 'Limited partnership', address: 'Leeds, UK' },
+        { name: 'Bright Finance Partners', number: '56789012', type: 'Partnership', address: 'Bristol, UK' },
+        { name: 'Blue Sky Ventures Ltd', number: '67890123', type: 'Limited company', address: 'Edinburgh, UK' },
+        { name: 'Capital Growth Trading Ltd', number: '78901234', type: 'Limited company', address: 'London, UK' },
+        { name: 'Crown Business Solutions Ltd', number: '89012345', type: 'Limited company', address: 'Cardiff, UK' },
+        { name: 'Dynamic Enterprises LLP', number: '90123456', type: 'Limited partnership', address: 'Glasgow, UK' },
+        { name: 'Eagle Commercial Ltd', number: '01234567', type: 'Limited company', address: 'Liverpool, UK' },
+        { name: 'First Choice Logistics Ltd', number: '11223344', type: 'Limited company', address: 'Southampton, UK' },
+        { name: 'Global Trade Partners Ltd', number: '22334455', type: 'Limited company', address: 'London, UK' },
+        { name: 'Horizon Digital Ltd', number: '33445566', type: 'Limited company', address: 'Brighton, UK' },
+        { name: 'Infinity Group Holdings Ltd', number: '44556677', type: 'Limited company', address: 'Nottingham, UK' },
+        { name: 'Jupiter Property Services LLP', number: '55667788', type: 'Limited partnership', address: 'Oxford, UK' },
+    ];
+
+    // Find Business button click — show Select Business dropdown
+    function findBusiness() {
+        const nameInput = document.getElementById('companyName').value.trim();
+        if (!nameInput) {
+            document.getElementById('companyName').focus();
+            return;
+        }
+        selectBusinessGroup.style.display = 'block';
+        businessSearchInput.value = nameInput;
+        businessSearchInput.focus();
+        showSuggestions(nameInput);
+    }
+
+    // Show suggestions based on search input
+    function showSuggestions(query) {
+        if (!query || query.length < 1) {
+            businessSuggestions.style.display = 'none';
+            return;
+        }
+        const q = query.toLowerCase();
+        const matches = sampleBusinesses.filter(b => b.name.toLowerCase().includes(q));
+
+        if (matches.length === 0) {
+            businessSuggestions.innerHTML = '<div style="padding:0.7rem 1rem;color:#999;font-size:0.85rem;">No businesses found</div>';
+            businessSuggestions.style.display = 'block';
+            return;
+        }
+
+        businessSuggestions.innerHTML = matches.map(b =>
+            '<div class="business-suggestion-item" onclick="selectSuggestedBusiness(\'' + b.name.replace(/'/g, "\\'") + '\', \'' + b.number + '\')" style="padding:0.6rem 1rem;cursor:pointer;border-bottom:1px solid #f0f0f0;transition:background 0.2s;"' +
+            ' onmouseover="this.style.background=\'#f5f7ff\'" onmouseout="this.style.background=\'#fff\'">' +
+            '<div style="font-weight:600;font-size:0.88rem;color:#1a2b4a;">' + b.name + '</div>' +
+            '<div style="font-size:0.75rem;color:#888;margin-top:2px;">Company No: ' + b.number + ' · ' + b.address + '</div>' +
+            '</div>'
+        ).join('');
+        businessSuggestions.style.display = 'block';
+    }
+
+    // Select a suggested business
+    function selectSuggestedBusiness(name, number) {
+        businessSearchInput.value = name;
+        document.getElementById('companyName').value = name;
+        businessSuggestions.style.display = 'none';
+    }
+
+    // Live search as user types in the Select Business input
+    businessSearchInput.addEventListener('input', function() {
+        showSuggestions(this.value.trim());
+    });
+
+    // Close suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!businessSearchInput.contains(e.target) && !businessSuggestions.contains(e.target)) {
+            businessSuggestions.style.display = 'none';
+        }
+    });
+    </script>
 </body>
 </html>

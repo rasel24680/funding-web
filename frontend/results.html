@@ -547,6 +547,81 @@
         transform: translateY(-2px);
         box-shadow: 0 6px 18px rgba(255, 107, 90, 0.4);
       }
+      /* Expandable Details Panel */
+      .matched-fund-card .expanded-details {
+        display: none;
+        padding: 1.2rem 0 0.5rem;
+        margin-top: 1rem;
+        border-top: 1px dashed #e5e5e5;
+        animation: slideDown 0.3s ease;
+      }
+      .matched-fund-card .expanded-details.open {
+        display: block;
+      }
+      @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .matched-fund-card .detail-description {
+        font-size: 0.92rem;
+        color: #555;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+      }
+      .matched-fund-card .detail-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+      }
+      .matched-fund-card .detail-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.8rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        font-weight: 600;
+        background: #f3f4f6;
+        color: #444;
+      }
+      .matched-fund-card .detail-chip.positive {
+        background: #ecfdf5;
+        color: #059669;
+      }
+      .matched-fund-card .detail-chip.neutral {
+        background: #f0f4ff;
+        color: #4f6bbd;
+      }
+      .matched-fund-card .detail-chip.highlight {
+        background: #fff7ed;
+        color: #d97706;
+      }
+      .matched-fund-card .detail-chip svg {
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+      }
+      .matched-fund-card .detail-website {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.85rem;
+        color: var(--accent-red);
+        font-weight: 600;
+        text-decoration: none;
+        transition: gap 0.3s;
+      }
+      .matched-fund-card .detail-website:hover {
+        gap: 0.6rem;
+      }
+      .matched-fund-card .more-details-btn.active {
+        color: #555;
+      }
+      .matched-fund-card .more-details-btn.active svg {
+        transform: rotate(90deg);
+        transition: transform 0.3s;
+      }
       .blur-notice {
         text-align: center;
         padding: 1.2rem 1.5rem;
@@ -1972,15 +2047,37 @@
               "</span></div>" +
               "</div>" +
               '<div class="card-footer">' +
-              '<button class="more-details-btn">More details <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>' +
+              '<button class="more-details-btn" onclick="toggleDetails(this)">More details <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>' +
               '<button class="apply-btn" onclick="alert(\'Contact ' +
               f.name +
               '\')">Apply</button>' +
               "</div>" +
+              '<div class="expanded-details">' +
+              '<p class="detail-description">' + (f.description || 'Tailored funding solution for your business needs.') + '</p>' +
+              '<div class="detail-chips">' +
+              '<span class="detail-chip neutral"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg> £' + ((f.minAmount || 0).toLocaleString()) + ' – £' + ((f.maxAmount || 0).toLocaleString()) + '</span>' +
+              (f.acceptsImpairedCredit ? '<span class="detail-chip positive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> Accepts Impaired Credit</span>' : '<span class="detail-chip highlight"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Good Credit Required</span>') +
+              '<span class="detail-chip positive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> ' + (f.approvalSpeed || 'N/A') + '</span>' +
+              '</div>' +
+              (f.website ? '<a class="detail-website" href="' + f.website + '" target="_blank" rel="noopener">Visit lender website <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6m0 0v6m0-6L10 14"/></svg></a>' : '') +
+              '</div>' +
               "</div>"
             );
           })
           .join("");
+      }
+
+      // Toggle expanded details panel
+      function toggleDetails(btn) {
+        const card = btn.closest('.matched-fund-card');
+        const panel = card.querySelector('.expanded-details');
+        if (panel.classList.contains('open')) {
+          panel.classList.remove('open');
+          btn.classList.remove('active');
+        } else {
+          panel.classList.add('open');
+          btn.classList.add('active');
+        }
       }
 
       // Load and display form data from localStorage
@@ -2325,6 +2422,13 @@
                   var bn = document.getElementById("blurNotice");
                   if (bn) bn.style.display = "none";
 
+                  // Show user dropdown in navbar
+                  var navLogin = document.getElementById("navLoginBtn");
+                  if (navLogin) navLogin.style.display = "none";
+                  if (typeof initializeUserNavbar === "function") {
+                    initializeUserNavbar();
+                  }
+
                   // Reset form
                   phoneVerifyForm.reset();
                   phoneVerifyMessage.textContent = "";
@@ -2462,5 +2566,77 @@
       });
     </script>
     <script src="script.js"></script>
+    <script>
+      // Ensure user navbar is initialized after script.js loads
+      (function() {
+        function showUserDropdown() {
+          const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+          if (!isLoggedIn) return;
+          
+          var navLogin = document.getElementById("navLoginBtn");
+          if (navLogin) navLogin.style.display = "none";
+          
+          // Directly show the dropdown element
+          var dropdown = document.getElementById("userProfileDropdown");
+          if (dropdown) {
+            dropdown.style.display = "block";
+            var nameDisplay = document.getElementById("companyNameDisplay");
+            if (nameDisplay) {
+              var name = localStorage.getItem("userCompanyName");
+              if (!name) {
+                var ud = localStorage.getItem("userData");
+                if (ud) { try { var p = JSON.parse(ud); name = p.companyName || p.firstName || ""; } catch(e){} }
+              }
+              if (!name) name = (localStorage.getItem("userEmail") || "").split("@")[0] || "My Account";
+              nameDisplay.textContent = name;
+            }
+          }
+          
+          // Bind toggle click on the header to show/hide menu
+          var header = dropdown ? dropdown.querySelector(".user-profile-header") : null;
+          var menu = document.getElementById("userDropdownMenu");
+          if (header && menu && !header._boundToggle) {
+            header._boundToggle = true;
+            header.addEventListener("click", function(e) {
+              e.stopPropagation();
+              header.classList.toggle("active");
+              menu.style.display = menu.style.display === "block" ? "none" : "block";
+            });
+            // Close when clicking outside
+            document.addEventListener("click", function(e) {
+              if (dropdown && !dropdown.contains(e.target)) {
+                header.classList.remove("active");
+                menu.style.display = "none";
+              }
+            });
+          }
+
+          // Bind logout
+          var logoutBtn = document.getElementById("logoutBtn");
+          if (logoutBtn && !logoutBtn._boundLogout) {
+            logoutBtn._boundLogout = true;
+            logoutBtn.addEventListener("click", function(e) {
+              e.preventDefault();
+              if (typeof handleLogout === "function") {
+                handleLogout();
+              } else {
+                localStorage.clear();
+                window.location.href = "login.html";
+              }
+            });
+          }
+          
+          // Also call full init if available
+          if (typeof initializeUserNavbar === "function") {
+            initializeUserNavbar();
+          }
+        }
+        
+        // Run immediately
+        showUserDropdown();
+        // Also run after a short delay as fallback
+        setTimeout(showUserDropdown, 100);
+      })();
+    </script>
   </body>
 </html>
