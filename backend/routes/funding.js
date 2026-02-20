@@ -400,4 +400,83 @@ router.delete("/application/:id", authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * POST /api/funding/get-matches
+ * Get matching funders based on funding application criteria
+ * Can be called by guest (sessionId) or authenticated user
+ */
+router.post("/get-matches", optionalAuth, async (req, res) => {
+  try {
+    const {
+      fundingAmount,
+      fundingPurpose,
+      homeowner,
+      tradingYears,
+      acceptsImpairedCredit,
+      sessionId,
+      applicationId,
+    } = req.body;
+
+    // Validate required fields
+    if (!fundingAmount) {
+      return res.status(400).json({ error: "Funding amount required" });
+    }
+
+    // Build matching criteria
+    let query = `SELECT * FROM funders WHERE is_active = TRUE 
+                 AND min_amount <= ? AND max_amount >= ?`;
+    let params = [fundingAmount, fundingAmount];
+
+    // Apply optional filters
+    if (fundingPurpose) {
+      query += ` AND JSON_CONTAINS(funding_purposes, JSON_QUOTE(?))`;
+      params.push(fundingPurpose);
+    }
+
+    if (homeowner === "Yes") {
+      // Funders that accept or don't require homeowner are both fine
+      // We only filter if homeowner = "No" and they require it
+    } else if (homeowner === "No") {
+      query += ` AND requires_homeowner = FALSE`;
+    }
+
+    if (tradingYears === "No") {
+      query += ` AND min_trading_years <= 1`;
+    } else if (tradingYears === "Yes") {
+      // No filtering - they have 3+ years
+    }
+
+    if (acceptsImpairedCredit) {
+      query += ` AND accepts_impaired_credit = TRUE`;
+    }
+
+    const [funders] = await db.query(query, params);
+
+    // Format response
+    const matchedFunders = funders.map((f) => ({
+      id: f.id,
+      name: f.name,
+      logoUrl: f.logo_url,
+      baseRate: f.base_rate,
+      approvalSpeed: f.approval_speed,
+      keyFeature: f.key_feature,
+      description: f.description,
+      minAmount: f.min_amount,
+      maxAmount: f.max_amount,
+      acceptsImpairedCredit: f.accepts_impaired_credit,
+      contactEmail: f.contact_email,
+      website: f.website,
+    }));
+
+    res.json({
+      success: true,
+      count: matchedFunders.length,
+      funders: matchedFunders,
+    });
+  } catch (error) {
+    console.error("Get matches error:", error);
+    res.status(500).json({ error: "Server error getting matches" });
+  }
+});
+
 module.exports = router;

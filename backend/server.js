@@ -8,7 +8,21 @@ const path = require("path");
 const app = express();
 
 // Security Middleware
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        scriptSrcAttr: ["'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "blob:"],
+        connectSrc: ["'self'", "http://localhost:3000"],
+        fontSrc: ["'self'"],
+      },
+    },
+  })
+);
 
 // Rate limiting - 100 requests per 15 minutes per IP
 const limiter = rateLimit({

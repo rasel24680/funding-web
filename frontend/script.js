@@ -836,9 +836,8 @@ async function handleLogin(form) {
     showAuthMessage("Login successful! Redirecting...", "success", messageEl);
 
     setTimeout(() => {
-      // Check if phone is verified - if not, need to verify first
-      // After login, always go to dashboard (phone verification happens there if needed)
-      window.location.href = "dashboard.html";
+      // After login, go to funding form page
+      window.location.href = "funding-form.html";
     }, 1000);
   } catch (error) {
     console.error("Login error:", error);
@@ -944,35 +943,15 @@ async function handleSignup(form) {
       );
     }
 
-    // Store auth token and user data (auto-login after signup)
-    localStorage.setItem("authToken", data.token);
-    localStorage.setItem("userEmail", data.user.email);
-    localStorage.setItem(
-      "userCompanyName",
-      data.user.businessName || data.user.firstName,
-    );
-    localStorage.setItem("isLoggedIn", "true");
-    localStorage.setItem("isPhoneVerified", "false");
-    localStorage.setItem(
-      "userData",
-      JSON.stringify({
-        firstName: data.user.firstName,
-        lastName: data.user.lastName,
-        email: data.user.email,
-        companyName: data.user.businessName,
-        phone: data.user.phone,
-      }),
-    );
-
     // Clear guest session ID
     localStorage.removeItem("guestSessionId");
 
-    showAuthMessage("Account created! Redirecting...", "success", messageEl);
+    showAuthMessage("Account created! Please log in.", "success", messageEl);
 
     setTimeout(() => {
-      // After signup, go to dashboard (phone verification happens there)
-      window.location.href = "dashboard.html";
-    }, 1000);
+      // After signup, redirect to login page so user logs in manually
+      window.location.href = "login.html";
+    }, 1500);
   } catch (error) {
     console.error("Signup error:", error);
     showAuthMessage(
@@ -1504,6 +1483,12 @@ const _fundersData = [
     apprTime: "2-3 days",
     personalTouch: 7,
     acceptsImpairedCredit: false,
+    description: "Fast Capital specialises in rapid unsecured business loans for UK SMEs. With a streamlined digital application process, they focus on getting funds to businesses quickly without requiring property as security.",
+    features: ["No early repayment fees", "Dedicated account manager", "Fixed monthly repayments", "No security required"],
+    requirements: ["Minimum 2 years trading", "Annual turnover £100k+", "UK registered business"],
+    fundingTypes: ["Unsecured Business Loan"],
+    minAmount: "£10,000",
+    maxAmount: "£50,000",
   },
   {
     id: 2,
@@ -1514,6 +1499,12 @@ const _fundersData = [
     apprTime: "5-7 days",
     personalTouch: 9,
     acceptsImpairedCredit: false,
+    description: "Prime Lenders is a premium funding provider offering competitive rates for established businesses. Known for their personal approach, each client is assigned a senior relationship manager who guides them through the entire process.",
+    features: ["Senior relationship manager", "Flexible repayment schedules", "Rate match guarantee", "Same-day decision in principle"],
+    requirements: ["Minimum 3 years trading", "Annual turnover £250k+", "Clean credit history", "UK registered limited company"],
+    fundingTypes: ["Secured Business Loan", "Commercial Mortgage"],
+    minAmount: "£50,000",
+    maxAmount: "£500,000",
   },
   {
     id: 3,
@@ -1524,6 +1515,12 @@ const _fundersData = [
     apprTime: "3-4 days",
     personalTouch: 8,
     acceptsImpairedCredit: true,
+    description: "Growth Finance works with businesses at all stages, including those with impaired credit. They take a holistic view of your business rather than relying solely on credit scores, making them ideal for growing companies.",
+    features: ["Accepts impaired credit", "Revenue-based assessment", "No arrangement fees", "Top-up facility available"],
+    requirements: ["Minimum 1 year trading", "Annual turnover £75k+", "Positive business trajectory"],
+    fundingTypes: ["Unsecured Business Loan", "Revenue-Based Finance"],
+    minAmount: "£25,000",
+    maxAmount: "£150,000",
   },
   {
     id: 4,
@@ -1534,6 +1531,12 @@ const _fundersData = [
     apprTime: "4-5 days",
     personalTouch: 6,
     acceptsImpairedCredit: true,
+    description: "Business Capital provides flexible funding solutions tailored to small and medium enterprises. They specialise in working with businesses that may have been declined elsewhere, offering second-chance lending with fair terms.",
+    features: ["Second-chance lending", "Flexible terms", "No hidden charges", "Online portal for account management"],
+    requirements: ["Minimum 6 months trading", "Annual turnover £50k+", "UK registered business"],
+    fundingTypes: ["Unsecured Business Loan", "Merchant Cash Advance"],
+    minAmount: "£5,000",
+    maxAmount: "£100,000",
   },
   {
     id: 5,
@@ -1544,6 +1547,12 @@ const _fundersData = [
     apprTime: "7-10 days",
     personalTouch: 10,
     acceptsImpairedCredit: false,
+    description: "Enterprise Loans is a boutique lender offering premium funding packages for established businesses. Their white-glove service includes a full financial review, bespoke structuring, and ongoing support throughout the loan term.",
+    features: ["Bespoke loan structuring", "Full financial review included", "Capital repayment holidays available", "Ongoing business support", "Priority processing"],
+    requirements: ["Minimum 3 years trading", "Annual turnover £500k+", "Strong credit profile", "Audited accounts preferred"],
+    fundingTypes: ["Secured Business Loan", "Asset Finance", "Commercial Mortgage"],
+    minAmount: "£75,000",
+    maxAmount: "£1,000,000",
   },
   {
     id: 6,
@@ -1554,6 +1563,12 @@ const _fundersData = [
     apprTime: "1-2 days",
     personalTouch: 4,
     acceptsImpairedCredit: true,
+    description: "Quick Finance is the fastest lender on our panel, offering same-day decisions and next-day funding. They use automated underwriting technology to assess applications rapidly, ideal for businesses that need capital urgently.",
+    features: ["Same-day decisions", "Next-day funding", "Accepts impaired credit", "Simple online application", "No paperwork required"],
+    requirements: ["Minimum 6 months trading", "Minimum monthly revenue £5k", "UK business bank account"],
+    fundingTypes: ["Short-Term Business Loan", "Merchant Cash Advance"],
+    minAmount: "£5,000",
+    maxAmount: "£100,000",
   },
   {
     id: 7,
@@ -1564,6 +1579,12 @@ const _fundersData = [
     apprTime: "3-4 days",
     personalTouch: 8,
     acceptsImpairedCredit: false,
+    description: "Smart Funding combines technology with personal service to deliver an exceptional borrowing experience. Their AI-powered platform matches you with the best product while their team ensures everything runs smoothly.",
+    features: ["AI-powered matching", "Dedicated support team", "Competitive rates", "Transparent fee structure", "Early repayment options"],
+    requirements: ["Minimum 2 years trading", "Annual turnover £150k+", "Good credit history", "UK registered company"],
+    fundingTypes: ["Unsecured Business Loan", "Invoice Finance"],
+    minAmount: "£20,000",
+    maxAmount: "£250,000",
   },
   {
     id: 8,
@@ -1574,6 +1595,12 @@ const _fundersData = [
     apprTime: "10-14 days",
     personalTouch: 9,
     acceptsImpairedCredit: false,
+    description: "Venture Capital offers the most competitive rates on our panel for larger loans. They work closely with ambitious businesses looking for significant growth capital, providing not just funding but strategic advice.",
+    features: ["Lowest rates available", "Strategic business advice", "Flexible drawdown facility", "Long-term partnerships", "Board-level advisory access"],
+    requirements: ["Minimum 5 years trading", "Annual turnover £1m+", "Strong credit profile", "Business plan required", "Security may be required"],
+    fundingTypes: ["Secured Business Loan", "Growth Capital", "Commercial Mortgage"],
+    minAmount: "£100,000",
+    maxAmount: "£2,000,000",
   },
   {
     id: 9,
@@ -1584,6 +1611,12 @@ const _fundersData = [
     apprTime: "2-3 days",
     personalTouch: 5,
     acceptsImpairedCredit: true,
+    description: "Credit Solutions is a specialist lender designed for businesses with less-than-perfect credit. They use alternative data points like bank statements and revenue trends to make fair lending decisions.",
+    features: ["Specialist impaired credit lender", "Bank statement-based assessment", "No personal guarantees on smaller loans", "Rapid turnaround"],
+    requirements: ["Minimum 1 year trading", "Monthly revenue £3k+", "UK business bank account", "3 months bank statements"],
+    fundingTypes: ["Unsecured Business Loan", "Revolving Credit Facility"],
+    minAmount: "£5,000",
+    maxAmount: "£75,000",
   },
   {
     id: 10,
@@ -1594,6 +1627,12 @@ const _fundersData = [
     apprTime: "3-5 days",
     personalTouch: 7,
     acceptsImpairedCredit: true,
+    description: "Rapid Lenders bridge the gap between speed and affordability, offering quick decisions without excessive interest rates. They accept businesses with minor credit issues and provide a balanced lending solution.",
+    features: ["Quick decisions", "Accepts minor credit issues", "Competitive rates for impaired credit", "Flexible repayment dates", "No broker fees"],
+    requirements: ["Minimum 1 year trading", "Annual turnover £80k+", "UK registered business", "No active CCJs over £5k"],
+    fundingTypes: ["Unsecured Business Loan", "Asset Finance"],
+    minAmount: "£10,000",
+    maxAmount: "£150,000",
   },
 ];
 
@@ -1656,13 +1695,13 @@ function generateFundingCards(sortBy) {
                 </div>
             </div>
             <div class="card-footer">
-                <button class="more-details-btn">
+                <button class="more-details-btn" data-funder-id="${funder.id}">
                     More details
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M5 12h14M12 5l7 7-7 7"/>
                     </svg>
                 </button>
-                <button class="apply-btn">Apply Now</button>
+                <button class="apply-btn" data-funder-id="${funder.id}">Apply Now</button>
             </div>
         </div>
     `,
@@ -1675,6 +1714,270 @@ function generateFundingCards(sortBy) {
   const count = funders.length;
   if (bannerCount) bannerCount.textContent = count;
   if (funderCountEl) funderCountEl.textContent = count;
+
+  // Attach More Details button handlers
+  document.querySelectorAll(".more-details-btn").forEach((btn) => {
+    btn.addEventListener("click", function () {
+      const funderId = parseInt(this.getAttribute("data-funder-id"));
+      const funder = _fundersData.find((f) => f.id === funderId);
+      if (funder) showFunderDetailsModal(funder);
+    });
+  });
+
+  // Attach Apply Now button handlers
+  document.querySelectorAll(".apply-btn").forEach((btn) => {
+    btn.addEventListener("click", function () {
+      const funderId = parseInt(this.getAttribute("data-funder-id"));
+      const funder = _fundersData.find((f) => f.id === funderId);
+      if (funder) showApplyModal(funder);
+    });
+  });
+}
+
+// ===== Funder Details Modal =====
+function showFunderDetailsModal(funder) {
+  // Remove existing modal if any
+  const existing = document.getElementById("funderDetailsModal");
+  if (existing) existing.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "funderDetailsModal";
+  modal.className = "funder-modal-overlay";
+  modal.innerHTML = `
+    <div class="funder-modal-card">
+      <button class="funder-modal-close" id="closeFunderDetails">&times;</button>
+      <div class="funder-modal-header">
+        <h2>${funder.name}</h2>
+        <span class="funder-badge">Verified</span>
+      </div>
+      <p class="funder-modal-desc">${funder.description}</p>
+
+      <div class="funder-modal-grid">
+        <div class="funder-modal-stat">
+          <span class="stat-label">Loan Amount</span>
+          <span class="stat-value highlight">${funder.loanAmount}</span>
+        </div>
+        <div class="funder-modal-stat">
+          <span class="stat-label">Interest Rate</span>
+          <span class="stat-value">${funder.interestRate}</span>
+        </div>
+        <div class="funder-modal-stat">
+          <span class="stat-label">Loan Term</span>
+          <span class="stat-value">${funder.term}</span>
+        </div>
+        <div class="funder-modal-stat">
+          <span class="stat-label">Approval Time</span>
+          <span class="stat-value">${funder.apprTime}</span>
+        </div>
+        <div class="funder-modal-stat">
+          <span class="stat-label">Min Amount</span>
+          <span class="stat-value">${funder.minAmount}</span>
+        </div>
+        <div class="funder-modal-stat">
+          <span class="stat-label">Max Amount</span>
+          <span class="stat-value">${funder.maxAmount}</span>
+        </div>
+      </div>
+
+      <div class="funder-modal-section">
+        <h3>Funding Types</h3>
+        <div class="funder-tags">
+          ${funder.fundingTypes.map((t) => `<span class="funder-tag">${t}</span>`).join("")}
+        </div>
+      </div>
+
+      <div class="funder-modal-section">
+        <h3>Key Features</h3>
+        <ul class="funder-feature-list">
+          ${funder.features.map((f) => `<li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>${f}</li>`).join("")}
+        </ul>
+      </div>
+
+      <div class="funder-modal-section">
+        <h3>Requirements</h3>
+        <ul class="funder-req-list">
+          ${funder.requirements.map((r) => `<li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>${r}</li>`).join("")}
+        </ul>
+      </div>
+
+      <div class="funder-modal-section">
+        <h3>Personal Touch Score</h3>
+        <div class="personal-touch-bar">
+          <div class="touch-fill" style="width: ${funder.personalTouch * 10}%"></div>
+        </div>
+        <span class="touch-score">${funder.personalTouch}/10</span>
+      </div>
+
+      <div class="funder-modal-actions">
+        <button class="funder-modal-apply-btn" id="detailsApplyBtn">Apply Now</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  // Close modal
+  document.getElementById("closeFunderDetails").addEventListener("click", () => {
+    modal.remove();
+  });
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.remove();
+  });
+
+  // Apply button inside details modal
+  document.getElementById("detailsApplyBtn").addEventListener("click", () => {
+    modal.remove();
+    showApplyModal(funder);
+  });
+}
+
+// ===== Apply Now Modal =====
+function showApplyModal(funder) {
+  // Remove existing modal if any
+  const existing = document.getElementById("applyModal");
+  if (existing) existing.remove();
+
+  // Pre-fill from localStorage if available
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+  const formData = JSON.parse(localStorage.getItem("fundingFormData") || "{}");
+
+  const modal = document.createElement("div");
+  modal.id = "applyModal";
+  modal.className = "funder-modal-overlay";
+  modal.innerHTML = `
+    <div class="funder-modal-card apply-modal-card">
+      <button class="funder-modal-close" id="closeApplyModal">&times;</button>
+      <div class="funder-modal-header">
+        <h2>Apply to ${funder.name}</h2>
+      </div>
+      <p class="funder-modal-desc">Complete the form below to submit your application. We'll connect you with ${funder.name} to discuss your funding needs.</p>
+
+      <div class="apply-summary">
+        <div class="apply-summary-item">
+          <span>Amount up to</span>
+          <strong>${funder.loanAmount}</strong>
+        </div>
+        <div class="apply-summary-item">
+          <span>Rate from</span>
+          <strong>${funder.interestRate}</strong>
+        </div>
+        <div class="apply-summary-item">
+          <span>Term</span>
+          <strong>${funder.term}</strong>
+        </div>
+      </div>
+
+      <form id="applyForm" class="apply-form">
+        <div class="apply-form-row">
+          <div class="apply-form-group">
+            <label for="applyFullName">Full Name</label>
+            <input type="text" id="applyFullName" placeholder="John Smith" value="${(userData.firstName || '') + (userData.lastName ? ' ' + userData.lastName : '')}" required>
+          </div>
+          <div class="apply-form-group">
+            <label for="applyEmail">Email Address</label>
+            <input type="email" id="applyEmail" placeholder="john@company.com" value="${userData.email || ''}" required>
+          </div>
+        </div>
+        <div class="apply-form-row">
+          <div class="apply-form-group">
+            <label for="applyPhone">Phone Number</label>
+            <input type="tel" id="applyPhone" placeholder="07123 456789" value="${userData.phone || ''}" required>
+          </div>
+          <div class="apply-form-group">
+            <label for="applyCompany">Business Name</label>
+            <input type="text" id="applyCompany" placeholder="My Company Ltd" value="${userData.companyName || ''}" required>
+          </div>
+        </div>
+        <div class="apply-form-row">
+          <div class="apply-form-group">
+            <label for="applyAmount">Amount Required (£)</label>
+            <input type="text" id="applyAmount" placeholder="e.g. 50000" value="${formData.fundingAmount || ''}" required>
+          </div>
+          <div class="apply-form-group">
+            <label for="applyPurpose">Funding Purpose</label>
+            <select id="applyPurpose" required>
+              <option value="" disabled ${!formData.fundingPurpose ? 'selected' : ''}>Select purpose</option>
+              <option value="Working Capital" ${formData.fundingPurpose === 'Working Capital' ? 'selected' : ''}>Working Capital</option>
+              <option value="Equipment Purchase" ${formData.fundingPurpose === 'Equipment Purchase' ? 'selected' : ''}>Equipment Purchase</option>
+              <option value="Expansion" ${formData.fundingPurpose === 'Expansion' ? 'selected' : ''}>Expansion</option>
+              <option value="Property" ${formData.fundingPurpose === 'Property' ? 'selected' : ''}>Property</option>
+              <option value="Refinancing" ${formData.fundingPurpose === 'Refinancing' ? 'selected' : ''}>Refinancing</option>
+              <option value="Stock Purchase" ${formData.fundingPurpose === 'Stock Purchase' ? 'selected' : ''}>Stock Purchase</option>
+              <option value="Other" ${formData.fundingPurpose === 'Other' ? 'selected' : ''}>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="apply-form-group full-width">
+          <label for="applyMessage">Additional Information (optional)</label>
+          <textarea id="applyMessage" rows="3" placeholder="Tell us more about your funding needs..."></textarea>
+        </div>
+        <div class="apply-form-message" id="applyFormMessage"></div>
+        <div class="apply-form-actions">
+          <button type="button" class="apply-cancel-btn" id="cancelApplyBtn">Cancel</button>
+          <button type="submit" class="apply-submit-btn" id="submitApplyBtn">Submit Application</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  // Close modal
+  document.getElementById("closeApplyModal").addEventListener("click", () => modal.remove());
+  document.getElementById("cancelApplyBtn").addEventListener("click", () => modal.remove());
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.remove();
+  });
+
+  // Form submission
+  document.getElementById("applyForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const msgEl = document.getElementById("applyFormMessage");
+    const submitBtn = document.getElementById("submitApplyBtn");
+
+    const fullName = document.getElementById("applyFullName").value.trim();
+    const email = document.getElementById("applyEmail").value.trim();
+    const phone = document.getElementById("applyPhone").value.trim();
+    const company = document.getElementById("applyCompany").value.trim();
+    const amount = document.getElementById("applyAmount").value.trim();
+    const purpose = document.getElementById("applyPurpose").value;
+
+    if (!fullName || !email || !phone || !company || !amount || !purpose) {
+      msgEl.textContent = "Please fill in all required fields.";
+      msgEl.className = "apply-form-message error";
+      return;
+    }
+
+    // Show loading
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Submitting...";
+    msgEl.textContent = "";
+    msgEl.className = "apply-form-message";
+
+    // Simulate submission (replace with real API call)
+    setTimeout(() => {
+      // Store application locally
+      const applications = JSON.parse(localStorage.getItem("funderApplications") || "[]");
+      applications.push({
+        funderId: funder.id,
+        funderName: funder.name,
+        fullName,
+        email,
+        phone,
+        company,
+        amount,
+        purpose,
+        message: document.getElementById("applyMessage").value.trim(),
+        date: new Date().toISOString(),
+        status: "Pending Review",
+      });
+      localStorage.setItem("funderApplications", JSON.stringify(applications));
+
+      msgEl.textContent = "Application submitted successfully! " + funder.name + " will be in touch shortly.";
+      msgEl.className = "apply-form-message success";
+      submitBtn.textContent = "Submitted ✓";
+
+      setTimeout(() => modal.remove(), 2500);
+    }, 1500);
+  });
 }
 
 function initializePhoneVerificationModal() {
@@ -1903,39 +2206,386 @@ function initializeDocumentsPage() {
     return;
   }
 
+  // Document storage key
+  const DOCS_KEY = "uploadedDocuments";
+
+  // Load saved documents from localStorage
+  function getSavedDocs() {
+    try {
+      return JSON.parse(localStorage.getItem(DOCS_KEY) || "{}");
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveDocs(docs) {
+    localStorage.setItem(DOCS_KEY, JSON.stringify(docs));
+  }
+
+  // Format file size
+  function formatSize(bytes) {
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  }
+
+  // Get file icon by extension
+  function getFileIcon(name) {
+    const ext = name.split(".").pop().toLowerCase();
+    if (["pdf"].includes(ext))
+      return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>';
+    if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext))
+      return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3498db" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+    if (["xls", "xlsx", "csv"].includes(ext))
+      return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#27ae60" stroke-width="2"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>';
+    if (["doc", "docx"].includes(ext))
+      return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2980b9" stroke-width="2"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>';
+    return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>';
+  }
+
+  // Render uploaded files list for a section
+  function renderFileList(sectionId) {
+    const container = document.getElementById("files-" + sectionId);
+    if (!container) return;
+
+    const docs = getSavedDocs();
+    const files = docs[sectionId] || [];
+
+    if (files.length === 0) {
+      container.innerHTML = "";
+      container.style.display = "none";
+      updateSectionStatus(sectionId, false);
+      return;
+    }
+
+    container.style.display = "block";
+    container.innerHTML = `
+      <div class="uploaded-files-header">
+        <span class="uploaded-count">${files.length} file${files.length > 1 ? "s" : ""} uploaded</span>
+      </div>
+      ${files
+        .map(
+          (file, idx) => `
+        <div class="uploaded-file-row" data-section="${sectionId}" data-index="${idx}">
+          <div class="file-icon">${getFileIcon(file.name)}</div>
+          <div class="file-info">
+            <span class="file-name">${file.name}</span>
+            <span class="file-meta">${formatSize(file.size)} &bull; ${file.date}</span>
+          </div>
+          <button class="file-remove-btn" data-section="${sectionId}" data-index="${idx}" title="Remove file">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      `,
+        )
+        .join("")}
+    `;
+
+    // Attach remove handlers
+    container.querySelectorAll(".file-remove-btn").forEach((btn) => {
+      btn.addEventListener("click", function () {
+        const sec = this.getAttribute("data-section");
+        const idx = parseInt(this.getAttribute("data-index"));
+        const allDocs = getSavedDocs();
+        if (allDocs[sec]) {
+          allDocs[sec].splice(idx, 1);
+          if (allDocs[sec].length === 0) delete allDocs[sec];
+          saveDocs(allDocs);
+          renderFileList(sec);
+          updateProgress();
+        }
+      });
+    });
+
+    updateSectionStatus(sectionId, true);
+  }
+
+  // Update section header to show completion status
+  function updateSectionStatus(sectionId, hasFiles) {
+    const header = document.querySelector(`[data-section="${sectionId}"]`);
+    if (!header) return;
+    const numEl = header.querySelector(".section-number");
+    if (hasFiles) {
+      numEl.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>';
+      numEl.classList.add("completed");
+    } else {
+      // Restore original number
+      const allHeaders = document.querySelectorAll(".section-header");
+      allHeaders.forEach((h, i) => {
+        if (h.getAttribute("data-section") === sectionId) {
+          numEl.textContent = i + 1;
+          numEl.classList.remove("completed");
+        }
+      });
+    }
+  }
+
+  // Update overall progress bar
+  function updateProgress() {
+    const docs = getSavedDocs();
+    const sections = ["bank-statements", "financial-accounts", "applicant-info"];
+    const completed = sections.filter((s) => docs[s] && docs[s].length > 0).length;
+    const total = sections.length;
+    const pct = Math.round((completed / total) * 100);
+
+    const progressBar = document.getElementById("docsProgressBar");
+    const progressText = document.getElementById("docsProgressText");
+    if (progressBar) progressBar.style.width = pct + "%";
+    if (progressText) progressText.textContent = completed + " of " + total + " sections completed";
+
+    // Show/hide completion message
+    const completeMsg = document.getElementById("docsCompleteMsg");
+    if (completeMsg) {
+      completeMsg.style.display = completed === total ? "block" : "none";
+    }
+  }
+
+  // Handle file selection (from input or drop)
+  function handleFiles(fileList, sectionId) {
+    if (!fileList || fileList.length === 0) return;
+
+    const allowedTypes = [
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "text/csv",
+    ];
+    const maxSize = 10 * 1024 * 1024; // 10MB
+
+    const docs = getSavedDocs();
+    if (!docs[sectionId]) docs[sectionId] = [];
+
+    let errors = [];
+
+    for (let i = 0; i < fileList.length; i++) {
+      const file = fileList[i];
+      if (!allowedTypes.includes(file.type)) {
+        errors.push(file.name + ": unsupported file type");
+        continue;
+      }
+      if (file.size > maxSize) {
+        errors.push(file.name + ": file too large (max 10MB)");
+        continue;
+      }
+      // Check duplicate
+      if (docs[sectionId].some((d) => d.name === file.name && d.size === file.size)) {
+        errors.push(file.name + ": already uploaded");
+        continue;
+      }
+
+      docs[sectionId].push({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
+      });
+    }
+
+    saveDocs(docs);
+    renderFileList(sectionId);
+    updateProgress();
+
+    if (errors.length > 0) {
+      showDocAlert(errors.join("\\n"), "error");
+    } else {
+      showDocAlert(fileList.length + " file" + (fileList.length > 1 ? "s" : "") + " uploaded successfully!", "success");
+    }
+  }
+
+  // Show temporary alert
+  function showDocAlert(message, type) {
+    let alert = document.getElementById("docAlertMsg");
+    if (!alert) {
+      alert = document.createElement("div");
+      alert.id = "docAlertMsg";
+      document.body.appendChild(alert);
+    }
+    alert.textContent = message;
+    alert.className = "doc-alert " + type;
+    alert.style.display = "block";
+    setTimeout(() => {
+      alert.style.display = "none";
+    }, 3500);
+  }
+
   // Initialize section toggles
   const sectionHeaders = document.querySelectorAll(".section-header");
-
   sectionHeaders.forEach((header) => {
     header.addEventListener("click", function () {
       const sectionId = this.getAttribute("data-section");
-      const sectionContent = document.getElementById(`section-${sectionId}`);
+      const sectionContent = document.getElementById("section-" + sectionId);
       const toggleIcon = this.querySelector(".section-toggle");
-
       if (sectionContent) {
         sectionContent.classList.toggle("active");
-        toggleIcon.classList.toggle("rotated");
+        if (toggleIcon) toggleIcon.classList.toggle("rotated");
       }
     });
   });
 
-  // Initialize upload buttons
-  const uploadButtons = document.querySelectorAll(".upload-button");
-  uploadButtons.forEach((button) => {
-    button.addEventListener("click", function (e) {
+  // Initialize all upload file buttons and drop zones
+  const sections = ["bank-statements", "financial-accounts", "applicant-info"];
+
+  sections.forEach((sectionId) => {
+    const sectionEl = document.getElementById("section-" + sectionId);
+    if (!sectionEl) return;
+
+    // Create hidden file input for this section
+    let fileInput = sectionEl.querySelector(".doc-file-input");
+    if (!fileInput) {
+      fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.className = "doc-file-input";
+      fileInput.multiple = true;
+      fileInput.accept = ".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.xls,.xlsx,.csv";
+      fileInput.style.display = "none";
+      sectionEl.appendChild(fileInput);
+    }
+
+    // Upload files button
+    const uploadBtn = sectionEl.querySelector(".upload-files-btn");
+    if (uploadBtn) {
+      uploadBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        fileInput.click();
+      });
+    }
+
+    // File input change handler
+    fileInput.addEventListener("change", function () {
+      handleFiles(this.files, sectionId);
+      this.value = ""; // reset so same file can be re-uploaded
+    });
+
+    // Drop zone
+    const dropZone = sectionEl.querySelector(".doc-drop-zone");
+    if (dropZone) {
+      dropZone.addEventListener("dragover", function (e) {
+        e.preventDefault();
+        this.classList.add("dragover");
+      });
+      dropZone.addEventListener("dragleave", function () {
+        this.classList.remove("dragover");
+      });
+      dropZone.addEventListener("drop", function (e) {
+        e.preventDefault();
+        this.classList.remove("dragover");
+        handleFiles(e.dataTransfer.files, sectionId);
+      });
+      // Clicking on drop zone also triggers file input
+      dropZone.addEventListener("click", function () {
+        fileInput.click();
+      });
+    }
+
+    // Render existing files
+    renderFileList(sectionId);
+  });
+
+  // Connect open banking button
+  const connectBankingBtns = document.querySelectorAll(".connect-banking-btn");
+  connectBankingBtns.forEach((btn) => {
+    btn.addEventListener("click", function (e) {
       e.preventDefault();
+      e.stopPropagation();
 
-      if (this.classList.contains("upload-files-btn")) {
-        // Trigger file upload
-        console.log("Opening file upload...");
-        // In a real app, this would open a file chooser
-      } else if (this.classList.contains("connect-banking-btn")) {
-        // Connect to open banking
-        console.log("Connecting to open banking...");
-        // In a real app, this would connect to a banking API
-      }
+      // Create connection modal
+      let modal = document.getElementById("openBankingModal");
+      if (modal) modal.remove();
+
+      modal = document.createElement("div");
+      modal.id = "openBankingModal";
+      modal.className = "funder-modal-overlay";
+      modal.innerHTML = `
+        <div class="funder-modal-card" style="max-width:480px; text-align:center;">
+          <button class="funder-modal-close" id="closeOBModal">&times;</button>
+          <div style="margin-bottom:1.5rem;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#F96C34" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+          </div>
+          <h2 style="font-size:1.3rem; margin-bottom:0.5rem; color:#1a2b3d;">Connect Open Banking</h2>
+          <p style="font-size:0.92rem; color:#666; margin-bottom:1.8rem; line-height:1.6;">Securely connect your business bank account to automatically share your last 6 months of bank statements. We use read-only access and never store your banking credentials.</p>
+          <div class="ob-banks" style="display:flex; flex-wrap:wrap; gap:0.75rem; justify-content:center; margin-bottom:1.8rem;">
+            <button class="ob-bank-btn" data-bank="Barclays">Barclays</button>
+            <button class="ob-bank-btn" data-bank="HSBC">HSBC</button>
+            <button class="ob-bank-btn" data-bank="Lloyds">Lloyds</button>
+            <button class="ob-bank-btn" data-bank="NatWest">NatWest</button>
+            <button class="ob-bank-btn" data-bank="Santander">Santander</button>
+            <button class="ob-bank-btn" data-bank="Monzo">Monzo</button>
+            <button class="ob-bank-btn" data-bank="Starling">Starling</button>
+            <button class="ob-bank-btn" data-bank="Tide">Tide</button>
+          </div>
+          <div id="obStatus" style="min-height:1.5em; font-size:0.9rem; margin-bottom:1rem;"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      document.getElementById("closeOBModal").addEventListener("click", () => modal.remove());
+      modal.addEventListener("click", (ev) => { if (ev.target === modal) modal.remove(); });
+
+      // Bank selection handler
+      modal.querySelectorAll(".ob-bank-btn").forEach((bankBtn) => {
+        bankBtn.addEventListener("click", function () {
+          const bank = this.getAttribute("data-bank");
+          const statusEl = document.getElementById("obStatus");
+
+          // Disable all bank buttons
+          modal.querySelectorAll(".ob-bank-btn").forEach((b) => { b.disabled = true; });
+          this.classList.add("selected");
+          statusEl.textContent = "Connecting to " + bank + "...";
+          statusEl.style.color = "#F96C34";
+
+          // Simulate connection process
+          setTimeout(() => {
+            statusEl.textContent = "Authenticating with " + bank + "...";
+            setTimeout(() => {
+              statusEl.textContent = "Retrieving bank statements...";
+              setTimeout(() => {
+                // Save simulated bank statements
+                const docs = getSavedDocs();
+                if (!docs["bank-statements"]) docs["bank-statements"] = [];
+
+                // Add simulated statements
+                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+                const year = new Date().getFullYear();
+                months.forEach((m) => {
+                  const fname = bank + "_Statement_" + m + "_" + year + ".pdf";
+                  if (!docs["bank-statements"].some((d) => d.name === fname)) {
+                    docs["bank-statements"].push({
+                      name: fname,
+                      size: Math.floor(Math.random() * 500000) + 100000,
+                      type: "application/pdf",
+                      date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
+                      source: "Open Banking - " + bank,
+                    });
+                  }
+                });
+
+                saveDocs(docs);
+                renderFileList("bank-statements");
+                updateProgress();
+
+                statusEl.innerHTML = '<span style="color:#10b981; font-weight:600;">&#10003; Connected successfully! 6 statements imported from ' + bank + '.</span>';
+
+                setTimeout(() => modal.remove(), 2500);
+              }, 1200);
+            }, 1000);
+          }, 1000);
+        });
+      });
     });
   });
+
+  // Initialize progress
+  updateProgress();
 }
 
 // ===== Admin Page Functions =====
@@ -2213,15 +2863,29 @@ function loadUserApplication() {
             </div>
           </div>
           <div class="application-actions">
-            <button class="btn-view-results" onclick="window.location.href='search-results.html'">
+            <button class="btn-view-results" id="btnViewResults">
               View Matched Funders →
             </button>
-            <button class="btn-edit-application" onclick="window.location.href='funding-form.html'">
+            <button class="btn-edit-application" id="btnEditApplication">
               Edit Application
             </button>
           </div>
         </div>
       `;
+
+      // Attach event listeners after injecting HTML
+      const viewResultsBtn = document.getElementById("btnViewResults");
+      if (viewResultsBtn) {
+        viewResultsBtn.addEventListener("click", function () {
+          window.location.href = "search-results.html";
+        });
+      }
+      const editAppBtn = document.getElementById("btnEditApplication");
+      if (editAppBtn) {
+        editAppBtn.addEventListener("click", function () {
+          window.location.href = "funding-form.html";
+        });
+      }
     } catch (e) {
       console.error("Error parsing form data:", e);
     }
@@ -2236,11 +2900,18 @@ function loadUserApplication() {
         </div>
         <h3>No Applications Yet</h3>
         <p>Start your funding journey by submitting an application.</p>
-        <button class="btn-start-application" onclick="window.location.href='funding-form.html'">
+        <button class="btn-start-application" id="btnStartApplication">
           Start Application →
         </button>
       </div>
     `;
+
+    const startAppBtn = document.getElementById("btnStartApplication");
+    if (startAppBtn) {
+      startAppBtn.addEventListener("click", function () {
+        window.location.href = "funding-form.html";
+      });
+    }
   }
 }
 

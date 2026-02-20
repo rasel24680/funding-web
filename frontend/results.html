@@ -401,11 +401,13 @@
       .matched-funds-section {
         display: none;
         margin-bottom: 2rem;
+        margin-top: 1rem;
       }
       .matched-funds-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        margin-top: 2rem;
         margin-bottom: 1.5rem;
         flex-wrap: wrap;
         gap: 1rem;
@@ -441,8 +443,9 @@
       }
       .matched-funds-container {
         display: grid;
-        gap: 1.2rem;
+        gap: 1.5rem;
         transition: filter 0.4s ease;
+        margin-top: 0.5rem;
       }
       .matched-funds-container.blurred {
         filter: blur(6px);
@@ -453,7 +456,7 @@
         background: #fff;
         border: 2px solid var(--gray-medium);
         border-radius: 12px;
-        padding: 1.5rem;
+        padding: 1.8rem;
         transition: all 0.3s ease;
         animation: slideInUp 0.5s ease-out both;
       }
@@ -484,8 +487,9 @@
       .matched-fund-card .card-details {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 1rem;
-        margin-bottom: 1rem;
+        gap: 1.2rem;
+        margin-bottom: 1.2rem;
+        margin-top: 0.5rem;
       }
       .matched-fund-card .detail-item {
         display: flex;
@@ -545,11 +549,12 @@
       }
       .blur-notice {
         text-align: center;
-        padding: 1rem;
+        padding: 1.2rem 1.5rem;
         background: linear-gradient(135deg, #fff8f7, #fff);
         border: 2px dashed var(--accent-red);
         border-radius: 12px;
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
+        margin-top: 0.5rem;
         animation: pulse 2s ease-in-out infinite;
       }
       .blur-notice p {
@@ -558,7 +563,7 @@
         margin: 0 0 0.5rem;
       }
       .blur-notice button {
-        background: linear-gradient(135deg, #ffb6c1 0%, #ff69b4 100%);
+        background: linear-gradient(135deg, var(--accent-red) 0%, #ff8c42 100%);
         color: #fff;
         border: none;
         padding: 0.5rem 1.5rem;
@@ -567,13 +572,15 @@
         cursor: pointer;
         font-size: 0.9rem;
         transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(255, 107, 90, 0.3);
       }
       .blur-notice button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(255, 105, 180, 0.4);
+        box-shadow: 0 6px 20px rgba(255, 107, 90, 0.45);
       }
       /* No match view */
       .no-match-view {
+        margin-top: 2rem;
       }
 
       .results-section {
@@ -581,11 +588,13 @@
         position: relative;
         overflow: hidden;
         margin-top: 80px;
+        padding: 2.5rem 1.5rem 3rem;
       }
 
       .results-container {
         max-width: 1200px;
         margin: 0 auto;
+        padding: 0 1rem;
         position: relative;
         z-index: 2;
       }
@@ -597,9 +606,9 @@
           var(--primary-light) 100%
         );
         color: white;
-        padding: 2rem;
+        padding: 2.5rem 2.5rem;
         border-radius: 12px;
-        margin-bottom: 2rem;
+        margin-bottom: 2.5rem;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
         animation: slideInDown 0.7s ease-out;
         position: relative;
@@ -917,6 +926,7 @@
         transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         animation: slideInUp 0.7s ease-out;
         border: 2px solid transparent;
+        margin-top: 2rem;
       }
 
       .contact-form-section:hover {
@@ -1059,8 +1069,8 @@
 
       .form-summary {
         background: var(--gray-light);
-        padding: 1.5rem;
-        border-radius: 8px;
+        padding: 2rem;
+        border-radius: 12px;
         margin-bottom: 2rem;
         transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         border: 2px solid transparent;
@@ -1519,33 +1529,7 @@
 
         <!-- ===== Matched Funds View (shown when funds match) ===== -->
         <div class="matched-funds-section" id="matchedFundsSection">
-          <div class="matched-funds-header">
-            <h2>
-              We found <span id="matchedFundCount">0</span> matching funders for
-              you!
-            </h2>
-            <div class="results-sort">
-              <label for="resultsSortSelect">Sort:</label>
-              <select id="resultsSortSelect">
-                <option value="personal-touch" selected>Personal Touch</option>
-                <option value="fastest-decision">Fastest Decision</option>
-                <option value="lowest-rates">Lowest Rates</option>
-                <option value="accepts-impaired-credit">
-                  Accepts Impaired Credit
-                </option>
-              </select>
-            </div>
-          </div>
-          <!-- Blur notice - dynamic message for guests vs logged-in -->
-          <div class="blur-notice" id="blurNotice" style="display: none">
-            <p id="blurNoticeText">🔒 Login or sign up to view fund details</p>
-            <button id="blurVerifyBtn">Login / Sign Up</button>
-          </div>
-          <div class="matched-funds-container" id="matchedFundsContainer">
-            <!-- Cards generated by JS -->
-          </div>
-
-          <!-- Great News Banner -->
+          <!-- Great News Banner (TOP) -->
           <div class="great-news-banner">
             <div class="banner-content">
               <div class="banner-text">
@@ -1605,6 +1589,40 @@
               </div>
             </div>
           </div>
+
+          <div class="matched-funds-header">
+            <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+              <h2>
+                We found <span id="matchedFundCount">0</span> matching funders for
+                you!
+              </h2>
+              <button class="edit-search-btn" onclick="window.location.href='funding-form.html'" style="background: none; border: 2px solid var(--primary-dark, #1a2b3d); color: var(--primary-dark, #1a2b3d); padding: 0.5rem 1.2rem; border-radius: 25px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; transition: all 0.3s ease;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L21 3z"></path>
+                </svg>
+                Edit search
+              </button>
+            </div>
+            <div class="results-sort">
+              <label for="resultsSortSelect">Sort:</label>
+              <select id="resultsSortSelect">
+                <option value="personal-touch" selected>Personal Touch</option>
+                <option value="fastest-decision">Fastest Decision</option>
+                <option value="lowest-rates">Lowest Rates</option>
+                <option value="accepts-impaired-credit">
+                  Accepts Impaired Credit
+                </option>
+              </select>
+            </div>
+          </div>
+          <!-- Blur notice - dynamic message for guests vs logged-in -->
+          <div class="blur-notice" id="blurNotice" style="display: none">
+            <p id="blurNoticeText">🔒 Login or sign up to view fund details</p>
+            <button id="blurVerifyBtn">Login / Sign Up</button>
+          </div>
+          <div class="matched-funds-container" id="matchedFundsContainer">
+            <!-- Cards generated by JS -->
+          </div>
         </div>
 
         <!-- ===== No Match View (shown when no funds match) ===== -->
@@ -1613,15 +1631,15 @@
           <div class="results-content" style="margin-bottom: 2rem">
             <!-- Results Message -->
             <div class="results-message">
-              <h2>We Found Matching Funding Options</h2>
+              <h2>We Don't Found Matching Funding Options</h2>
               <p>
-                We've reviewed your application and identified several funding
-                products that match your requirements. Our team is now analysing
-                the best options for your business.
+                Unfortunately, we couldn't find any funding products that match
+                your current requirements. This doesn't mean funding isn't
+                available to you.
               </p>
               <p>
-                You should receive personalised funding recommendations via
-                email within 2 business hours.
+                Our team of funding specialists can help explore alternative
+                options. Please contact us to discuss your requirements.
               </p>
               <button
                 class="adjust-button"
@@ -1679,7 +1697,7 @@
         <!-- /noMatchView -->
 
         <!-- Form Summary -->
-        <div class="form-summary" style="margin-top: 3rem">
+        <div class="form-summary" style="margin-top: 3rem; margin-bottom: 2rem">
           <h3>Your Application Details</h3>
           <div class="summary-row">
             <div class="summary-item">
@@ -1771,6 +1789,200 @@
         `;
       document.head.appendChild(fadeOutStyle);
 
+      // ===== Fetch and Display Matching Funders =====
+      async function fetchMatchingFunders(formData) {
+        try {
+          const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+          const isPhoneVerified =
+            localStorage.getItem("isPhoneVerified") === "true";
+
+          const payload = {
+            fundingAmount: parseFloat(formData.fundingAmount) || 0,
+            fundingPurpose: formData.fundingPurpose || null,
+            homeowner: formData.homeowner || null,
+            tradingYears: formData.tradingYears || null,
+            acceptsImpairedCredit: false,
+          };
+
+          const response = await fetch(`${API_BASE}/funding/get-matches`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch matches");
+          }
+
+          const data = await response.json();
+          const funders = data.funders || [];
+
+          const matchedFundsSection = document.getElementById(
+            "matchedFundsSection"
+          );
+          const noMatchView = document.getElementById("noMatchView");
+          const matchedFundsContainer = document.getElementById(
+            "matchedFundsContainer"
+          );
+          const blurNotice = document.getElementById("blurNotice");
+          const resultsSortSelect = document.getElementById(
+            "resultsSortSelect"
+          );
+
+          if (funders.length === 0) {
+            // Show no match view
+            if (matchedFundsSection) matchedFundsSection.style.display = "none";
+            if (noMatchView) noMatchView.style.display = "block";
+          } else {
+            // Show matched funds view
+            if (matchedFundsSection) matchedFundsSection.style.display = "block";
+            if (noMatchView) noMatchView.style.display = "none";
+
+            // Update counters
+            document.getElementById("matchedFundCount").textContent =
+              funders.length;
+            document.getElementById("bannerMatchedCount").textContent =
+              funders.length;
+
+            // Render matched fund cards
+            renderMatchedFunds(funders);
+
+            // Show blur notice if not logged in or not verified
+            if (!isLoggedIn || !isPhoneVerified) {
+              if (blurNotice) blurNotice.style.display = "flex";
+              if (matchedFundsContainer) {
+                matchedFundsContainer.classList.add("blurred");
+              }
+
+              // Update blur notice text
+              const blurNoticeText = document.getElementById("blurNoticeText");
+              if (blurNoticeText) {
+                if (!isLoggedIn) {
+                  blurNoticeText.textContent =
+                    "🔒 Login to view fund details";
+                } else {
+                  blurNoticeText.textContent =
+                    "🔒 Verify your phone number to view fund details";
+                }
+              }
+
+              // Handle blur notice button click
+              const blurVerifyBtn = document.getElementById("blurVerifyBtn");
+              if (blurVerifyBtn) {
+                blurVerifyBtn.onclick = function () {
+                  if (!isLoggedIn) {
+                    document.getElementById("loginModal").style.display =
+                      "flex";
+                  } else {
+                    document.getElementById("phoneVerifyModal").style.display =
+                      "flex";
+                  }
+                };
+              }
+            } else {
+              // User is logged in and verified, don't blur
+              if (blurNotice) blurNotice.style.display = "none";
+              if (matchedFundsContainer) {
+                matchedFundsContainer.classList.remove("blurred");
+              }
+            }
+
+            // Add sort functionality
+            if (resultsSortSelect) {
+              resultsSortSelect.addEventListener("change", function () {
+                renderMatchedFunds(funders, this.value);
+              });
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching matches:", error);
+          const noMatchView = document.getElementById("noMatchView");
+          if (noMatchView) noMatchView.style.display = "block";
+        }
+      }
+
+      // Render matched fund cards
+      function renderMatchedFunds(funders, sortBy = "personal-touch") {
+        const container = document.getElementById("matchedFundsContainer");
+        if (!container) return;
+
+        // Sort funders based on criteria
+        let sorted = [...funders];
+        switch (sortBy) {
+          case "fastest-decision":
+            sorted.sort((a, b) => {
+              const speedMap = {
+                "24-48 hours": 1,
+                "3-5 business days": 2,
+                "1-2 weeks": 3,
+                "5-7 business days": 4,
+              };
+              return (
+                (speedMap[a.approvalSpeed] || 999) -
+                (speedMap[b.approvalSpeed] || 999)
+              );
+            });
+            break;
+          case "lowest-rates":
+            sorted.sort(
+              (a, b) => (a.baseRate || 999) - (b.baseRate || 999)
+            );
+            break;
+          case "accepts-impaired-credit":
+            sorted.sort((a, b) =>
+              b.acceptsImpairedCredit ? 1 : -1
+            );
+            break;
+          default:
+            // personal-touch
+        }
+
+        container.innerHTML = sorted
+          .map((f, i) => {
+            const minAmountStr =
+              typeof f.minAmount === "number"
+                ? "£" + f.minAmount.toLocaleString()
+                : "";
+            const maxAmountStr =
+              typeof f.maxAmount === "number"
+                ? "£" + f.maxAmount.toLocaleString()
+                : "";
+            return (
+              '<div class="matched-fund-card" style="animation-delay:' +
+              i * 0.1 +
+              's">' +
+              '<div class="card-header">' +
+              '<h3 class="funder-name">' +
+              f.name +
+              "</h3>" +
+              '<span class="funder-badge">Matched</span>' +
+              "</div>" +
+              '<div class="card-details">' +
+              '<div class="detail-item"><span class="detail-label">Amount Range</span><span class="detail-value highlight">' +
+              (maxAmountStr || "Custom") +
+              "</span></div>" +
+              '<div class="detail-item"><span class="detail-label">Base Rate</span><span class="detail-value">' +
+              (f.baseRate ? f.baseRate + "%" : "Variable") +
+              "</span></div>" +
+              '<div class="detail-item"><span class="detail-label">Approval Speed</span><span class="detail-value">' +
+              (f.approvalSpeed || "N/A") +
+              "</span></div>" +
+              '<div class="detail-item"><span class="detail-label">Key Feature</span><span class="detail-value">' +
+              (f.keyFeature || "Competitive") +
+              "</span></div>" +
+              "</div>" +
+              '<div class="card-footer">' +
+              '<button class="more-details-btn">More details <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>' +
+              '<button class="apply-btn" onclick="alert(\'Contact ' +
+              f.name +
+              '\')">Apply</button>' +
+              "</div>" +
+              "</div>"
+            );
+          })
+          .join("");
+      }
+
       // Load and display form data from localStorage
       document.addEventListener("DOMContentLoaded", function () {
         // Hide login button and show dropdown if already logged in
@@ -1804,6 +2016,9 @@
         const formData = JSON.parse(
           localStorage.getItem("fundingFormData") || "{}",
         );
+
+        // Fetch and display matching funders from API
+        fetchMatchingFunders(formData);
 
         // Populate summary with animations
         if (formData.fundingAmount) {
@@ -1849,241 +2064,8 @@
             formData.homeowner;
         }
 
-        // ===== Fund Matching System =====
-        // Mock funders data for demo (always show mock results for guest users)
-        var mockFunders = [
-          {
-            id: 1,
-            name: "Fast Capital",
-            loanAmount: 50000,
-            maxAmount: 100000,
-            interestRate: 4.5,
-            term: "36 months",
-            apprTime: "2-3 days",
-            personalTouch: 7,
-            acceptsImpairedCredit: false,
-          },
-          {
-            id: 2,
-            name: "Prime Lenders",
-            loanAmount: 100000,
-            maxAmount: 200000,
-            interestRate: 5.2,
-            term: "48 months",
-            apprTime: "5-7 days",
-            personalTouch: 9,
-            acceptsImpairedCredit: false,
-          },
-          {
-            id: 3,
-            name: "Growth Finance",
-            loanAmount: 75000,
-            maxAmount: 150000,
-            interestRate: 4.8,
-            term: "42 months",
-            apprTime: "3-4 days",
-            personalTouch: 8,
-            acceptsImpairedCredit: true,
-          },
-          {
-            id: 4,
-            name: "Business Capital",
-            loanAmount: 60000,
-            maxAmount: 120000,
-            interestRate: 5.5,
-            term: "36 months",
-            apprTime: "4-5 days",
-            personalTouch: 6,
-            acceptsImpairedCredit: true,
-          },
-          {
-            id: 5,
-            name: "Enterprise Loans",
-            loanAmount: 150000,
-            maxAmount: 300000,
-            interestRate: 4.2,
-            term: "60 months",
-            apprTime: "7-10 days",
-            personalTouch: 10,
-            acceptsImpairedCredit: false,
-          },
-        ];
-
-        // For guests, always use mock data. For logged-in users, would use real API data
-        var availableFunds = mockFunders;
-
-        // Match funds against user's form data
-        function getMatchedFunds(formData, funds) {
-          // Always return all mock funders for demo purposes
-          return funds;
-        }
-
-        // Render matched fund cards
-        function renderMatchedFunds(funds, sortBy) {
-          var container = document.getElementById("matchedFundsContainer");
-          if (!container) return;
-
-          // Sort
-          var sorted = funds.slice();
-          switch (sortBy) {
-            case "personal-touch":
-              sorted.sort(function (a, b) {
-                return (b.personalTouch || 0) - (a.personalTouch || 0);
-              });
-              break;
-            case "fastest-decision":
-              sorted.sort(function (a, b) {
-                var aD = parseInt(
-                  (a.apprTime || "999").match(/\d+/)?.[0] || "999",
-                );
-                var bD = parseInt(
-                  (b.apprTime || "999").match(/\d+/)?.[0] || "999",
-                );
-                return aD - bD;
-              });
-              break;
-            case "lowest-rates":
-              sorted.sort(function (a, b) {
-                return a.interestRate - b.interestRate;
-              });
-              break;
-            case "accepts-impaired-credit":
-              sorted.sort(function (a, b) {
-                return (
-                  (b.acceptsImpairedCredit ? 1 : 0) -
-                  (a.acceptsImpairedCredit ? 1 : 0)
-                );
-              });
-              break;
-          }
-
-          container.innerHTML = sorted
-            .map(function (f, i) {
-              var displayAmount =
-                typeof f.maxAmount === "number"
-                  ? "£" + f.maxAmount.toLocaleString()
-                  : "£" + (f.loanAmount || 0).toLocaleString();
-              return (
-                '<div class="matched-fund-card" style="animation-delay:' +
-                i * 0.1 +
-                's">' +
-                '<div class="card-header">' +
-                '<h3 class="funder-name">' +
-                f.name +
-                "</h3>" +
-                '<span class="funder-badge">Verified</span>' +
-                "</div>" +
-                '<div class="card-details">' +
-                '<div class="detail-item"><span class="detail-label">Amount</span><span class="detail-value highlight">' +
-                displayAmount +
-                "</span></div>" +
-                '<div class="detail-item"><span class="detail-label">Interest Rate</span><span class="detail-value">' +
-                f.interestRate +
-                "%</span></div>" +
-                '<div class="detail-item"><span class="detail-label">Loan Term</span><span class="detail-value">' +
-                f.term +
-                "</span></div>" +
-                '<div class="detail-item"><span class="detail-label">Approval Time</span><span class="detail-value">' +
-                f.apprTime +
-                "</span></div>" +
-                "</div>" +
-                '<div class="card-footer">' +
-                '<button class="more-details-btn">More details <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>' +
-                '<button class="apply-btn">Apply Now</button>' +
-                "</div>" +
-                "</div>"
-              );
-            })
-            .join("");
-        }
-
-        // Run matching
-        var matchedFunds = getMatchedFunds(formData, availableFunds);
-        var matchedFundsSection = document.getElementById(
-          "matchedFundsSection",
-        );
-        var noMatchView = document.getElementById("noMatchView");
-        var matchedFundsContainer = document.getElementById(
-          "matchedFundsContainer",
-        );
-        var blurNotice = document.getElementById("blurNotice");
-        var resultsSortSelect = document.getElementById("resultsSortSelect");
-
-        if (matchedFunds.length > 0) {
-          // Show matched funds view, hide no-match view
-          if (matchedFundsSection) matchedFundsSection.style.display = "block";
-          if (noMatchView) noMatchView.style.display = "none";
-          document.getElementById("matchedFundCount").textContent =
-            matchedFunds.length;
-          const bannerMatchedEl = document.getElementById("bannerMatchedCount");
-          if (bannerMatchedEl)
-            bannerMatchedEl.textContent = matchedFunds.length;
-
-          // Determine blur state: Guest users always see blur, logged-in users see blur until phone verified
-          var shouldBlur = !isLoggedIn || !isPhoneVerified;
-
-          if (shouldBlur && matchedFundsContainer) {
-            matchedFundsContainer.classList.add("blurred");
-            if (blurNotice) {
-              blurNotice.style.display = "block";
-              // Update blur notice text based on login state
-              var blurNoticeText = document.getElementById("blurNoticeText");
-              var blurVerifyBtnEl = document.getElementById("blurVerifyBtn");
-              if (!isLoggedIn) {
-                if (blurNoticeText)
-                  blurNoticeText.textContent =
-                    "🔒 Login or sign up to view fund details";
-                if (blurVerifyBtnEl)
-                  blurVerifyBtnEl.textContent = "Login / Sign Up";
-              } else {
-                if (blurNoticeText)
-                  blurNoticeText.textContent =
-                    "🔒 Verify your mobile number to view fund details";
-                if (blurVerifyBtnEl) blurVerifyBtnEl.textContent = "Verify Now";
-              }
-            }
-          }
-
-          // Render cards
-          renderMatchedFunds(
-            matchedFunds,
-            resultsSortSelect ? resultsSortSelect.value : "personal-touch",
-          );
-
-          // Sort handler
-          if (resultsSortSelect) {
-            resultsSortSelect.addEventListener("change", function () {
-              renderMatchedFunds(matchedFunds, this.value);
-              // Re-apply blur if needed
-              var stillBlurred =
-                !localStorage.getItem("isLoggedIn") ||
-                localStorage.getItem("isPhoneVerified") !== "true";
-              if (stillBlurred && matchedFundsContainer) {
-                matchedFundsContainer.classList.add("blurred");
-              }
-            });
-          }
-
-          // Blur notice verify button - show login modal for guests, phone modal for logged-in
-          var blurVerifyBtn = document.getElementById("blurVerifyBtn");
-          if (blurVerifyBtn) {
-            blurVerifyBtn.addEventListener("click", function () {
-              if (!isLoggedIn) {
-                // Show login modal for guests
-                var loginModalEl = document.getElementById("loginModal");
-                if (loginModalEl) loginModalEl.style.display = "flex";
-              } else {
-                // Show phone verification modal for logged-in users
-                var phoneModal = document.getElementById("phoneVerifyModal");
-                if (phoneModal) phoneModal.style.display = "flex";
-              }
-            });
-          }
-        } else {
-          // No matches — show current results page
-          if (matchedFundsSection) matchedFundsSection.style.display = "none";
-          if (noMatchView) noMatchView.style.display = "block";
-        }
+        // Fund matching is handled by the API-based fetchMatchingFunders() function above.
+        // No duplicate mock matching needed here.
 
         // --- Login Modal Logic ---
         const loginModal = document.getElementById("loginModal");
@@ -2183,8 +2165,8 @@
               submitBtn.textContent = "✓ Done";
 
               setTimeout(function () {
-                // Redirect to dashboard after login from results page
-                window.location.href = "dashboard.html";
+                // Reload results page to show unblurred funds
+                window.location.reload();
               }, 800);
             } catch (error) {
               console.error("Login error:", error);

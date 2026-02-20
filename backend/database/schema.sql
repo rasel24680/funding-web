@@ -7,13 +7,6 @@
 CREATE DATABASE IF NOT EXISTS pellopay;
 USE pellopay;
 
--- Drop existing tables (for fresh setup)
-DROP TABLE IF EXISTS session_logs;
-DROP TABLE IF EXISTS password_reset_tokens;
-DROP TABLE IF EXISTS phone_verifications;
-DROP TABLE IF EXISTS funding_applications;
-DROP TABLE IF EXISTS contact_inquiries;
-DROP TABLE IF EXISTS users;
 
 -- =============================================
 -- Users Table (JWT Authentication)
@@ -155,3 +148,40 @@ CREATE TABLE IF NOT EXISTS session_logs (
     INDEX idx_action (action),
     INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================
+-- Funders/Products Table
+-- =============================================
+CREATE TABLE IF NOT EXISTS funders (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    logo_url VARCHAR(255),
+    base_rate DECIMAL(5, 2),
+    min_amount DECIMAL(15, 2),
+    max_amount DECIMAL(15, 2),
+    approval_speed VARCHAR(100),
+    key_feature VARCHAR(255),
+    description TEXT,
+    accepts_impaired_credit BOOLEAN DEFAULT FALSE,
+    requires_homeowner BOOLEAN DEFAULT FALSE,
+    min_trading_years INT DEFAULT 0,
+    funding_purposes JSON,
+    asset_types JSON,
+    contact_email VARCHAR(255),
+    website VARCHAR(255),
+    is_active BOOLEAN DEFAULT TRUE,
+    last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    INDEX idx_is_active (is_active),
+    INDEX idx_min_amount (min_amount),
+    INDEX idx_max_amount (max_amount)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Insert sample funders
+INSERT IGNORE INTO funders (name, base_rate, min_amount, max_amount, approval_speed, key_feature, description, accepts_impaired_credit, requires_homeowner, min_trading_years, funding_purposes, asset_types, contact_email, website, is_active) VALUES
+('Bank of England', 3.75, 5000, 5000000, '5-7 business days', 'Best Rates', 'Leading UK bank offering competitive rates', FALSE, FALSE, 3, '["Growth", "Cashflow", "Refinancing"]', '[]', 'business@boe.co.uk', 'https://www.boe.co.uk', TRUE),
+('Rapid Finance UK', 5.50, 2000, 1000000, '24-48 hours', 'Fastest Approval', 'Quick approval for businesses', TRUE, TRUE, 0, '["Growth", "Cashflow"]', '[]', 'info@rapidfinanceuk.co.uk', 'https://www.rapidfinanceuk.co.uk', TRUE),
+('Asset Finance Plus', 4.25, 10000, 500000, '3-5 business days', 'Asset Finance Specialist', 'Specialized in asset financing', FALSE, FALSE, 1, '["Asset Finance"]', '["Vehicles", "Equipment", "Machinery"]', 'sales@assetfinanceplus.co.uk', 'https://www.assetfinanceplus.co.uk', TRUE),
+('Growth Capital Partners', 5.99, 25000, 2000000, '1-2 weeks', 'Personal Support', 'Dedicated relationship managers', FALSE, TRUE, 3, '["Growth"]', '[]', 'hello@growthcapital.co.uk', 'https://www.growthcapital.co.uk', TRUE),
+('SME Funding Direct', 6.50, 5000, 750000, '3-4 business days', 'Low Credit Options', 'Flexible lending for impaired credit', TRUE, FALSE, 0, '["Growth", "Cashflow"]', '[]', 'support@smefundingdirect.co.uk', 'https://www.smefundingdirect.co.uk', TRUE);
