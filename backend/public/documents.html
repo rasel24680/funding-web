@@ -86,6 +86,17 @@
                 <h1>Your Documentation</h1>
                 <p class="documents-intro">Speed up your applications and improve your chances of receiving strong offers from our lending partners by uploading the following documentation.</p>
 
+                <!-- Progress Bar -->
+                <div class="docs-progress-card">
+                    <div class="docs-progress-info">
+                        <span id="docsProgressText">0 of 3 sections completed</span>
+                    </div>
+                    <div class="docs-progress-track">
+                        <div class="docs-progress-fill" id="docsProgressBar" style="width: 0%"></div>
+                    </div>
+                    <p class="docs-complete-msg" id="docsCompleteMsg" style="display:none;">All documents uploaded! Your applications are now strengthened.</p>
+                </div>
+
                 <!-- Documentation Sections -->
                 <div class="documentation-sections">
                     <!-- Section 1: Bank Statements -->
@@ -99,6 +110,15 @@
                         </button>
                         <div class="section-content active" id="section-bank-statements">
                             <p class="section-description">Please supply your last 6 months' business bank statements</p>
+                            <div class="doc-drop-zone" id="dropzone-bank-statements">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                <p>Drag and drop files here</p>
+                                <span>or click to browse</span>
+                            </div>
                             <div class="upload-options">
                                 <button class="upload-button upload-files-btn">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -117,6 +137,8 @@
                                     Connect open banking
                                 </button>
                             </div>
+                            <p class="upload-hint">Accepted: PDF, JPG, PNG, DOC, XLS, CSV &bull; Max 10MB per file</p>
+                            <div class="uploaded-files-list" id="files-bank-statements"></div>
                         </div>
                     </div>
 
@@ -131,6 +153,15 @@
                         </button>
                         <div class="section-content" id="section-financial-accounts">
                             <p class="section-description">Please provide your financial account information</p>
+                            <div class="doc-drop-zone" id="dropzone-financial-accounts">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                <p>Drag and drop files here</p>
+                                <span>or click to browse</span>
+                            </div>
                             <div class="upload-options">
                                 <button class="upload-button upload-files-btn">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -141,6 +172,8 @@
                                     Upload files
                                 </button>
                             </div>
+                            <p class="upload-hint">Accepted: PDF, JPG, PNG, DOC, XLS, CSV &bull; Max 10MB per file</p>
+                            <div class="uploaded-files-list" id="files-financial-accounts"></div>
                         </div>
                     </div>
 
@@ -155,6 +188,15 @@
                         </button>
                         <div class="section-content" id="section-applicant-info">
                             <p class="section-description">Please provide your applicant information documents</p>
+                            <div class="doc-drop-zone" id="dropzone-applicant-info">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                <p>Drag and drop files here</p>
+                                <span>or click to browse</span>
+                            </div>
                             <div class="upload-options">
                                 <button class="upload-button upload-files-btn">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -165,6 +207,8 @@
                                     Upload files
                                 </button>
                             </div>
+                            <p class="upload-hint">Accepted: PDF, JPG, PNG, DOC, XLS, CSV &bull; Max 10MB per file</p>
+                            <div class="uploaded-files-list" id="files-applicant-info"></div>
                         </div>
                     </div>
                 </div>

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Sign Up - Pellopay</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo-link">
+                <img src="assets/logo.png" alt="Pellopay" class="logo-img">
+            </a>
+            <div class="nav-actions">
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login & Sign Up Container -->
+    <section class="auth-section-new">
+        <!-- Left Side - Banner -->
+        <div class="auth-left">
+            <div class="auth-left-overlay"></div>
+            <img src="assets/banner.png" alt="Pellopay" class="auth-banner-image">
+            <div class="auth-left-content">
+                <h1>Welcome to <span>Pellopay</span></h1>
+                <p>Find the right funding for your business. Compare lenders, rates and get matched instantly.</p>
+                <div class="auth-left-features">
+                    <div class="auth-feature">
+                        <div class="auth-feature-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        </div>
+                        <span>100+ Verified Lenders</span>
+                    </div>
+                    <div class="auth-feature">
+                        <div class="auth-feature-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </div>
+                        <span>Matched in Minutes</span>
+                    </div>
+                    <div class="auth-feature">
+                        <div class="auth-feature-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                        </div>
+                        <span>Secure & Confidential</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side - Form Section -->
+        <div class="auth-right">
+            <div class="form-container">
+                <!-- Tab Switcher -->
+                <div class="auth-tab-switcher">
+                    <button type="button" class="auth-tab active" data-toggle="login">Sign In</button>
+                    <button type="button" class="auth-tab" data-toggle="signup">Sign Up</button>
+                    <div class="auth-tab-indicator"></div>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm" class="auth-form-new active">
+                    <p class="form-subtitle">Welcome back! Please enter your details.</p>
+
+                    <div class="form-group-new">
+                        <label for="loginEmail" class="form-label-new">Email Address</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            <input 
+                                type="email" 
+                                id="loginEmail" 
+                                name="email" 
+                                placeholder="your@email.com"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-group-new">
+                        <div class="label-row">
+                            <label for="loginPassword" class="form-label-new">Password</label>
+                            <a href="#" class="forgot-password-link">Forgot Password?</a>
+                        </div>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                            <input 
+                                type="password" 
+                                id="loginPassword" 
+                                name="password" 
+                                placeholder="••••••••"
+                                required
+                            >
+                            <button type="button" class="toggle-password-btn" tabindex="-1">
+                                <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                <svg class="eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="auth-continue-button">
+                        <span>Sign In</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </form>
+
+                <!-- Sign Up Form -->
+                <form id="signupForm" class="auth-form-new">
+                    <p class="form-subtitle">Create your account and start finding funding.</p>
+
+                    <div class="form-row-new">
+                        <div class="form-group-new">
+                            <label for="firstName" class="form-label-new">First Name</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                <input type="text" id="firstName" name="firstName" placeholder="John" required>
+                            </div>
+                        </div>
+                        <div class="form-group-new">
+                            <label for="lastName" class="form-label-new">Last Name</label>
+                            <div class="input-wrapper">
+                                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                <input type="text" id="lastName" name="lastName" placeholder="Doe" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group-new">
+                        <label for="signupEmail" class="form-label-new">Email Address</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                            <input type="email" id="signupEmail" name="email" placeholder="your@email.com" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group-new">
+                        <label for="signupPassword" class="form-label-new">Password</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                            <input type="password" id="signupPassword" name="password" placeholder="Min. 8 characters" required>
+                        </div>
+                        <div class="password-strength">
+                            <div class="strength-bar" id="strengthBar"></div>
+                        </div>
+                        <p class="password-hint">Use 8+ characters with a mix of letters, numbers & symbols</p>
+                    </div>
+
+                    <div class="form-group-new">
+                        <label for="confirmPassword" class="form-label-new">Confirm Password</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Re-enter password" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group-new">
+                        <label for="businessType" class="form-label-new">Business Type</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                            <select id="businessType" name="businessType" required style="width:100%;padding:0.65rem 0.85rem 0.65rem 2.75rem;border:1.5px solid #e0e3ea;border-radius:10px;font-size:0.88rem;color:var(--text-dark);background:#fff;appearance:auto;cursor:pointer;">
+                                <option value="" disabled selected>Business Type</option>
+                                <option value="Limited company">Limited company</option>
+                                <option value="Limited partnership">Limited partnership</option>
+                                <option value="Partnership">Partnership</option>
+                                <option value="Sole trader">Sole trader</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group-new" id="businessNameGroup">
+                        <label for="companyName" class="form-label-new">Business Name</label>
+                        <div style="display:flex;gap:0.6rem;align-items:stretch;">
+                            <div class="input-wrapper" style="flex:1;">
+                                <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                                <input type="text" id="companyName" name="companyName" placeholder="Business Name" required>
+                            </div>
+                            <button type="button" id="findBusinessBtn" onclick="findBusiness()" style="background:linear-gradient(135deg,#1a73e8,#0d5bbd);color:#fff;border:none;padding:0.5rem 1rem;border-radius:10px;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:0.3rem;transition:all 0.3s ease;">
+                                Find Business <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group-new" id="selectBusinessGroup" style="display:none;">
+                        <label for="selectBusiness" class="form-label-new">Select Business</label>
+                        <div class="input-wrapper" style="position:relative;">
+                            <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                            <input type="text" id="businessSearchInput" placeholder="Type to search businesses..." autocomplete="off" style="width:100%;padding:0.65rem 0.85rem 0.65rem 2.75rem;border:1.5px solid #e0e3ea;border-radius:10px;font-size:0.88rem;color:var(--text-dark);background:#fff;">
+                            <div id="businessSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #e0e3ea;border-top:none;border-radius:0 0 10px 10px;max-height:180px;overflow-y:auto;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.08);"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group-new checkbox-new">
+                        <input type="checkbox" id="agreeTerms" name="agreeTerms" required>
+                        <label for="agreeTerms">I agree to the <a href="#" class="link">Terms of Service</a> and <a href="#" class="link">Privacy Policy</a></label>
+                    </div>
+
+                    <button type="submit" class="auth-continue-button">
+                        <span>Create Account</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </form>
+
+                <!-- Authentication Message -->
+                <div class="auth-message" id="authMessage"></div>
+
+                <!-- Guest / Get Started -->
+                <div class="auth-guest-section">
+                    <p>Just want to explore?</p>
+                    <a href="funding-form.html" class="get-started-btn">
+                        <span>Get Started Without Account</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+    <script>
+    // === Business Type Logic ===
+    const businessTypeSelect = document.getElementById('businessType');
+    const findBusinessBtn = document.getElementById('findBusinessBtn');
+    const selectBusinessGroup = document.getElementById('selectBusinessGroup');
+    const businessSearchInput = document.getElementById('businessSearchInput');
+    const businessSuggestions = document.getElementById('businessSuggestions');
+
+    // Hide Find Business button when Sole Trader is selected
+    businessTypeSelect.addEventListener('change', function() {
+        const isSoleTrader = this.value === 'Sole trader';
+        findBusinessBtn.style.display = isSoleTrader ? 'none' : 'flex';
+        // Also hide the select business dropdown when changing type
+        selectBusinessGroup.style.display = 'none';
+        businessSearchInput.value = '';
+    });
+
+    // Sample business data for suggestions (simulating Companies House API)
+    const sampleBusinesses = [
+        { name: 'ABC Trading Ltd', number: '12345678', type: 'Limited company', address: 'London, UK' },
+        { name: 'ABC Solutions Limited', number: '23456789', type: 'Limited company', address: 'Manchester, UK' },
+        { name: 'Acme Corporation Ltd', number: '34567890', type: 'Limited company', address: 'Birmingham, UK' },
+        { name: 'Alpha Business Services LLP', number: '45678901', type: 'Limited partnership', address: 'Leeds, UK' },
+        { name: 'Bright Finance Partners', number: '56789012', type: 'Partnership', address: 'Bristol, UK' },
+        { name: 'Blue Sky Ventures Ltd', number: '67890123', type: 'Limited company', address: 'Edinburgh, UK' },
+        { name: 'Capital Growth Trading Ltd', number: '78901234', type: 'Limited company', address: 'London, UK' },
+        { name: 'Crown Business Solutions Ltd', number: '89012345', type: 'Limited company', address: 'Cardiff, UK' },
+        { name: 'Dynamic Enterprises LLP', number: '90123456', type: 'Limited partnership', address: 'Glasgow, UK' },
+        { name: 'Eagle Commercial Ltd', number: '01234567', type: 'Limited company', address: 'Liverpool, UK' },
+        { name: 'First Choice Logistics Ltd', number: '11223344', type: 'Limited company', address: 'Southampton, UK' },
+        { name: 'Global Trade Partners Ltd', number: '22334455', type: 'Limited company', address: 'London, UK' },
+        { name: 'Horizon Digital Ltd', number: '33445566', type: 'Limited company', address: 'Brighton, UK' },
+        { name: 'Infinity Group Holdings Ltd', number: '44556677', type: 'Limited company', address: 'Nottingham, UK' },
+        { name: 'Jupiter Property Services LLP', number: '55667788', type: 'Limited partnership', address: 'Oxford, UK' },
+    ];
+
+    // Find Business button click — show Select Business dropdown
+    function findBusiness() {
+        const nameInput = document.getElementById('companyName').value.trim();
+        if (!nameInput) {
+            document.getElementById('companyName').focus();
+            return;
+        }
+        selectBusinessGroup.style.display = 'block';
+        businessSearchInput.value = nameInput;
+        businessSearchInput.focus();
+        showSuggestions(nameInput);
+    }
+
+    // Show suggestions based on search input
+    function showSuggestions(query) {
+        if (!query || query.length < 1) {
+            businessSuggestions.style.display = 'none';
+            return;
+        }
+        const q = query.toLowerCase();
+        const matches = sampleBusinesses.filter(b => b.name.toLowerCase().includes(q));
+
+        if (matches.length === 0) {
+            businessSuggestions.innerHTML = '<div style="padding:0.7rem 1rem;color:#999;font-size:0.85rem;">No businesses found</div>';
+            businessSuggestions.style.display = 'block';
+            return;
+        }
+
+        businessSuggestions.innerHTML = matches.map(b =>
+            '<div class="business-suggestion-item" onclick="selectSuggestedBusiness(\'' + b.name.replace(/'/g, "\\'") + '\', \'' + b.number + '\')" style="padding:0.6rem 1rem;cursor:pointer;border-bottom:1px solid #f0f0f0;transition:background 0.2s;"' +
+            ' onmouseover="this.style.background=\'#f5f7ff\'" onmouseout="this.style.background=\'#fff\'">' +
+            '<div style="font-weight:600;font-size:0.88rem;color:#1a2b4a;">' + b.name + '</div>' +
+            '<div style="font-size:0.75rem;color:#888;margin-top:2px;">Company No: ' + b.number + ' · ' + b.address + '</div>' +
+            '</div>'
+        ).join('');
+        businessSuggestions.style.display = 'block';
+    }
+
+    // Select a suggested business
+    function selectSuggestedBusiness(name, number) {
+        businessSearchInput.value = name;
+        document.getElementById('companyName').value = name;
+        businessSuggestions.style.display = 'none';
+    }
+
+    // Live search as user types in the Select Business input
+    businessSearchInput.addEventListener('input', function() {
+        showSuggestions(this.value.trim());
+    });
+
+    // Close suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!businessSearchInput.contains(e.target) && !businessSuggestions.contains(e.target)) {
+            businessSuggestions.style.display = 'none';
+        }
+    });
+    </script>
+</body>
+</html>
