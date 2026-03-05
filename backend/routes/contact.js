@@ -3,6 +3,7 @@ const router = express.Router();
 const { body, validationResult } = require("express-validator");
 const nodemailer = require("nodemailer");
 const db = require("../config/db");
+const authMiddleware = require("../middleware/auth");
 
 // Validation rules
 const contactValidation = [
@@ -140,11 +141,19 @@ router.post("/submit", contactValidation, async (req, res) => {
 
 /**
  * GET /api/contact/inquiries
- * Get all contact inquiries (admin only - would need admin auth in production)
+ * Get all contact inquiries (admin only - requires authentication and admin role)
  */
-router.get("/inquiries", async (req, res) => {
+router.get("/inquiries", authMiddleware, async (req, res) => {
   try {
-    // In production, add admin authentication middleware
+    // Check if user has admin role
+    const [users] = await db.query(`SELECT role FROM users WHERE id = ?`, [
+      req.userId,
+    ]);
+
+    if (users.length === 0 || users[0].role !== "admin") {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
     const [inquiries] = await db.query(
       `SELECT * FROM contact_inquiries ORDER BY created_at DESC LIMIT 100`,
     );

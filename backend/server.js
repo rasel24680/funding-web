@@ -7,8 +7,14 @@ const path = require("path");
 
 const app = express();
 
-// Security Middleware
-app.use(helmet());
+// Security Middleware - relaxed for production
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: false,
+  }),
+);
 
 // Rate limiting - 100 requests per 15 minutes per IP
 const limiter = rateLimit({
@@ -18,10 +24,13 @@ const limiter = rateLimit({
 });
 app.use("/api/", limiter);
 
-// CORS Configuration
+// CORS Configuration - allow Hostinger domain
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "*",
+    origin: [
+      "https://red-cat-211667.hostingersite.com",
+      "http://localhost:3000",
+    ],
     credentials: true,
   }),
 );
@@ -30,14 +39,16 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static frontend files
-app.use(express.static(path.join(__dirname, "../frontend")));
+// Serve static frontend files from 'public' folder
+app.use(express.static(path.join(__dirname, "public")));
 
 // API Routes
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/phone", require("./routes/phone-verification"));
 app.use("/api/funding", require("./routes/funding"));
 app.use("/api/contact", require("./routes/contact"));
+app.use("/api/lenders", require("./routes/lenders"));
+app.use("/api/company", require("./routes/company"));
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {
@@ -46,7 +57,7 @@ app.get("/api/health", (req, res) => {
 
 // Serve frontend for all other routes (SPA support)
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/login.html"));
+  res.sendFile(path.join(__dirname, "public/login.html"));
 });
 
 // Global Error Handler
@@ -59,8 +70,6 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(
-    `📁 Frontend served from: ${path.join(__dirname, "../frontend")}`,
-  );
+  console.log(`📁 Frontend served from: ${path.join(__dirname, "public")}`);
   console.log(`🔗 API available at: http://localhost:${PORT}/api`);
 });

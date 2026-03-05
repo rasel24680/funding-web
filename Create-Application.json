@@ -1,0 +1,61 @@
+{
+  "application": {
+    "consent_to_search": true
+  },
+  "applicant": {
+    "first_name": "Caroline",
+    "last_name": "DAY",
+    "email": "anil.jain@mypulse.io",
+    "phone_number": "9685748547",
+    "address": [
+      {
+        "house_number": "",
+        "flat_number": "33a",
+        "house_name": "",
+        "street": "Gloucester Road",
+        "town": "Chorley",
+        "postcode": "PR7 3HN",
+        "residential_status": "owner"
+      }
+    ],
+    "date_of_birth": "1983-02-03",
+    "percent_of_control": "",
+    "role": "Director",
+    "guarantor": true,
+    "send_ob_link": true,
+    "send_oa_link": true
+  },
+  "directors": [
+    {
+      "first_name": "Caroline",
+      "last_name": "DAY",
+      "email": "anil.jain@mypulse.io",
+      "phone_number": "9685748547",
+      "date_of_birth": "1983-02-23",
+      "percent_of_control": "",
+      "role": "Director",
+      "guarantor": true,
+      "send_ob_link": true,
+      "send_oa_link": true,
+      "address": [
+        {
+          "house_number": "",
+          "flat_number": "33a",
+          "house_name": "",
+          "street": "Gloucester Road",
+          "town": "Chorley",
+          "postcode": "PR7 3HN",
+          "residential_status": "owner"
+        }
+      ]
+    }
+  ],
+  "company": {
+    "company_name": "DAY'S HOLDINGS LIMITED",
+    "companies_house_id": "05452545",
+    "last_12_months_turnover": 123456,
+    "loan_amount": 12345,
+    "loan_term": 32,
+    "additional_information": "Any additional information to be sent"
+  }
+}

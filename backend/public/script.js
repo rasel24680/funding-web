@@ -1,5 +1,10 @@
 // ===== API Configuration =====
-const API_BASE = "http://localhost:3000/api";
+// Use relative URL so it works through ngrok/production
+const API_BASE =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1"
+    ? "http://localhost:3000/api"
+    : "/api";
 
 // ===== Form Step Navigation =====
 let currentStep = 1;
@@ -709,6 +714,9 @@ function initializeAuthPage() {
     });
   }
 
+  // CRN Lookup functionality
+  setupCRNLookup();
+
   // Toggle password visibility
   document.querySelectorAll(".toggle-password-btn").forEach((btn) => {
     btn.addEventListener("click", function () {
@@ -756,6 +764,246 @@ function updatePasswordStrength(password) {
     strengthBar.style.background = "linear-gradient(90deg, #ffc857, #ffc857)";
   } else {
     strengthBar.style.background = "linear-gradient(90deg, #2ecc71, #2ecc71)";
+  }
+}
+
+// ===== CRN Lookup Functionality =====
+function setupCRNLookup() {
+  const crnInput = document.getElementById("companyNumber");
+  const crnLookupBtn = document.getElementById("crnLookupBtn");
+  const crnStatus = document.getElementById("crnStatus");
+  const companyNameInput = document.getElementById("companyName");
+  const searchResults = document.getElementById("companySearchResults");
+
+  if (!crnInput || !crnLookupBtn) return;
+
+  let searchTimeout = null;
+  let selectedCRN = null;
+
+  // Lookup on button click
+  crnLookupBtn.addEventListener("click", () => {
+    searchCompany();
+  });
+
+  // Lookup on Enter key in CRN input
+  crnInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      searchCompany();
+    }
+  });
+
+  // Debounced search as user types (for name search)
+  crnInput.addEventListener("input", () => {
+    const query = crnInput.value.trim();
+    selectedCRN = null; // Reset selection
+
+    // Clear previous timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    // Hide results if input is too short
+    if (query.length < 2) {
+      hideSearchResults();
+      return;
+    }
+
+    // Check if it's a CRN (alphanumeric, 6-8 chars)
+    if (/^[A-Za-z0-9]{6,8}$/.test(query)) {
+      // Direct CRN lookup
+      searchTimeout = setTimeout(() => {
+        lookupCompanyByCRN(query);
+      }, 300);
+    } else if (query.length >= 3) {
+      // Name search with debounce
+      searchTimeout = setTimeout(() => {
+        searchCompaniesByName(query);
+      }, 500);
+    }
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener("click", (e) => {
+    if (
+      !e.target.closest(".crn-lookup-wrapper") &&
+      !e.target.closest(".company-search-results")
+    ) {
+      hideSearchResults();
+    }
+  });
+
+  async function searchCompany() {
+    const query = crnInput.value.trim();
+
+    if (!query) {
+      showCRNStatus("Please enter a company name or CRN", "error");
+      return;
+    }
+
+    // Check if it looks like a CRN
+    if (/^[A-Za-z0-9]{6,8}$/.test(query)) {
+      await lookupCompanyByCRN(query);
+    } else if (query.length >= 2) {
+      await searchCompaniesByName(query);
+    } else {
+      showCRNStatus("Enter at least 2 characters to search", "error");
+    }
+  }
+
+  async function lookupCompanyByCRN(crn) {
+    crn = crn.toUpperCase();
+
+    // Show loading state
+    crnLookupBtn.classList.add("loading");
+    crnLookupBtn.disabled = true;
+    showCRNStatus("Looking up company...", "loading");
+    hideSearchResults();
+
+    try {
+      const response = await fetch(`${API_BASE}/company/lookup/${crn}`);
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Company not found");
+      }
+
+      // Set the CRN value
+      crnInput.value = data.company.crn || crn;
+      selectedCRN = data.company.crn || crn;
+
+      // Auto-populate company name
+      if (companyNameInput && data.company?.name) {
+        companyNameInput.value = data.company.name;
+      }
+
+      // Show success message with company info
+      let statusHTML = `<strong>✓ ${data.company.name}</strong>`;
+
+      if (data.company.status) {
+        statusHTML += `<div class="crn-company-info">Status: <strong>${data.company.status}</strong>`;
+        if (data.company.type) {
+          statusHTML += ` | Type: ${data.company.type}`;
+        }
+        if (data.company.incorporationDate) {
+          const incDate = new Date(
+            data.company.incorporationDate,
+          ).toLocaleDateString("en-GB");
+          statusHTML += ` | Est: ${incDate}`;
+        }
+        statusHTML += `</div>`;
+      }
+
+      showCRNStatus(statusHTML, "success");
+
+      // Store company data for later use
+      localStorage.setItem("verifiedCompanyCRN", crn);
+      localStorage.setItem("verifiedCompanyData", JSON.stringify(data.company));
+    } catch (error) {
+      showCRNStatus(error.message || "Failed to lookup company", "error");
+    } finally {
+      crnLookupBtn.classList.remove("loading");
+      crnLookupBtn.disabled = false;
+    }
+  }
+
+  async function searchCompaniesByName(query) {
+    // Show loading state
+    crnLookupBtn.classList.add("loading");
+    showCRNStatus("Searching companies...", "loading");
+
+    try {
+      const response = await fetch(`${API_BASE}/company/find`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, type: "name" }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Search failed");
+      }
+
+      if (data.companies && data.companies.length > 0) {
+        showSearchResults(data.companies);
+        showCRNStatus(`Found ${data.companies.length} companies`, "success");
+      } else if (data.message) {
+        // Name search not available, try CRN lookup
+        showCRNStatus(data.message, "info");
+        hideSearchResults();
+      } else {
+        showCRNStatus(
+          "No companies found. Try entering the CRN directly.",
+          "info",
+        );
+        hideSearchResults();
+      }
+    } catch (error) {
+      showCRNStatus(error.message || "Search failed", "error");
+      hideSearchResults();
+    } finally {
+      crnLookupBtn.classList.remove("loading");
+      crnLookupBtn.disabled = false;
+    }
+  }
+
+  function showSearchResults(companies) {
+    if (!searchResults) return;
+
+    const html = companies
+      .map(
+        (company) => `
+      <div class="company-result-item" data-crn="${company.crn}" data-name="${escapeHtml(company.name)}">
+        <div class="company-result-name">${escapeHtml(company.name)}</div>
+        <div class="company-result-info">
+          <span class="crn-badge">${company.crn}</span>
+          ${company.status ? `<span class="status-${company.status.toLowerCase().replace(/\s+/g, "-")}">${company.status}</span>` : ""}
+        </div>
+      </div>
+    `,
+      )
+      .join("");
+
+    searchResults.innerHTML = html;
+    searchResults.style.display = "block";
+
+    // Add click handlers
+    searchResults.querySelectorAll(".company-result-item").forEach((item) => {
+      item.addEventListener("click", () => {
+        const crn = item.dataset.crn;
+        const name = item.dataset.name;
+
+        // Set values
+        crnInput.value = crn;
+        selectedCRN = crn;
+        if (companyNameInput) {
+          companyNameInput.value = name;
+        }
+
+        // Lookup full details
+        lookupCompanyByCRN(crn);
+        hideSearchResults();
+      });
+    });
+  }
+
+  function hideSearchResults() {
+    if (searchResults) {
+      searchResults.style.display = "none";
+      searchResults.innerHTML = "";
+    }
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function showCRNStatus(message, type) {
+    if (!crnStatus) return;
+    crnStatus.innerHTML = message;
+    crnStatus.className = "crn-status " + type;
   }
 }
 
@@ -807,7 +1055,20 @@ async function handleLogin(form) {
       throw new Error(data.error || data.errors?.[0]?.msg || "Login failed");
     }
 
-    // Store auth token and user data
+    // SECURITY: Clear ALL previous user data before setting new user data
+    // This prevents data leakage between users on shared browsers
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("userCompanyName");
+    localStorage.removeItem("userData");
+    localStorage.removeItem("isPhoneVerified");
+    localStorage.removeItem("userPhone");
+    localStorage.removeItem("userProfilePicture");
+    localStorage.removeItem("applicationId");
+    localStorage.removeItem("fundingFormData"); // Clear previous user's form data
+    localStorage.removeItem("pendingPhoneVerification");
+
+    // Store auth token and user data for NEW logged-in user
     localStorage.setItem("authToken", data.token);
     localStorage.setItem("userEmail", data.user.email);
     localStorage.setItem(
@@ -860,6 +1121,8 @@ async function handleSignup(form) {
   const password = form.querySelector("#signupPassword").value;
   const confirmPassword = form.querySelector("#confirmPassword").value;
   const companyName = form.querySelector("#companyName").value.trim();
+  const companyNumber =
+    form.querySelector("#companyNumber")?.value.trim() || "";
   const agreeTerms = form.querySelector("#agreeTerms").checked;
   const messageEl = document.getElementById("authMessage");
   const submitBtn = form.querySelector('button[type="submit"]');
@@ -932,6 +1195,7 @@ async function handleSignup(form) {
         email,
         password,
         businessName: companyName,
+        companyNumber,
         sessionId,
       }),
     });
@@ -1494,106 +1758,35 @@ function parseApprovalDays(str) {
   return match ? parseInt(match[1], 10) : 999;
 }
 
+// Real lenders data - connected to actual API providers
 const _fundersData = [
   {
     id: 1,
-    name: "Fast Capital",
-    loanAmount: "£50,000",
-    interestRate: "4.5%",
-    term: "36 months",
-    apprTime: "2-3 days",
-    personalTouch: 7,
-    acceptsImpairedCredit: false,
+    name: "Business Finance Partner",
+    lenderKey: "bizcap",
+    loanAmount: "£5,000 - £500,000",
+    interestRate: "0.9% - 3.5%",
+    term: "3 - 24 months",
+    apprTime: "24-48 hours",
+    personalTouch: 9,
+    acceptsImpairedCredit: true,
+    features: ["Fast approval", "No early repayment fees", "Flexible terms"],
   },
   {
     id: 2,
-    name: "Prime Lenders",
-    loanAmount: "£100,000",
-    interestRate: "5.2%",
-    term: "48 months",
-    apprTime: "5-7 days",
-    personalTouch: 9,
-    acceptsImpairedCredit: false,
-  },
-  {
-    id: 3,
-    name: "Growth Finance",
-    loanAmount: "£75,000",
-    interestRate: "4.8%",
-    term: "42 months",
-    apprTime: "3-4 days",
-    personalTouch: 8,
-    acceptsImpairedCredit: true,
-  },
-  {
-    id: 4,
-    name: "Business Capital",
-    loanAmount: "£60,000",
-    interestRate: "5.5%",
-    term: "36 months",
-    apprTime: "4-5 days",
-    personalTouch: 6,
-    acceptsImpairedCredit: true,
-  },
-  {
-    id: 5,
-    name: "Enterprise Loans",
-    loanAmount: "£150,000",
-    interestRate: "4.2%",
-    term: "60 months",
-    apprTime: "7-10 days",
-    personalTouch: 10,
-    acceptsImpairedCredit: false,
-  },
-  {
-    id: 6,
-    name: "Quick Finance",
-    loanAmount: "£45,000",
-    interestRate: "6.0%",
-    term: "24 months",
-    apprTime: "1-2 days",
-    personalTouch: 4,
-    acceptsImpairedCredit: true,
-  },
-  {
-    id: 7,
-    name: "Smart Funding",
-    loanAmount: "£80,000",
-    interestRate: "5.0%",
-    term: "48 months",
-    apprTime: "3-4 days",
+    name: "SME Finance Partner",
+    lenderKey: "mypulse",
+    loanAmount: "£10,000 - £1,000,000",
+    interestRate: "Competitive rates",
+    term: "6 - 60 months",
+    apprTime: "24-72 hours",
     personalTouch: 8,
     acceptsImpairedCredit: false,
-  },
-  {
-    id: 8,
-    name: "Venture Capital",
-    loanAmount: "£200,000",
-    interestRate: "3.8%",
-    term: "72 months",
-    apprTime: "10-14 days",
-    personalTouch: 9,
-    acceptsImpairedCredit: false,
-  },
-  {
-    id: 9,
-    name: "Credit Solutions",
-    loanAmount: "£55,000",
-    interestRate: "5.7%",
-    term: "36 months",
-    apprTime: "2-3 days",
-    personalTouch: 5,
-    acceptsImpairedCredit: true,
-  },
-  {
-    id: 10,
-    name: "Rapid Lenders",
-    loanAmount: "£70,000",
-    interestRate: "5.3%",
-    term: "42 months",
-    apprTime: "3-5 days",
-    personalTouch: 7,
-    acceptsImpairedCredit: true,
+    features: [
+      "Open banking integration",
+      "Real-time decisions",
+      "Tailored offers",
+    ],
   },
 ];
 
@@ -1632,7 +1825,7 @@ function generateFundingCards(sortBy) {
   fundingCardsContainer.innerHTML = funders
     .map(
       (funder) => `
-        <div class="funding-card">
+        <div class="funding-card" data-lender-key="${funder.lenderKey || "bizcap"}">
             <div class="card-header">
                 <h3 class="funder-name">${funder.name}</h3>
                 <span class="funder-badge">Verified</span>
@@ -1662,7 +1855,7 @@ function generateFundingCards(sortBy) {
                         <path d="M5 12h14M12 5l7 7-7 7"/>
                     </svg>
                 </button>
-                <button class="apply-btn">Apply Now</button>
+                <button class="apply-btn" data-lender-key="${funder.lenderKey || "bizcap"}">Apply Now</button>
             </div>
         </div>
     `,
@@ -1675,8 +1868,484 @@ function generateFundingCards(sortBy) {
   const count = funders.length;
   if (bannerCount) bannerCount.textContent = count;
   if (funderCountEl) funderCountEl.textContent = count;
+
+  // Attach Apply Now button handlers
+  attachApplyButtonHandlers();
+
+  // Attach More Details button handlers
+  attachMoreDetailsHandlers();
 }
 
+// ===== Apply Now Button Handlers =====
+function attachApplyButtonHandlers() {
+  const applyButtons = document.querySelectorAll(".apply-btn");
+
+  applyButtons.forEach((btn) => {
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      const lenderKey = this.dataset.lenderKey || "bizcap";
+      const card = this.closest(".funding-card");
+      const lenderName = card
+        ? card.querySelector(".funder-name")?.textContent
+        : "Lender";
+
+      showApplicationModal(lenderKey, lenderName);
+    });
+  });
+}
+
+// ===== More Details Button Handlers =====
+function attachMoreDetailsHandlers() {
+  const moreDetailsButtons = document.querySelectorAll(".more-details-btn");
+
+  moreDetailsButtons.forEach((btn) => {
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      const card = this.closest(".funding-card");
+      const lenderKey = card ? card.dataset.lenderKey : "bizcap";
+      const lenderData =
+        _fundersData.find((f) => f.lenderKey === lenderKey) || _fundersData[0];
+
+      showLenderDetailsModal(lenderData);
+    });
+  });
+}
+
+// ===== Lender Details Modal =====
+function showLenderDetailsModal(lender) {
+  // Remove existing modal if present
+  const existingModal = document.getElementById("lenderDetailsModal");
+  if (existingModal) existingModal.remove();
+
+  const featuresHtml = lender.features
+    ? lender.features
+        .map((f) => `<li><span class="feature-check">✓</span> ${f}</li>`)
+        .join("")
+    : "";
+
+  const modal = document.createElement("div");
+  modal.id = "lenderDetailsModal";
+  modal.className = "application-modal-overlay";
+  modal.innerHTML = `
+    <div class="application-modal lender-details-modal">
+      <div class="modal-header">
+        <h2>${lender.name}</h2>
+        <button class="modal-close-btn" id="closeLenderDetailsModal">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="lender-overview">
+          <span class="funder-badge verified">Verified Lender</span>
+          <p class="lender-description">A trusted lending partner providing flexible business finance solutions.</p>
+        </div>
+        
+        <div class="lender-stats">
+          <div class="stat-item">
+            <span class="stat-label">Loan Amount</span>
+            <span class="stat-value">${lender.loanAmount}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Interest Rate</span>
+            <span class="stat-value">${lender.interestRate}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Loan Term</span>
+            <span class="stat-value">${lender.term}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Approval Time</span>
+            <span class="stat-value">${lender.apprTime}</span>
+          </div>
+        </div>
+
+        ${
+          lender.features
+            ? `
+        <div class="lender-features">
+          <h3>Key Features</h3>
+          <ul>${featuresHtml}</ul>
+        </div>
+        `
+            : ""
+        }
+
+        <div class="lender-eligibility">
+          <h3>Eligibility</h3>
+          <ul>
+            <li><span class="feature-check">✓</span> UK registered business</li>
+            <li><span class="feature-check">✓</span> Minimum trading period required</li>
+            ${lender.acceptsImpairedCredit ? '<li><span class="feature-check">✓</span> Accepts impaired credit history</li>' : ""}
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="closeLenderDetailsBtn">Close</button>
+        <button class="btn-primary apply-from-details" data-lender-key="${lender.lenderKey}">Apply Now</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Close handlers
+  document
+    .getElementById("closeLenderDetailsModal")
+    .addEventListener("click", () => modal.remove());
+  document
+    .getElementById("closeLenderDetailsBtn")
+    .addEventListener("click", () => modal.remove());
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.remove();
+  });
+
+  // Apply from details
+  modal
+    .querySelector(".apply-from-details")
+    .addEventListener("click", function () {
+      modal.remove();
+      showApplicationModal(lender.lenderKey, lender.name);
+    });
+}
+
+// ===== Application Modal =====
+function showApplicationModal(lenderKey, lenderName) {
+  // Check if phone is verified
+  const isPhoneVerified = localStorage.getItem("isPhoneVerified") === "true";
+  if (!isPhoneVerified) {
+    const phoneModal = document.getElementById("phoneVerificationModal");
+    if (phoneModal) {
+      phoneModal.style.display = "flex";
+    }
+    return;
+  }
+
+  // Get user data from localStorage
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+  const formData = JSON.parse(localStorage.getItem("fundingFormData") || "{}");
+
+  // Check if this is MyPulse (requires additional fields)
+  const isMyPulse = lenderKey === "mypulse";
+  const maxAmount = isMyPulse ? 500000 : 5000000;
+
+  // Remove existing modal if present
+  const existingModal = document.getElementById("applicationModal");
+  if (existingModal) existingModal.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "applicationModal";
+  modal.className = "application-modal-overlay";
+  modal.innerHTML = `
+    <div class="application-modal">
+      <div class="modal-header">
+        <h2>Apply to ${lenderName}</h2>
+        <button class="modal-close-btn" id="closeApplicationModal">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-description">Review your application details before submitting. The lender will contact you directly about your funding request.</p>
+        
+        <form id="applicationForm" class="application-form">
+          <div class="form-section">
+            <h3>Business Information</h3>
+            <div class="form-row two-col">
+              <div class="form-group">
+                <label for="appBusinessName">Business Name *</label>
+                <input type="text" id="appBusinessName" value="${userData.companyName || formData.businessName || ""}" required>
+              </div>
+              <div class="form-group">
+                <label for="appCompanyNumber">Company Registration Number ${isMyPulse ? "*" : ""}</label>
+                <input type="text" id="appCompanyNumber" value="${userData.companyNumber || formData.companyNumber || ""}" placeholder="e.g. 12345678" ${isMyPulse ? "required" : ""}>
+                <small class="field-hint">8-digit Companies House number</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>Contact Details</h3>
+            <div class="form-row two-col">
+              <div class="form-group">
+                <label for="appFirstName">First Name *</label>
+                <input type="text" id="appFirstName" value="${userData.firstName || formData.firstName || ""}" pattern="[A-Za-z\\s\\-']+" title="Please enter a valid name (letters only)" required>
+              </div>
+              <div class="form-group">
+                <label for="appLastName">Last Name *</label>
+                <input type="text" id="appLastName" value="${userData.lastName || formData.lastName || ""}" pattern="[A-Za-z\\s\\-']+" title="Please enter a valid name (letters only)" required>
+              </div>
+            </div>
+            <div class="form-row two-col">
+              <div class="form-group">
+                <label for="appEmail">Email *</label>
+                <input type="email" id="appEmail" value="${userData.email || formData.email || ""}" required>
+              </div>
+              <div class="form-group">
+                <label for="appPhone">Phone * <small>(UK mobile/landline)</small></label>
+                <input type="tel" id="appPhone" value="${userData.phone || formData.phone || ""}" pattern="[0-9]{10,11}" title="Please enter a valid UK phone number (10-11 digits)" required>
+              </div>
+            </div>
+            <div class="form-row two-col">
+              <div class="form-group">
+                <label for="appDateOfBirth">Date of Birth ${isMyPulse ? "*" : ""}</label>
+                <input type="date" id="appDateOfBirth" value="${userData.dateOfBirth || formData.dateOfBirth || ""}" max="${new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split("T")[0]}" ${isMyPulse ? "required" : ""}>
+                <small class="field-hint">You must be 18 or over</small>
+              </div>
+              <div class="form-group">
+                <label for="appHomeowner">Homeowner Status</label>
+                <select id="appHomeowner">
+                  <option value="No" ${formData.homeowner === "No" ? "selected" : ""}>Tenant/Renting</option>
+                  <option value="Yes" ${formData.homeowner === "Yes" ? "selected" : ""}>Homeowner</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <h3>Funding Request</h3>
+            <div class="form-row two-col">
+              <div class="form-group">
+                <label for="appFundingAmount">Amount Required (£) *</label>
+                <input type="number" id="appFundingAmount" value="${Math.min(formData.fundingAmount || 0, maxAmount) || ""}" min="1000" max="${maxAmount}" required>
+                ${isMyPulse ? `<small class="field-hint">Maximum £500,000 for this lender</small>` : ""}
+              </div>
+              <div class="form-group">
+                <label for="appFundingPurpose">Purpose *</label>
+                <select id="appFundingPurpose" required>
+                  <option value="Growth" ${formData.fundingPurpose === "Growth" ? "selected" : ""}>Growth</option>
+                  <option value="Cashflow" ${formData.fundingPurpose === "Cashflow" ? "selected" : ""}>Cashflow</option>
+                  <option value="Refinancing" ${formData.fundingPurpose === "Refinancing" ? "selected" : ""}>Refinancing</option>
+                  <option value="Asset Finance" ${formData.fundingPurpose === "Asset Finance" ? "selected" : ""}>Asset Finance</option>
+                  <option value="Other" ${formData.fundingPurpose === "Other" ? "selected" : ""}>Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row two-col">
+              <div class="form-group">
+                <label for="appAnnualTurnover">Annual Turnover (£)</label>
+                <input type="number" id="appAnnualTurnover" value="${formData.annualTurnover || ""}" min="0">
+              </div>
+              <div class="form-group">
+                <label for="appTradingYears">Trading 3+ Years?</label>
+                <select id="appTradingYears">
+                  <option value="Yes" ${formData.tradingYears === "Yes" ? "selected" : ""}>Yes</option>
+                  <option value="No" ${formData.tradingYears === "No" ? "selected" : ""}>No</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-message" id="applicationMessage"></div>
+
+          <div class="form-consent">
+            <label class="consent-checkbox">
+              <input type="checkbox" id="appConsent" required>
+              <span>I agree to share my details with ${lenderName} and consent to being contacted about my funding application.</span>
+            </label>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="cancelApplicationBtn">Cancel</button>
+        <button class="btn-primary" id="submitApplicationBtn" data-lender-key="${lenderKey}">
+          <span class="btn-text">Submit Application</span>
+          <span class="btn-loading" style="display: none;">
+            <svg class="spinner" width="20" height="20" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="32" stroke-linecap="round"/>
+            </svg>
+            Submitting...
+          </span>
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Close handlers
+  document
+    .getElementById("closeApplicationModal")
+    .addEventListener("click", () => modal.remove());
+  document
+    .getElementById("cancelApplicationBtn")
+    .addEventListener("click", () => modal.remove());
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.remove();
+  });
+
+  // Submit handler
+  document
+    .getElementById("submitApplicationBtn")
+    .addEventListener("click", () => {
+      submitApplication(lenderKey, lenderName);
+    });
+
+  // Form validation on input
+  const form = document.getElementById("applicationForm");
+  form.querySelectorAll("input, select").forEach((input) => {
+    input.addEventListener("input", () => {
+      document.getElementById("applicationMessage").textContent = "";
+      document.getElementById("applicationMessage").className = "form-message";
+    });
+  });
+}
+
+// ===== Submit Application to Lender =====
+async function submitApplication(lenderKey, lenderName) {
+  const form = document.getElementById("applicationForm");
+  const messageEl = document.getElementById("applicationMessage");
+  const submitBtn = document.getElementById("submitApplicationBtn");
+  const btnText = submitBtn.querySelector(".btn-text");
+  const btnLoading = submitBtn.querySelector(".btn-loading");
+
+  // Validate form
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
+  // Check consent
+  if (!document.getElementById("appConsent").checked) {
+    messageEl.textContent =
+      "Please agree to share your details with the lender";
+    messageEl.className = "form-message error";
+    return;
+  }
+
+  // Gather form data
+  const applicationData = {
+    businessName: document.getElementById("appBusinessName").value.trim(),
+    companyNumber:
+      document.getElementById("appCompanyNumber")?.value.trim() || "",
+    firstName: document.getElementById("appFirstName").value.trim(),
+    lastName: document.getElementById("appLastName").value.trim(),
+    email: document.getElementById("appEmail").value.trim(),
+    phone: document.getElementById("appPhone").value.trim(),
+    dateOfBirth: document.getElementById("appDateOfBirth")?.value || "",
+    homeowner: document.getElementById("appHomeowner")?.value || "No",
+    fundingAmount: parseFloat(
+      document.getElementById("appFundingAmount").value,
+    ),
+    fundingPurpose: document.getElementById("appFundingPurpose").value,
+    annualTurnover:
+      parseFloat(document.getElementById("appAnnualTurnover").value) || 0,
+    tradingYears: document.getElementById("appTradingYears").value,
+    lenderKey: lenderKey,
+  };
+
+  // Client-side validation for names (letters only)
+  const nameRegex = /^[A-Za-z\s\-']+$/;
+  if (!nameRegex.test(applicationData.firstName)) {
+    messageEl.textContent = "First name must contain only letters";
+    messageEl.className = "form-message error";
+    return;
+  }
+  if (!nameRegex.test(applicationData.lastName)) {
+    messageEl.textContent = "Last name must contain only letters";
+    messageEl.className = "form-message error";
+    return;
+  }
+
+  // Validate phone format (10-11 digits)
+  const phoneDigits = applicationData.phone.replace(/\D/g, "");
+  if (phoneDigits.length < 10 || phoneDigits.length > 11) {
+    messageEl.textContent = "Phone number must be 10-11 digits";
+    messageEl.className = "form-message error";
+    return;
+  }
+
+  // Show loading state
+  btnText.style.display = "none";
+  btnLoading.style.display = "inline-flex";
+  submitBtn.disabled = true;
+
+  try {
+    const response = await fetch(`${API_BASE}/funding/soft-inquiry`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+      },
+      body: JSON.stringify(applicationData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to submit application");
+    }
+
+    // Success - show confirmation
+    showApplicationSuccess(lenderName, data);
+
+    // Close modal
+    document.getElementById("applicationModal").remove();
+  } catch (error) {
+    console.error("Application submission error:", error);
+    messageEl.textContent =
+      error.message || "Failed to submit application. Please try again.";
+    messageEl.className = "form-message error";
+
+    btnText.style.display = "inline";
+    btnLoading.style.display = "none";
+    submitBtn.disabled = false;
+  }
+}
+
+// ===== Application Success Modal =====
+function showApplicationSuccess(lenderName, responseData) {
+  const existingModal = document.getElementById("successModal");
+  if (existingModal) existingModal.remove();
+
+  const leadId = responseData.results?.[0]?.data?.leadId || "N/A";
+
+  const modal = document.createElement("div");
+  modal.id = "successModal";
+  modal.className = "application-modal-overlay success-overlay";
+  modal.innerHTML = `
+    <div class="application-modal success-modal">
+      <div class="success-icon">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#28a745" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M8 12l2 2 4-4"/>
+        </svg>
+      </div>
+      <h2>Application Submitted!</h2>
+      <p class="success-message">Your application has been sent to <strong>${lenderName}</strong>.</p>
+      <div class="success-details">
+        <div class="detail-row">
+          <span class="label">Reference:</span>
+          <span class="value">${leadId}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Amount:</span>
+          <span class="value">£${Number(responseData.applicationData?.fundingAmount || 0).toLocaleString()}</span>
+        </div>
+      </div>
+      <p class="next-steps">The lender will review your application and contact you within 24-48 hours. Check your email for updates.</p>
+      <div class="success-actions">
+        <button class="btn-secondary" onclick="window.location.href='dashboard.html'">Go to Dashboard</button>
+        <button class="btn-primary" id="closeSuccessModal">View More Funders</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  document
+    .getElementById("closeSuccessModal")
+    .addEventListener("click", () => modal.remove());
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.remove();
+  });
+}
+
+// ===== Phone Verification Modal =====
 function initializePhoneVerificationModal() {
   const phoneVerificationModal = document.getElementById(
     "phoneVerificationModal",
@@ -2168,79 +2837,228 @@ function showDashboardPhoneVerificationModal() {
 }
 
 // ===== Load User Application =====
-function loadUserApplication() {
+async function loadUserApplication() {
   const myApplicationsList = document.getElementById("my-applications");
   if (!myApplicationsList) return;
 
-  const formData = localStorage.getItem("fundingFormData");
+  // Show loading state
+  myApplicationsList.innerHTML = `
+    <div class="loading-applications">
+      <p>Loading your applications...</p>
+    </div>
+  `;
 
-  if (formData) {
-    try {
-      const data = JSON.parse(formData);
-      const applicationId =
-        localStorage.getItem("applicationId") ||
-        "APP-" + Date.now().toString(36).toUpperCase();
+  try {
+    // Fetch user's applications from API (secure, user-scoped)
+    const authToken = localStorage.getItem("authToken");
+    const response = await fetch(`${API_BASE}/funding/my-applications`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
 
-      myApplicationsList.innerHTML = `
-        <div class="application-card">
-          <div class="application-header">
-            <div class="application-info">
-              <h3>Funding Application</h3>
-              <span class="application-id">#${applicationId}</span>
+    if (response.ok) {
+      const data = await response.json();
+
+      if (data.applications && data.applications.length > 0) {
+        // Display applications from database (user-specific)
+        myApplicationsList.innerHTML = data.applications
+          .map(
+            (app) => `
+          <div class="application-card" data-app-id="${app.id}">
+            <div class="application-header">
+              <div class="application-info">
+                <h3>Funding Application</h3>
+                <span class="application-id">#APP-${app.id}</span>
+              </div>
+              <div class="application-header-actions">
+                <button class="btn-refresh-status" onclick="refreshApplicationStatus(${app.id})" title="Refresh Status">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 4v6h-6M1 20v-6h6"/>
+                    <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                  </svg>
+                </button>
+                <span class="application-status status-${app.status || "pending"}">${formatStatus(app.status || "pending")}</span>
+              </div>
             </div>
-            <span class="application-status status-pending">Pending Review</span>
+            <div class="application-details">
+              <div class="detail-row">
+                <span class="detail-label">Amount Requested</span>
+                <span class="detail-value">£${Number(app.fundingAmount || 0).toLocaleString()}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Purpose</span>
+                <span class="detail-value">${app.fundingPurpose || "Not specified"}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Annual Turnover</span>
+                <span class="detail-value">£${Number(app.annualTurnover || 0).toLocaleString()}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Trading Experience</span>
+                <span class="detail-value">${app.tradingYears === "Yes" ? "3+ years" : app.tradingMonths ? app.tradingMonths + " months" : "Less than 3 years"}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Submitted</span>
+                <span class="detail-value">${formatDate(app.createdAt)}</span>
+              </div>
+            </div>
+            ${renderLenderSubmissions(app.lenderSubmissions)}
+            <div class="application-actions">
+              <button class="btn-view-results" onclick="window.location.href='search-results.html'">
+                View Matched Funders →
+              </button>
+              <button class="btn-edit-application" onclick="window.location.href='funding-form.html'">
+                New Application
+              </button>
+            </div>
           </div>
-          <div class="application-details">
-            <div class="detail-row">
-              <span class="detail-label">Amount Requested</span>
-              <span class="detail-value">£${Number(data.fundingAmount || 0).toLocaleString()}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Purpose</span>
-              <span class="detail-value">${data.fundingPurpose || "Not specified"}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Annual Turnover</span>
-              <span class="detail-value">£${Number(data.annualTurnover || 0).toLocaleString()}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Trading Experience</span>
-              <span class="detail-value">${data.tradingYears === "Yes" ? "3+ years" : data.tradingMonths ? data.tradingMonths + " months" : "Less than 3 years"}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Priority</span>
-              <span class="detail-value">${data.importance || "Not specified"}</span>
-            </div>
-          </div>
-          <div class="application-actions">
-            <button class="btn-view-results" onclick="window.location.href='search-results.html'">
-              View Matched Funders →
-            </button>
-            <button class="btn-edit-application" onclick="window.location.href='funding-form.html'">
-              Edit Application
-            </button>
-          </div>
-        </div>
-      `;
-    } catch (e) {
-      console.error("Error parsing form data:", e);
+        `,
+          )
+          .join("");
+        return;
+      }
     }
-  } else {
-    myApplicationsList.innerHTML = `
-      <div class="no-applications-card">
-        <div class="no-app-icon">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
-            <polyline points="13 2 13 9 20 9"/>
-          </svg>
-        </div>
-        <h3>No Applications Yet</h3>
-        <p>Start your funding journey by submitting an application.</p>
-        <button class="btn-start-application" onclick="window.location.href='funding-form.html'">
-          Start Application →
-        </button>
+  } catch (error) {
+    console.error("Error fetching applications:", error);
+  }
+
+  // Fallback: No applications found
+  myApplicationsList.innerHTML = `
+    <div class="no-applications-state">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5">
+        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+        <polyline points="13 2 13 9 20 9"/>
+      </svg>
+      <h3>No Applications Yet</h3>
+      <p>Start exploring funding options to submit your first application.</p>
+      <a href="funding-form.html" class="btn-primary">Find Funding</a>
+    </div>
+  `;
+}
+
+// ===== Format Status Display =====
+function formatStatus(status) {
+  const statusMap = {
+    pending: "Pending",
+    reviewing: "Under Review",
+    approved: "Approved",
+    declined: "Declined",
+    rejected: "Rejected",
+    submitted: "Submitted",
+    submitted_to_lenders: "Sent to Lenders",
+    funded: "Funded",
+    error: "Error",
+  };
+  return (
+    statusMap[status] ||
+    status.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+  );
+}
+
+// ===== Format Date =====
+function formatDate(dateStr) {
+  if (!dateStr) return "N/A";
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// ===== Render Lender Submissions =====
+function renderLenderSubmissions(submissions) {
+  if (!submissions || submissions.length === 0) {
+    return "";
+  }
+
+  return `
+    <div class="lender-submissions-section">
+      <h4>Lender Responses</h4>
+      <div class="lender-submissions-list">
+        ${submissions
+          .map(
+            (sub) => `
+          <div class="lender-submission-item status-${sub.status}">
+            <div class="lender-info">
+              <span class="lender-name">${sub.lender}</span>
+              ${sub.leadId ? `<span class="lead-id">Ref: ${sub.leadId}</span>` : ""}
+            </div>
+            <div class="submission-status">
+              <span class="status-badge status-${sub.status}">${formatStatus(sub.status)}</span>
+              <span class="submission-date">${formatDate(sub.submittedAt)}</span>
+            </div>
+            ${sub.error ? `<p class="submission-error">${sub.error}</p>` : ""}
+          </div>
+        `,
+          )
+          .join("")}
       </div>
-    `;
+    </div>
+  `;
+}
+
+// ===== Refresh Application Status =====
+async function refreshApplicationStatus(applicationId) {
+  const card = document.querySelector(`[data-app-id="${applicationId}"]`);
+  if (!card) return;
+
+  const refreshBtn = card.querySelector(".btn-refresh-status");
+  if (refreshBtn) {
+    refreshBtn.classList.add("spinning");
+    refreshBtn.disabled = true;
+  }
+
+  try {
+    const authToken = localStorage.getItem("authToken");
+    const response = await fetch(
+      `${API_BASE}/funding/${applicationId}/lender-status`,
+      {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      },
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+
+      // Update the status badge
+      const statusBadge = card.querySelector(".application-status");
+      if (statusBadge && data.applicationStatus) {
+        statusBadge.className = `application-status status-${data.applicationStatus}`;
+        statusBadge.textContent = formatStatus(data.applicationStatus);
+      }
+
+      // Update lender submissions section
+      const existingSection = card.querySelector(".lender-submissions-section");
+      if (existingSection) {
+        existingSection.remove();
+      }
+
+      if (data.lenderSubmissions && data.lenderSubmissions.length > 0) {
+        const submissionsHtml = renderLenderSubmissions(data.lenderSubmissions);
+        const actionsDiv = card.querySelector(".application-actions");
+        if (actionsDiv) {
+          actionsDiv.insertAdjacentHTML("beforebegin", submissionsHtml);
+        }
+      }
+
+      showAlert("Status refreshed successfully", "success");
+    } else {
+      showAlert("Failed to refresh status", "error");
+    }
+  } catch (error) {
+    console.error("Error refreshing status:", error);
+    showAlert("Failed to refresh status", "error");
+  } finally {
+    if (refreshBtn) {
+      refreshBtn.classList.remove("spinning");
+      refreshBtn.disabled = false;
+    }
   }
 }
 

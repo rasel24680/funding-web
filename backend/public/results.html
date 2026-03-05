@@ -1803,6 +1803,70 @@
         `;
       document.head.appendChild(fadeOutStyle);
 
+      // API base URL
+      var API_BASE = window.location.origin + "/api";
+
+      // Function to attach Apply Now handlers for matched fund cards
+      function attachResultsApplyHandlers() {
+        var applyButtons = document.querySelectorAll(
+          ".matched-fund-card .apply-btn",
+        );
+        applyButtons.forEach(function (btn) {
+          // Remove old listeners by cloning and replacing
+          var newBtn = btn.cloneNode(true);
+          btn.parentNode.replaceChild(newBtn, btn);
+
+          newBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+            var lenderKey = this.dataset.lenderKey || "bizcap";
+            var card = this.closest(".matched-fund-card");
+            var lenderName = card
+              ? card.querySelector(".funder-name").textContent
+              : "Lender";
+
+            // Check if phone is verified
+            var isPhoneVerified =
+              localStorage.getItem("isPhoneVerified") === "true";
+            if (!isPhoneVerified) {
+              var phoneModal = document.getElementById("phoneVerifyModal");
+              if (phoneModal) phoneModal.style.display = "flex";
+              return;
+            }
+
+            // Use the showApplicationModal function from script.js
+            if (typeof showApplicationModal === "function") {
+              showApplicationModal(lenderKey, lenderName);
+            } else {
+              // Fallback: redirect to search-results which has the full script
+              window.location.href = "search-results.html";
+            }
+          });
+        });
+
+        // Also handle More Details buttons
+        var moreDetailsButtons = document.querySelectorAll(
+          ".matched-fund-card .more-details-btn",
+        );
+        moreDetailsButtons.forEach(function (btn) {
+          var newBtn = btn.cloneNode(true);
+          btn.parentNode.replaceChild(newBtn, btn);
+
+          newBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+            var card = this.closest(".matched-fund-card");
+            var lenderKey = card ? card.dataset.lenderKey : "bizcap";
+            var lenderData =
+              mockFunders.find(function (f) {
+                return f.lenderKey === lenderKey;
+              }) || mockFunders[0];
+
+            if (typeof showLenderDetailsModal === "function") {
+              showLenderDetailsModal(lenderData);
+            }
+          });
+        });
+      }
+
       // Load and display form data from localStorage
       document.addEventListener("DOMContentLoaded", function () {
         // Hide login button and show dropdown if already logged in
@@ -2078,6 +2142,9 @@
             resultsSortSelect ? resultsSortSelect.value : "personal-touch",
           );
 
+          // Attach Apply Now button handlers after rendering
+          attachResultsApplyHandlers();
+
           // Sort handler
           if (resultsSortSelect) {
             resultsSortSelect.addEventListener("change", function () {
@@ -2089,6 +2156,8 @@
               if (stillBlurred && matchedFundsContainer) {
                 matchedFundsContainer.classList.add("blurred");
               }
+              // Re-attach Apply handlers after re-render
+              attachResultsApplyHandlers();
             });
           }
 

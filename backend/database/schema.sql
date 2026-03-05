@@ -3,17 +3,11 @@
 -- JWT Authentication + Phone Verification
 -- =============================================
 
--- Create database (if running manually)
-CREATE DATABASE IF NOT EXISTS pellopay;
+-- Use the database (change based on environment)
+-- For Hostinger: USE u683316176_pellopay;
+-- For local: USE pellopay;
 USE pellopay;
 
--- Drop existing tables (for fresh setup)
-DROP TABLE IF EXISTS session_logs;
-DROP TABLE IF EXISTS password_reset_tokens;
-DROP TABLE IF EXISTS phone_verifications;
-DROP TABLE IF EXISTS funding_applications;
-DROP TABLE IF EXISTS contact_inquiries;
-DROP TABLE IF EXISTS users;
 
 -- =============================================
 -- Users Table (JWT Authentication)
@@ -30,12 +24,14 @@ CREATE TABLE IF NOT EXISTS users (
     phone_verified BOOLEAN DEFAULT FALSE,
     is_active BOOLEAN DEFAULT TRUE,
     email_verified BOOLEAN DEFAULT FALSE,
+    role ENUM('user', 'admin') DEFAULT 'user',
     last_login DATETIME,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
     INDEX idx_email (email),
-    INDEX idx_phone_verified (phone_verified)
+    INDEX idx_phone_verified (phone_verified),
+    INDEX idx_role (role)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================
@@ -87,7 +83,7 @@ CREATE TABLE IF NOT EXISTS funding_applications (
     business_name VARCHAR(255),
     
     -- Status
-    status ENUM('pending', 'reviewing', 'approved', 'rejected', 'completed') DEFAULT 'pending',
+    status ENUM('pending', 'reviewing', 'approved', 'rejected', 'completed', 'submitted_to_lenders') DEFAULT 'pending',
     admin_notes TEXT,
     
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -136,6 +132,27 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     INDEX idx_token (token),
     INDEX idx_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================
+-- Lender Submissions Table (tracks submissions to external lenders)
+-- =============================================
+CREATE TABLE IF NOT EXISTS lender_submissions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    application_id INT NOT NULL,
+    lender_name VARCHAR(100) NOT NULL,
+    lender_lead_id VARCHAR(255),
+    lender_deal_id VARCHAR(255),
+    status ENUM('pending', 'submitted', 'approved', 'declined', 'funded', 'error') DEFAULT 'pending',
+    response_data JSON,
+    error_message TEXT,
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (application_id) REFERENCES funding_applications(id) ON DELETE CASCADE,
+    INDEX idx_application_id (application_id),
+    INDEX idx_lender_name (lender_name),
+    INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================
