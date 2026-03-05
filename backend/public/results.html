@@ -599,9 +599,6 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 15px rgba(255, 105, 180, 0.4);
       }
-      /* No match view */
-      .no-match-view {
-      }
 
       .results-section {
         background: linear-gradient(135deg, #f9f9f9 0%, #ffffff 100%);
@@ -1802,9 +1799,6 @@
             }
         `;
       document.head.appendChild(fadeOutStyle);
-
-      // API base URL
-      var API_BASE = window.location.origin + "/api";
 
       // Function to attach Apply Now handlers for matched fund cards
       function attachResultsApplyHandlers() {

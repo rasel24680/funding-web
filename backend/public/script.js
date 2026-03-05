@@ -761,147 +761,100 @@ function updatePasswordStrength(password) {
   }
 }
 
-// ===== CRN Lookup Functionality =====
+// ===== Mock Company Verification =====
 function setupCRNLookup() {
-  const crnInput = document.getElementById("companyNumber");
-  const crnLookupBtn = document.getElementById("crnLookupBtn");
-  const crnStatus = document.getElementById("crnStatus");
   const companyNameInput = document.getElementById("companyName");
-  const searchResults = document.getElementById("companySearchResults");
+  const verifyStatus = document.getElementById("companyVerifyStatus");
 
-  if (!crnInput || !crnLookupBtn) return;
+  if (!companyNameInput) return;
 
-  let searchTimeout = null;
-  let selectedCRN = null;
+  let verifyTimeout = null;
 
-  // Lookup on button click
-  crnLookupBtn.addEventListener("click", () => {
-    searchCompany();
-  });
-
-  // Lookup on Enter key in CRN input
-  crnInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      searchCompany();
-    }
-  });
-
-  // Debounced search as user types (for name search)
-  crnInput.addEventListener("input", () => {
-    const query = crnInput.value.trim();
-    selectedCRN = null; // Reset selection
+  // Verify company name as user types (with debounce)
+  companyNameInput.addEventListener("input", () => {
+    const companyName = companyNameInput.value.trim();
 
     // Clear previous timeout
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
+    if (verifyTimeout) {
+      clearTimeout(verifyTimeout);
     }
 
-    // Hide results if input is too short
-    if (query.length < 2) {
-      hideSearchResults();
+    // Hide status if input is too short
+    if (companyName.length < 2) {
+      hideVerifyStatus();
       return;
     }
 
-    // Check if it's a CRN (alphanumeric, 6-8 chars)
-    if (/^[A-Za-z0-9]{6,8}$/.test(query)) {
-      // Direct CRN lookup
-      searchTimeout = setTimeout(() => {
-        lookupCompanyByCRN(query);
-      }, 300);
-    } else if (query.length >= 3) {
-      // Name search with debounce
-      searchTimeout = setTimeout(() => {
-        searchCompaniesByName(query);
-      }, 500);
-    }
+    // Show checking status after user stops typing
+    verifyTimeout = setTimeout(() => {
+      mockVerifyCompany(companyName);
+    }, 600);
   });
 
-  // Close dropdown when clicking outside
-  document.addEventListener("click", (e) => {
-    if (
-      !e.target.closest(".crn-lookup-wrapper") &&
-      !e.target.closest(".company-search-results")
-    ) {
-      hideSearchResults();
-    }
-  });
+  // Mock company verification - shows checking animation then approves
+  function mockVerifyCompany(companyName) {
+    // Show checking status
+    showVerifyStatus(
+      `<span class="verify-spinner"></span> Checking "${escapeHtml(companyName)}"...`,
+      "checking",
+    );
 
-  async function searchCompany() {
-    const query = crnInput.value.trim();
-
-    if (!query) {
-      showCRNStatus("Please enter a company name or CRN", "error");
-      return;
-    }
-
-    // Check if it looks like a CRN
-    if (/^[A-Za-z0-9]{6,8}$/.test(query)) {
-      await lookupCompanyByCRN(query);
-    } else if (query.length >= 2) {
-      await searchCompaniesByName(query);
-    } else {
-      showCRNStatus("Enter at least 2 characters to search", "error");
-    }
-  }
-
-  async function lookupCompanyByCRN(crn) {
-    crn = crn.toUpperCase();
-
-    // Show loading state
-    crnLookupBtn.classList.add("loading");
-    crnLookupBtn.disabled = true;
-    showCRNStatus("Looking up company...", "loading");
-    hideSearchResults();
-
-    try {
-      const response = await fetch(`${API_BASE}/company/lookup/${crn}`);
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || "Company not found");
-      }
-
-      // Set the CRN value
-      crnInput.value = data.company.crn || crn;
-      selectedCRN = data.company.crn || crn;
-
-      // Auto-populate company name
-      if (companyNameInput && data.company?.name) {
-        companyNameInput.value = data.company.name;
-      }
-
-      // Show success message with company info
-      let statusHTML = `<strong>✓ ${data.company.name}</strong>`;
-
-      if (data.company.status) {
-        statusHTML += `<div class="crn-company-info">Status: <strong>${data.company.status}</strong>`;
-        if (data.company.type) {
-          statusHTML += ` | Type: ${data.company.type}`;
-        }
-        if (data.company.incorporationDate) {
-          const incDate = new Date(
-            data.company.incorporationDate,
-          ).toLocaleDateString("en-GB");
-          statusHTML += ` | Est: ${incDate}`;
-        }
-        statusHTML += `</div>`;
-      }
-
-      showCRNStatus(statusHTML, "success");
+    // After a short delay, show approved
+    setTimeout(() => {
+      showVerifyStatus(
+        `<span class="verify-check">✓</span> <strong>${escapeHtml(companyName)}</strong> - Company verified`,
+        "verified",
+      );
 
       // Store company data for later use
-      localStorage.setItem("verifiedCompanyCRN", crn);
-      localStorage.setItem("verifiedCompanyData", JSON.stringify(data.company));
-    } catch (error) {
-      showCRNStatus(error.message || "Failed to lookup company", "error");
-    } finally {
-      crnLookupBtn.classList.remove("loading");
-      crnLookupBtn.disabled = false;
+      localStorage.setItem(
+        "verifiedCompanyData",
+        JSON.stringify({
+          name: companyName,
+          verified: true,
+          verifiedAt: new Date().toISOString(),
+        }),
+      );
+    }, 1200);
+  }
+
+  function showVerifyStatus(message, type) {
+    if (!verifyStatus) return;
+    verifyStatus.innerHTML = message;
+    verifyStatus.className = "company-verify-status " + type;
+    verifyStatus.style.display = "block";
+  }
+
+  function hideVerifyStatus() {
+    if (verifyStatus) {
+      verifyStatus.style.display = "none";
+      verifyStatus.innerHTML = "";
     }
   }
 
-  async function searchCompaniesByName(query) {
+  function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+  }
+}
+
+// Legacy function placeholder - no longer used
+function searchCompaniesByName_legacy(query) {
+  // Removed - Companies House API not available
+  console.log("Company search disabled - no API key provided");
+  return Promise.resolve({ companies: [] });
+}
+
+// Legacy CRN lookup placeholder - no longer used
+function lookupCompanyByCRN_legacy(crn) {
+  // Removed - Companies House API not available
+  console.log("CRN lookup disabled - no API key provided");
+  return Promise.resolve(null);
+}
+
+/* REMOVED - Old CRN lookup functionality
+async function searchCompaniesByName(query) {
     // Show loading state
     crnLookupBtn.classList.add("loading");
     showCRNStatus("Searching companies...", "loading");
@@ -999,7 +952,7 @@ function setupCRNLookup() {
     crnStatus.innerHTML = message;
     crnStatus.className = "crn-status " + type;
   }
-}
+} */
 
 // Handle login
 async function handleLogin(form) {
