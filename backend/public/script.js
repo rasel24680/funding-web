@@ -1067,13 +1067,6 @@ async function handleSignup(form) {
   const password = form.querySelector("#signupPassword").value;
   const confirmPassword = form.querySelector("#confirmPassword").value;
   const companyName = form.querySelector("#companyName").value.trim();
-<<<<<<< HEAD:backend/public/script.js
-  const companyNumber =
-    form.querySelector("#companyNumber")?.value.trim() || "";
-=======
-  const businessTypeEl = form.querySelector("#businessType");
-  const businessType = businessTypeEl ? businessTypeEl.value : null;
->>>>>>> 55de6a7dd2ffc07592c43fc38c0d21b3566b3726:frontend/script.js
   const agreeTerms = form.querySelector("#agreeTerms").checked;
   const messageEl = document.getElementById("authMessage");
   const submitBtn = form.querySelector('button[type="submit"]');
@@ -1146,11 +1139,6 @@ async function handleSignup(form) {
         email,
         password,
         businessName: companyName,
-<<<<<<< HEAD:backend/public/script.js
-        companyNumber,
-=======
-        businessType: businessType || null,
->>>>>>> 55de6a7dd2ffc07592c43fc38c0d21b3566b3726:frontend/script.js
         sessionId,
       }),
     });
@@ -1697,7 +1685,6 @@ function parseApprovalDays(str) {
 const _fundersData = [
   {
     id: 1,
-<<<<<<< HEAD:backend/public/script.js
     name: "Business Finance Partner",
     lenderKey: "bizcap",
     loanAmount: "£5,000 - £500,000",
@@ -1723,165 +1710,6 @@ const _fundersData = [
       "Real-time decisions",
       "Tailored offers",
     ],
-=======
-    name: "Fast Capital",
-    loanAmount: "£50,000",
-    interestRate: "4.5%",
-    term: "36 months",
-    apprTime: "2-3 days",
-    personalTouch: 7,
-    acceptsImpairedCredit: false,
-    description: "Fast Capital specialises in rapid unsecured business loans for UK SMEs. With a streamlined digital application process, they focus on getting funds to businesses quickly without requiring property as security.",
-    features: ["No early repayment fees", "Dedicated account manager", "Fixed monthly repayments", "No security required"],
-    requirements: ["Minimum 2 years trading", "Annual turnover £100k+", "UK registered business"],
-    fundingTypes: ["Unsecured Business Loan"],
-    minAmount: "£10,000",
-    maxAmount: "£50,000",
-  },
-  {
-    id: 2,
-    name: "Prime Lenders",
-    loanAmount: "£100,000",
-    interestRate: "5.2%",
-    term: "48 months",
-    apprTime: "5-7 days",
-    personalTouch: 9,
-    acceptsImpairedCredit: false,
-    description: "Prime Lenders is a premium funding provider offering competitive rates for established businesses. Known for their personal approach, each client is assigned a senior relationship manager who guides them through the entire process.",
-    features: ["Senior relationship manager", "Flexible repayment schedules", "Rate match guarantee", "Same-day decision in principle"],
-    requirements: ["Minimum 3 years trading", "Annual turnover £250k+", "Clean credit history", "UK registered limited company"],
-    fundingTypes: ["Secured Business Loan", "Commercial Mortgage"],
-    minAmount: "£50,000",
-    maxAmount: "£500,000",
-  },
-  {
-    id: 3,
-    name: "Growth Finance",
-    loanAmount: "£75,000",
-    interestRate: "4.8%",
-    term: "42 months",
-    apprTime: "3-4 days",
-    personalTouch: 8,
-    acceptsImpairedCredit: true,
-    description: "Growth Finance works with businesses at all stages, including those with impaired credit. They take a holistic view of your business rather than relying solely on credit scores, making them ideal for growing companies.",
-    features: ["Accepts impaired credit", "Revenue-based assessment", "No arrangement fees", "Top-up facility available"],
-    requirements: ["Minimum 1 year trading", "Annual turnover £75k+", "Positive business trajectory"],
-    fundingTypes: ["Unsecured Business Loan", "Revenue-Based Finance"],
-    minAmount: "£25,000",
-    maxAmount: "£150,000",
-  },
-  {
-    id: 4,
-    name: "Business Capital",
-    loanAmount: "£60,000",
-    interestRate: "5.5%",
-    term: "36 months",
-    apprTime: "4-5 days",
-    personalTouch: 6,
-    acceptsImpairedCredit: true,
-    description: "Business Capital provides flexible funding solutions tailored to small and medium enterprises. They specialise in working with businesses that may have been declined elsewhere, offering second-chance lending with fair terms.",
-    features: ["Second-chance lending", "Flexible terms", "No hidden charges", "Online portal for account management"],
-    requirements: ["Minimum 6 months trading", "Annual turnover £50k+", "UK registered business"],
-    fundingTypes: ["Unsecured Business Loan", "Merchant Cash Advance"],
-    minAmount: "£5,000",
-    maxAmount: "£100,000",
-  },
-  {
-    id: 5,
-    name: "Enterprise Loans",
-    loanAmount: "£150,000",
-    interestRate: "4.2%",
-    term: "60 months",
-    apprTime: "7-10 days",
-    personalTouch: 10,
-    acceptsImpairedCredit: false,
-    description: "Enterprise Loans is a boutique lender offering premium funding packages for established businesses. Their white-glove service includes a full financial review, bespoke structuring, and ongoing support throughout the loan term.",
-    features: ["Bespoke loan structuring", "Full financial review included", "Capital repayment holidays available", "Ongoing business support", "Priority processing"],
-    requirements: ["Minimum 3 years trading", "Annual turnover £500k+", "Strong credit profile", "Audited accounts preferred"],
-    fundingTypes: ["Secured Business Loan", "Asset Finance", "Commercial Mortgage"],
-    minAmount: "£75,000",
-    maxAmount: "£1,000,000",
-  },
-  {
-    id: 6,
-    name: "Quick Finance",
-    loanAmount: "£45,000",
-    interestRate: "6.0%",
-    term: "24 months",
-    apprTime: "1-2 days",
-    personalTouch: 4,
-    acceptsImpairedCredit: true,
-    description: "Quick Finance is the fastest lender on our panel, offering same-day decisions and next-day funding. They use automated underwriting technology to assess applications rapidly, ideal for businesses that need capital urgently.",
-    features: ["Same-day decisions", "Next-day funding", "Accepts impaired credit", "Simple online application", "No paperwork required"],
-    requirements: ["Minimum 6 months trading", "Minimum monthly revenue £5k", "UK business bank account"],
-    fundingTypes: ["Short-Term Business Loan", "Merchant Cash Advance"],
-    minAmount: "£5,000",
-    maxAmount: "£100,000",
-  },
-  {
-    id: 7,
-    name: "Smart Funding",
-    loanAmount: "£80,000",
-    interestRate: "5.0%",
-    term: "48 months",
-    apprTime: "3-4 days",
-    personalTouch: 8,
-    acceptsImpairedCredit: false,
-    description: "Smart Funding combines technology with personal service to deliver an exceptional borrowing experience. Their AI-powered platform matches you with the best product while their team ensures everything runs smoothly.",
-    features: ["AI-powered matching", "Dedicated support team", "Competitive rates", "Transparent fee structure", "Early repayment options"],
-    requirements: ["Minimum 2 years trading", "Annual turnover £150k+", "Good credit history", "UK registered company"],
-    fundingTypes: ["Unsecured Business Loan", "Invoice Finance"],
-    minAmount: "£20,000",
-    maxAmount: "£250,000",
-  },
-  {
-    id: 8,
-    name: "Venture Capital",
-    loanAmount: "£200,000",
-    interestRate: "3.8%",
-    term: "72 months",
-    apprTime: "10-14 days",
-    personalTouch: 9,
-    acceptsImpairedCredit: false,
-    description: "Venture Capital offers the most competitive rates on our panel for larger loans. They work closely with ambitious businesses looking for significant growth capital, providing not just funding but strategic advice.",
-    features: ["Lowest rates available", "Strategic business advice", "Flexible drawdown facility", "Long-term partnerships", "Board-level advisory access"],
-    requirements: ["Minimum 5 years trading", "Annual turnover £1m+", "Strong credit profile", "Business plan required", "Security may be required"],
-    fundingTypes: ["Secured Business Loan", "Growth Capital", "Commercial Mortgage"],
-    minAmount: "£100,000",
-    maxAmount: "£2,000,000",
-  },
-  {
-    id: 9,
-    name: "Credit Solutions",
-    loanAmount: "£55,000",
-    interestRate: "5.7%",
-    term: "36 months",
-    apprTime: "2-3 days",
-    personalTouch: 5,
-    acceptsImpairedCredit: true,
-    description: "Credit Solutions is a specialist lender designed for businesses with less-than-perfect credit. They use alternative data points like bank statements and revenue trends to make fair lending decisions.",
-    features: ["Specialist impaired credit lender", "Bank statement-based assessment", "No personal guarantees on smaller loans", "Rapid turnaround"],
-    requirements: ["Minimum 1 year trading", "Monthly revenue £3k+", "UK business bank account", "3 months bank statements"],
-    fundingTypes: ["Unsecured Business Loan", "Revolving Credit Facility"],
-    minAmount: "£5,000",
-    maxAmount: "£75,000",
-  },
-  {
-    id: 10,
-    name: "Rapid Lenders",
-    loanAmount: "£70,000",
-    interestRate: "5.3%",
-    term: "42 months",
-    apprTime: "3-5 days",
-    personalTouch: 7,
-    acceptsImpairedCredit: true,
-    description: "Rapid Lenders bridge the gap between speed and affordability, offering quick decisions without excessive interest rates. They accept businesses with minor credit issues and provide a balanced lending solution.",
-    features: ["Quick decisions", "Accepts minor credit issues", "Competitive rates for impaired credit", "Flexible repayment dates", "No broker fees"],
-    requirements: ["Minimum 1 year trading", "Annual turnover £80k+", "UK registered business", "No active CCJs over £5k"],
-    fundingTypes: ["Unsecured Business Loan", "Asset Finance"],
-    minAmount: "£10,000",
-    maxAmount: "£150,000",
->>>>>>> 55de6a7dd2ffc07592c43fc38c0d21b3566b3726:frontend/script.js
   },
 ];
 
@@ -1950,11 +1778,7 @@ function generateFundingCards(sortBy) {
                         <path d="M5 12h14M12 5l7 7-7 7"/>
                     </svg>
                 </button>
-<<<<<<< HEAD:backend/public/script.js
                 <button class="apply-btn" data-lender-key="${funder.lenderKey || "bizcap"}">Apply Now</button>
-=======
-                <button class="apply-btn" data-funder-id="${funder.id}">Apply Now</button>
->>>>>>> 55de6a7dd2ffc07592c43fc38c0d21b3566b3726:frontend/script.js
             </div>
         </div>
     `,
@@ -1968,277 +1792,11 @@ function generateFundingCards(sortBy) {
   if (bannerCount) bannerCount.textContent = count;
   if (funderCountEl) funderCountEl.textContent = count;
 
-<<<<<<< HEAD:backend/public/script.js
   // Attach Apply Now button handlers
   attachApplyButtonHandlers();
 
   // Attach More Details button handlers
   attachMoreDetailsHandlers();
-=======
-  // Attach More Details button handlers
-  document.querySelectorAll(".more-details-btn").forEach((btn) => {
-    btn.addEventListener("click", function () {
-      const funderId = parseInt(this.getAttribute("data-funder-id"));
-      const funder = _fundersData.find((f) => f.id === funderId);
-      if (funder) showFunderDetailsModal(funder);
-    });
-  });
-
-  // Attach Apply Now button handlers
-  document.querySelectorAll(".apply-btn").forEach((btn) => {
-    btn.addEventListener("click", function () {
-      const funderId = parseInt(this.getAttribute("data-funder-id"));
-      const funder = _fundersData.find((f) => f.id === funderId);
-      if (funder) showApplyModal(funder);
-    });
-  });
-}
-
-// ===== Funder Details Modal =====
-function showFunderDetailsModal(funder) {
-  // Remove existing modal if any
-  const existing = document.getElementById("funderDetailsModal");
-  if (existing) existing.remove();
-
-  const modal = document.createElement("div");
-  modal.id = "funderDetailsModal";
-  modal.className = "funder-modal-overlay";
-  modal.innerHTML = `
-    <div class="funder-modal-card">
-      <button class="funder-modal-close" id="closeFunderDetails">&times;</button>
-      <div class="funder-modal-header">
-        <h2>${funder.name}</h2>
-        <span class="funder-badge">Verified</span>
-      </div>
-      <p class="funder-modal-desc">${funder.description}</p>
-
-      <div class="funder-modal-grid">
-        <div class="funder-modal-stat">
-          <span class="stat-label">Loan Amount</span>
-          <span class="stat-value highlight">${funder.loanAmount}</span>
-        </div>
-        <div class="funder-modal-stat">
-          <span class="stat-label">Interest Rate</span>
-          <span class="stat-value">${funder.interestRate}</span>
-        </div>
-        <div class="funder-modal-stat">
-          <span class="stat-label">Loan Term</span>
-          <span class="stat-value">${funder.term}</span>
-        </div>
-        <div class="funder-modal-stat">
-          <span class="stat-label">Approval Time</span>
-          <span class="stat-value">${funder.apprTime}</span>
-        </div>
-        <div class="funder-modal-stat">
-          <span class="stat-label">Min Amount</span>
-          <span class="stat-value">${funder.minAmount}</span>
-        </div>
-        <div class="funder-modal-stat">
-          <span class="stat-label">Max Amount</span>
-          <span class="stat-value">${funder.maxAmount}</span>
-        </div>
-      </div>
-
-      <div class="funder-modal-section">
-        <h3>Funding Types</h3>
-        <div class="funder-tags">
-          ${funder.fundingTypes.map((t) => `<span class="funder-tag">${t}</span>`).join("")}
-        </div>
-      </div>
-
-      <div class="funder-modal-section">
-        <h3>Key Features</h3>
-        <ul class="funder-feature-list">
-          ${funder.features.map((f) => `<li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>${f}</li>`).join("")}
-        </ul>
-      </div>
-
-      <div class="funder-modal-section">
-        <h3>Requirements</h3>
-        <ul class="funder-req-list">
-          ${funder.requirements.map((r) => `<li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>${r}</li>`).join("")}
-        </ul>
-      </div>
-
-      <div class="funder-modal-section">
-        <h3>Personal Touch Score</h3>
-        <div class="personal-touch-bar">
-          <div class="touch-fill" style="width: ${funder.personalTouch * 10}%"></div>
-        </div>
-        <span class="touch-score">${funder.personalTouch}/10</span>
-      </div>
-
-      <div class="funder-modal-actions">
-        <button class="funder-modal-apply-btn" id="detailsApplyBtn">Apply Now</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-
-  // Close modal
-  document.getElementById("closeFunderDetails").addEventListener("click", () => {
-    modal.remove();
-  });
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) modal.remove();
-  });
-
-  // Apply button inside details modal
-  document.getElementById("detailsApplyBtn").addEventListener("click", () => {
-    modal.remove();
-    showApplyModal(funder);
-  });
-}
-
-// ===== Apply Now Modal =====
-function showApplyModal(funder) {
-  // Remove existing modal if any
-  const existing = document.getElementById("applyModal");
-  if (existing) existing.remove();
-
-  // Pre-fill from localStorage if available
-  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
-  const formData = JSON.parse(localStorage.getItem("fundingFormData") || "{}");
-
-  const modal = document.createElement("div");
-  modal.id = "applyModal";
-  modal.className = "funder-modal-overlay";
-  modal.innerHTML = `
-    <div class="funder-modal-card apply-modal-card">
-      <button class="funder-modal-close" id="closeApplyModal">&times;</button>
-      <div class="funder-modal-header">
-        <h2>Apply to ${funder.name}</h2>
-      </div>
-      <p class="funder-modal-desc">Complete the form below to submit your application. We'll connect you with ${funder.name} to discuss your funding needs.</p>
-
-      <div class="apply-summary">
-        <div class="apply-summary-item">
-          <span>Amount up to</span>
-          <strong>${funder.loanAmount}</strong>
-        </div>
-        <div class="apply-summary-item">
-          <span>Rate from</span>
-          <strong>${funder.interestRate}</strong>
-        </div>
-        <div class="apply-summary-item">
-          <span>Term</span>
-          <strong>${funder.term}</strong>
-        </div>
-      </div>
-
-      <form id="applyForm" class="apply-form">
-        <div class="apply-form-row">
-          <div class="apply-form-group">
-            <label for="applyFullName">Full Name</label>
-            <input type="text" id="applyFullName" placeholder="John Smith" value="${(userData.firstName || '') + (userData.lastName ? ' ' + userData.lastName : '')}" required>
-          </div>
-          <div class="apply-form-group">
-            <label for="applyEmail">Email Address</label>
-            <input type="email" id="applyEmail" placeholder="john@company.com" value="${userData.email || ''}" required>
-          </div>
-        </div>
-        <div class="apply-form-row">
-          <div class="apply-form-group">
-            <label for="applyPhone">Phone Number</label>
-            <input type="tel" id="applyPhone" placeholder="07123 456789" value="${userData.phone || ''}" required>
-          </div>
-          <div class="apply-form-group">
-            <label for="applyCompany">Business Name</label>
-            <input type="text" id="applyCompany" placeholder="My Company Ltd" value="${userData.companyName || ''}" required>
-          </div>
-        </div>
-        <div class="apply-form-row">
-          <div class="apply-form-group">
-            <label for="applyAmount">Amount Required (£)</label>
-            <input type="text" id="applyAmount" placeholder="e.g. 50000" value="${formData.fundingAmount || ''}" required>
-          </div>
-          <div class="apply-form-group">
-            <label for="applyPurpose">Funding Purpose</label>
-            <select id="applyPurpose" required>
-              <option value="" disabled ${!formData.fundingPurpose ? 'selected' : ''}>Select purpose</option>
-              <option value="Working Capital" ${formData.fundingPurpose === 'Working Capital' ? 'selected' : ''}>Working Capital</option>
-              <option value="Equipment Purchase" ${formData.fundingPurpose === 'Equipment Purchase' ? 'selected' : ''}>Equipment Purchase</option>
-              <option value="Expansion" ${formData.fundingPurpose === 'Expansion' ? 'selected' : ''}>Expansion</option>
-              <option value="Property" ${formData.fundingPurpose === 'Property' ? 'selected' : ''}>Property</option>
-              <option value="Refinancing" ${formData.fundingPurpose === 'Refinancing' ? 'selected' : ''}>Refinancing</option>
-              <option value="Stock Purchase" ${formData.fundingPurpose === 'Stock Purchase' ? 'selected' : ''}>Stock Purchase</option>
-              <option value="Other" ${formData.fundingPurpose === 'Other' ? 'selected' : ''}>Other</option>
-            </select>
-          </div>
-        </div>
-        <div class="apply-form-group full-width">
-          <label for="applyMessage">Additional Information (optional)</label>
-          <textarea id="applyMessage" rows="3" placeholder="Tell us more about your funding needs..."></textarea>
-        </div>
-        <div class="apply-form-message" id="applyFormMessage"></div>
-        <div class="apply-form-actions">
-          <button type="button" class="apply-cancel-btn" id="cancelApplyBtn">Cancel</button>
-          <button type="submit" class="apply-submit-btn" id="submitApplyBtn">Submit Application</button>
-        </div>
-      </form>
-    </div>
-  `;
-  document.body.appendChild(modal);
-
-  // Close modal
-  document.getElementById("closeApplyModal").addEventListener("click", () => modal.remove());
-  document.getElementById("cancelApplyBtn").addEventListener("click", () => modal.remove());
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) modal.remove();
-  });
-
-  // Form submission
-  document.getElementById("applyForm").addEventListener("submit", function (e) {
-    e.preventDefault();
-    const msgEl = document.getElementById("applyFormMessage");
-    const submitBtn = document.getElementById("submitApplyBtn");
-
-    const fullName = document.getElementById("applyFullName").value.trim();
-    const email = document.getElementById("applyEmail").value.trim();
-    const phone = document.getElementById("applyPhone").value.trim();
-    const company = document.getElementById("applyCompany").value.trim();
-    const amount = document.getElementById("applyAmount").value.trim();
-    const purpose = document.getElementById("applyPurpose").value;
-
-    if (!fullName || !email || !phone || !company || !amount || !purpose) {
-      msgEl.textContent = "Please fill in all required fields.";
-      msgEl.className = "apply-form-message error";
-      return;
-    }
-
-    // Show loading
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Submitting...";
-    msgEl.textContent = "";
-    msgEl.className = "apply-form-message";
-
-    // Simulate submission (replace with real API call)
-    setTimeout(() => {
-      // Store application locally
-      const applications = JSON.parse(localStorage.getItem("funderApplications") || "[]");
-      applications.push({
-        funderId: funder.id,
-        funderName: funder.name,
-        fullName,
-        email,
-        phone,
-        company,
-        amount,
-        purpose,
-        message: document.getElementById("applyMessage").value.trim(),
-        date: new Date().toISOString(),
-        status: "Pending Review",
-      });
-      localStorage.setItem("funderApplications", JSON.stringify(applications));
-
-      msgEl.textContent = "Application submitted successfully! " + funder.name + " will be in touch shortly.";
-      msgEl.className = "apply-form-message success";
-      submitBtn.textContent = "Submitted ✓";
-
-      setTimeout(() => modal.remove(), 2500);
-    }, 1500);
-  });
->>>>>>> 55de6a7dd2ffc07592c43fc38c0d21b3566b3726:frontend/script.js
 }
 
 // ===== Apply Now Button Handlers =====
@@ -3037,7 +2595,8 @@ function initializeDocumentsPage() {
     if (!header) return;
     const numEl = header.querySelector(".section-number");
     if (hasFiles) {
-      numEl.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>';
+      numEl.innerHTML =
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>';
       numEl.classList.add("completed");
     } else {
       // Restore original number
@@ -3054,15 +2613,23 @@ function initializeDocumentsPage() {
   // Update overall progress bar
   function updateProgress() {
     const docs = getSavedDocs();
-    const sections = ["bank-statements", "financial-accounts", "applicant-info"];
-    const completed = sections.filter((s) => docs[s] && docs[s].length > 0).length;
+    const sections = [
+      "bank-statements",
+      "financial-accounts",
+      "applicant-info",
+    ];
+    const completed = sections.filter(
+      (s) => docs[s] && docs[s].length > 0,
+    ).length;
     const total = sections.length;
     const pct = Math.round((completed / total) * 100);
 
     const progressBar = document.getElementById("docsProgressBar");
     const progressText = document.getElementById("docsProgressText");
     if (progressBar) progressBar.style.width = pct + "%";
-    if (progressText) progressText.textContent = completed + " of " + total + " sections completed";
+    if (progressText)
+      progressText.textContent =
+        completed + " of " + total + " sections completed";
 
     // Show/hide completion message
     const completeMsg = document.getElementById("docsCompleteMsg");
@@ -3105,7 +2672,11 @@ function initializeDocumentsPage() {
         continue;
       }
       // Check duplicate
-      if (docs[sectionId].some((d) => d.name === file.name && d.size === file.size)) {
+      if (
+        docs[sectionId].some(
+          (d) => d.name === file.name && d.size === file.size,
+        )
+      ) {
         errors.push(file.name + ": already uploaded");
         continue;
       }
@@ -3114,7 +2685,11 @@ function initializeDocumentsPage() {
         name: file.name,
         size: file.size,
         type: file.type,
-        date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
+        date: new Date().toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }),
       });
     }
 
@@ -3125,7 +2700,13 @@ function initializeDocumentsPage() {
     if (errors.length > 0) {
       showDocAlert(errors.join("\\n"), "error");
     } else {
-      showDocAlert(fileList.length + " file" + (fileList.length > 1 ? "s" : "") + " uploaded successfully!", "success");
+      showDocAlert(
+        fileList.length +
+          " file" +
+          (fileList.length > 1 ? "s" : "") +
+          " uploaded successfully!",
+        "success",
+      );
     }
   }
 
@@ -3173,7 +2754,8 @@ function initializeDocumentsPage() {
       fileInput.type = "file";
       fileInput.className = "doc-file-input";
       fileInput.multiple = true;
-      fileInput.accept = ".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.xls,.xlsx,.csv";
+      fileInput.accept =
+        ".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.xls,.xlsx,.csv";
       fileInput.style.display = "none";
       sectionEl.appendChild(fileInput);
     }
@@ -3259,8 +2841,12 @@ function initializeDocumentsPage() {
       `;
       document.body.appendChild(modal);
 
-      document.getElementById("closeOBModal").addEventListener("click", () => modal.remove());
-      modal.addEventListener("click", (ev) => { if (ev.target === modal) modal.remove(); });
+      document
+        .getElementById("closeOBModal")
+        .addEventListener("click", () => modal.remove());
+      modal.addEventListener("click", (ev) => {
+        if (ev.target === modal) modal.remove();
+      });
 
       // Bank selection handler
       modal.querySelectorAll(".ob-bank-btn").forEach((bankBtn) => {
@@ -3269,7 +2855,9 @@ function initializeDocumentsPage() {
           const statusEl = document.getElementById("obStatus");
 
           // Disable all bank buttons
-          modal.querySelectorAll(".ob-bank-btn").forEach((b) => { b.disabled = true; });
+          modal.querySelectorAll(".ob-bank-btn").forEach((b) => {
+            b.disabled = true;
+          });
           this.classList.add("selected");
           statusEl.textContent = "Connecting to " + bank + "...";
           statusEl.style.color = "#F96C34";
@@ -3294,7 +2882,11 @@ function initializeDocumentsPage() {
                       name: fname,
                       size: Math.floor(Math.random() * 500000) + 100000,
                       type: "application/pdf",
-                      date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
+                      date: new Date().toLocaleDateString("en-GB", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      }),
                       source: "Open Banking - " + bank,
                     });
                   }
@@ -3304,7 +2896,10 @@ function initializeDocumentsPage() {
                 renderFileList("bank-statements");
                 updateProgress();
 
-                statusEl.innerHTML = '<span style="color:#10b981; font-weight:600;">&#10003; Connected successfully! 6 statements imported from ' + bank + '.</span>';
+                statusEl.innerHTML =
+                  '<span style="color:#10b981; font-weight:600;">&#10003; Connected successfully! 6 statements imported from ' +
+                  bank +
+                  ".</span>";
 
                 setTimeout(() => modal.remove(), 2500);
               }, 1200);
@@ -3625,7 +3220,6 @@ async function loadUserApplication() {
               </button>
             </div>
           </div>
-<<<<<<< HEAD:backend/public/script.js
         `,
           )
           .join("");
@@ -3771,57 +3365,6 @@ async function refreshApplicationStatus(applicationId) {
     if (refreshBtn) {
       refreshBtn.classList.remove("spinning");
       refreshBtn.disabled = false;
-=======
-          <div class="application-actions">
-            <button class="btn-view-results" id="btnViewResults">
-              View Matched Funders →
-            </button>
-            <button class="btn-edit-application" id="btnEditApplication">
-              Edit Application
-            </button>
-          </div>
-        </div>
-      `;
-
-      // Attach event listeners after injecting HTML
-      const viewResultsBtn = document.getElementById("btnViewResults");
-      if (viewResultsBtn) {
-        viewResultsBtn.addEventListener("click", function () {
-          window.location.href = "search-results.html";
-        });
-      }
-      const editAppBtn = document.getElementById("btnEditApplication");
-      if (editAppBtn) {
-        editAppBtn.addEventListener("click", function () {
-          window.location.href = "funding-form.html";
-        });
-      }
-    } catch (e) {
-      console.error("Error parsing form data:", e);
-    }
-  } else {
-    myApplicationsList.innerHTML = `
-      <div class="no-applications-card">
-        <div class="no-app-icon">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
-            <polyline points="13 2 13 9 20 9"/>
-          </svg>
-        </div>
-        <h3>No Applications Yet</h3>
-        <p>Start your funding journey by submitting an application.</p>
-        <button class="btn-start-application" id="btnStartApplication">
-          Start Application →
-        </button>
-      </div>
-    `;
-
-    const startAppBtn = document.getElementById("btnStartApplication");
-    if (startAppBtn) {
-      startAppBtn.addEventListener("click", function () {
-        window.location.href = "funding-form.html";
-      });
->>>>>>> 55de6a7dd2ffc07592c43fc38c0d21b3566b3726:frontend/script.js
     }
   }
 }

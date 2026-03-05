@@ -7,7 +7,6 @@ const path = require("path");
 
 const app = express();
 
-<<<<<<< HEAD
 // Security Middleware - relaxed for production
 app.use(
   helmet({
@@ -15,23 +14,6 @@ app.use(
     crossOriginEmbedderPolicy: false,
     crossOriginResourcePolicy: false,
   }),
-=======
-// Security Middleware
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-        scriptSrcAttr: ["'unsafe-inline'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:", "blob:"],
-        connectSrc: ["'self'", "http://localhost:3000"],
-        fontSrc: ["'self'"],
-      },
-    },
-  })
->>>>>>> 55de6a7dd2ffc07592c43fc38c0d21b3566b3726
 );
 
 // Rate limiting - 100 requests per 15 minutes per IP
