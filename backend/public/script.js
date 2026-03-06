@@ -1375,6 +1375,13 @@ function initializeUserNavbar() {
     searchLink.addEventListener("click", function (e) {
       e.preventDefault();
       closeUserDropdownMenu();
+
+      const isPhoneVerified = localStorage.getItem("isPhoneVerified") === "true";
+      if (!isPhoneVerified) {
+        showDashboardPhoneVerificationModal();
+        return;
+      }
+
       window.location.href = "search-results.html";
     });
   }
@@ -2397,50 +2404,47 @@ function showApplicationSuccess(lenderName, responseData) {
   });
 }
 
-// ===== Phone Verification Modal =====
+// ===== Phone Verification Modal (new card design) =====
 function initializePhoneVerificationModal() {
   const phoneVerificationModal = document.getElementById(
     "phoneVerificationModal",
   );
-  const modalOverlay = document.getElementById("modalOverlay");
-  const closeModalBtn = document.getElementById("closeModalBtn");
   const skipVerificationBtn = document.getElementById("skipVerificationBtn");
   const verifyPhoneBtn = document.getElementById("verifyPhoneBtn");
   const phoneInput = document.getElementById("phoneNumber");
   const verificationMessage = document.getElementById("verificationMessage");
+  const phoneVerifyForm = document.getElementById("phoneVerifyFormSearch");
 
   let verificationStep = "phone"; // 'phone' or 'code'
-
-  // Close modal on close button
-  if (closeModalBtn) {
-    closeModalBtn.addEventListener("click", function () {
-      if (phoneVerificationModal) {
-        phoneVerificationModal.style.display = "none";
-      }
-    });
-  }
 
   // Skip verification
   if (skipVerificationBtn) {
     skipVerificationBtn.addEventListener("click", function () {
-      // Just close the modal but keep cards blurred
       if (phoneVerificationModal) {
         phoneVerificationModal.style.display = "none";
       }
-      // Cards remain blurred
     });
   }
 
-  // Verify phone - 2-step API flow
-  if (verifyPhoneBtn) {
-    verifyPhoneBtn.addEventListener("click", async function () {
+  // Close on overlay click
+  if (phoneVerificationModal) {
+    phoneVerificationModal.addEventListener("click", function (e) {
+      if (e.target === phoneVerificationModal) {
+        phoneVerificationModal.style.display = "none";
+      }
+    });
+  }
+
+  // Form submit handler (Get code / Verify Code)
+  if (phoneVerifyForm) {
+    phoneVerifyForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
       const inputValue = phoneInput.value.trim();
 
       if (verificationStep === "phone") {
-        // Step 1: Send verification code
         if (!inputValue) {
           showVerificationMessage(
-            "Please enter your phone number",
+            "Please enter your mobile number",
             "error",
             verificationMessage,
           );
@@ -2449,7 +2453,7 @@ function initializePhoneVerificationModal() {
 
         if (!/^\d{7,15}$/.test(inputValue.replace(/\D/g, ""))) {
           showVerificationMessage(
-            "Please enter a valid phone number",
+            "Please enter a valid mobile number",
             "error",
             verificationMessage,
           );
@@ -2478,7 +2482,6 @@ function initializePhoneVerificationModal() {
             );
           }
 
-          // In dev mode, show the code
           if (data.code) {
             showVerificationMessage(
               `DEV MODE - Code: ${data.code}`,
@@ -2493,7 +2496,6 @@ function initializePhoneVerificationModal() {
             );
           }
 
-          // Switch to code entry mode
           verificationStep = "code";
           phoneInput.value = "";
           phoneInput.placeholder = "Enter 6-digit code";
@@ -2508,11 +2510,10 @@ function initializePhoneVerificationModal() {
             "error",
             verificationMessage,
           );
-          verifyPhoneBtn.textContent = "Send Code";
+          verifyPhoneBtn.textContent = "Get code";
           verifyPhoneBtn.disabled = false;
         }
       } else {
-        // Step 2: Verify the code
         if (!inputValue || inputValue.length !== 6) {
           showVerificationMessage(
             "Please enter the 6-digit code",
@@ -2557,7 +2558,6 @@ function initializePhoneVerificationModal() {
           localStorage.removeItem("pendingPhoneVerification");
 
           setTimeout(() => {
-            // Update UI
             const fundingCardsContainer = document.getElementById(
               "fundingCardsContainer",
             );
@@ -2568,11 +2568,10 @@ function initializePhoneVerificationModal() {
               phoneVerificationModal.style.display = "none";
             }
 
-            // Reset modal for next use
             phoneInput.value = "";
-            phoneInput.placeholder = "Phone number";
+            phoneInput.placeholder = "Mobile Phone";
             phoneInput.maxLength = 15;
-            verifyPhoneBtn.textContent = "Send Code";
+            verifyPhoneBtn.textContent = "Get code";
             verifyPhoneBtn.disabled = false;
             verificationStep = "phone";
             verificationMessage.textContent = "";
@@ -2596,13 +2595,6 @@ function initializePhoneVerificationModal() {
   if (phoneInput) {
     phoneInput.addEventListener("input", function (e) {
       this.value = this.value.replace(/\D/g, "").slice(0, this.maxLength || 15);
-    });
-
-    phoneInput.addEventListener("keypress", function (e) {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        verifyPhoneBtn.click();
-      }
     });
   }
 }
@@ -3124,8 +3116,8 @@ function showDashboardPhoneVerificationModal() {
     modal.className = "phone-verify-overlay";
     modal.innerHTML = `
       <div class="phone-verify-card">
-        <h2>Verify Your Phone</h2>
-        <p class="verify-subtitle">Please verify your mobile number to access your matched funders.</p>
+        <h2>Mobile Verification</h2>
+        <p class="verify-subtitle">We'll text you a verification code.</p>
         <form id="dashboardPhoneForm">
           <div class="phone-verify-group">
             <label>Mobile number</label>

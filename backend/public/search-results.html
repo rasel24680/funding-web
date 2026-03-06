@@ -70,42 +70,19 @@
     </nav>
 
     <!-- Phone Verification Modal -->
-    <div class="phone-verification-modal" id="phoneVerificationModal">
-        <div class="modal-overlay" id="modalOverlay"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Verify Your Phone Number</h2>
-                <button class="modal-close" id="closeModalBtn">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p class="modal-description">We need to verify your phone number to show you available funding options.</p>
-                
-                <div class="phone-input-group">
-                    <label for="phoneNumber">Phone Number</label>
-                    <div class="phone-input-wrapper">
-                        <span class="country-code">+44</span>
-                        <input 
-                            type="tel" 
-                            id="phoneNumber" 
-                            placeholder="20 8123 2841"
-                            maxlength="15"
-                        >
-                    </div>
-                    <p class="phone-hint">Enter your UK phone number (without the country code)</p>
+    <div class="phone-verify-overlay" id="phoneVerificationModal" style="display: none;">
+        <div class="phone-verify-card">
+            <h2>Mobile Verification</h2>
+            <p class="verify-subtitle">We'll text you a verification code.</p>
+            <form id="phoneVerifyFormSearch">
+                <div class="phone-verify-group">
+                    <label>Mobile number</label>
+                    <input type="tel" id="phoneNumber" placeholder="Mobile Phone" maxlength="15">
                 </div>
-
-                <div class="modal-message" id="verificationMessage"></div>
-
-                <div class="modal-actions">
-                    <button class="btn-close-modal" id="skipVerificationBtn">Skip for now</button>
-                    <button class="btn-verify" id="verifyPhoneBtn">Verify Phone</button>
-                </div>
-            </div>
+                <div class="phone-verify-message" id="verificationMessage"></div>
+                <button type="submit" class="phone-verify-btn" id="verifyPhoneBtn">Get code</button>
+            </form>
+            <button class="phone-verify-skip" id="skipVerificationBtn">Skip for now</button>
         </div>
     </div>
 
