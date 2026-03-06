@@ -130,10 +130,25 @@
       </div>
     </nav>
 
+    <div class="mobile-options-bar">
+      <button
+        id="dashboardOptionsToggle"
+        class="dashboard-options-toggle"
+        type="button"
+        aria-label="Open navigation menu"
+        aria-expanded="false"
+        aria-controls="dashboardSidebarMenu"
+      >
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </button>
+    </div>
+
     <!-- Dashboard Container -->
     <div class="dashboard-container">
       <!-- Sidebar -->
-      <aside class="dashboard-sidebar">
+      <aside class="dashboard-sidebar" id="dashboardSidebarMenu">
         <nav class="sidebar-nav">
           <a
             href="dashboard.html"

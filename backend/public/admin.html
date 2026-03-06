@@ -69,10 +69,25 @@
         </div>
     </nav>
 
+    <div class="mobile-options-bar">
+        <button
+            id="dashboardOptionsToggle"
+            class="dashboard-options-toggle"
+            type="button"
+            aria-label="Open navigation menu"
+            aria-expanded="false"
+            aria-controls="dashboardSidebarMenu"
+        >
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+        </button>
+    </div>
+
     <!-- Admin Dashboard Container -->
     <div class="dashboard-container">
         <!-- Sidebar -->
-        <aside class="dashboard-sidebar">
+        <aside class="dashboard-sidebar" id="dashboardSidebarMenu">
             <nav class="sidebar-nav">
                 <a href="dashboard.html" class="sidebar-item" data-section="applications">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

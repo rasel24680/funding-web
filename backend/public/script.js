@@ -1245,13 +1245,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Only initialize if on auth page
   if (document.querySelector(".auth-section-new")) {
-    // Redirect logged-in users away from login page
-    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-    if (isLoggedIn) {
-      window.location.href = "dashboard.html";
-      return;
-    }
-
     initializeAuthPage();
 
     // Add forgot password handler
@@ -1260,6 +1253,12 @@ document.addEventListener("DOMContentLoaded", function () {
       forgotPasswordLink.addEventListener("click", handleForgotPassword);
     }
   }
+});
+
+// Fallback init: some pages inject inline scripts that can affect DOMContentLoaded timing.
+// This ensures navbar dropdown is always initialized when the page is fully loaded.
+window.addEventListener("load", function () {
+  initializeUserNavbar();
 });
 
 // ===== User Navbar Functions =====
@@ -1347,9 +1346,19 @@ function initializeUserNavbar() {
   const adminLink = document.querySelector(".admin-link");
   const connectedAppsLink = document.querySelector(".connected-apps-link");
 
+  function closeUserDropdownMenu() {
+    if (userProfileHeader) {
+      userProfileHeader.classList.remove("active");
+    }
+    if (userDropdownMenu) {
+      userDropdownMenu.style.display = "none";
+    }
+  }
+
   if (dashboardLink) {
     dashboardLink.addEventListener("click", function (e) {
       e.preventDefault();
+      closeUserDropdownMenu();
       window.location.href = "dashboard.html";
     });
   }
@@ -1357,6 +1366,7 @@ function initializeUserNavbar() {
   if (documentsLink) {
     documentsLink.addEventListener("click", function (e) {
       e.preventDefault();
+      closeUserDropdownMenu();
       window.location.href = "documents.html";
     });
   }
@@ -1364,6 +1374,7 @@ function initializeUserNavbar() {
   if (searchLink) {
     searchLink.addEventListener("click", function (e) {
       e.preventDefault();
+      closeUserDropdownMenu();
       window.location.href = "search-results.html";
     });
   }
@@ -1371,6 +1382,7 @@ function initializeUserNavbar() {
   if (adminLink) {
     adminLink.addEventListener("click", function (e) {
       e.preventDefault();
+      closeUserDropdownMenu();
       window.location.href = "admin.html";
     });
   }
@@ -1378,7 +1390,14 @@ function initializeUserNavbar() {
   if (connectedAppsLink) {
     connectedAppsLink.addEventListener("click", function (e) {
       e.preventDefault();
-      window.location.href = "dashboard.html#connected-apps";
+      closeUserDropdownMenu();
+
+      // If already on dashboard, switch hash in-place; otherwise navigate.
+      if (window.location.pathname.endsWith("/dashboard.html")) {
+        window.location.hash = "connected-apps";
+      } else {
+        window.location.href = "dashboard.html#connected-apps";
+      }
     });
   }
 }
@@ -1530,13 +1549,75 @@ function initializeDashboard() {
   // Initialize sidebar navigation
   const sidebarItems = document.querySelectorAll(".sidebar-item");
   const dashboardSections = document.querySelectorAll(".dashboard-section");
+  const sidebarMenu = document.getElementById("dashboardSidebarMenu");
+  const menuToggleBtn = document.getElementById("dashboardOptionsToggle");
+
+  function activateDashboardSection(sectionName) {
+    if (!sectionName || dashboardSections.length === 0) return;
+
+    const targetSidebarItem = document.querySelector(
+      `.sidebar-item[data-section="${sectionName}"]`,
+    );
+    const targetSection = document.getElementById(`section-${sectionName}`);
+    if (!targetSidebarItem || !targetSection) return;
+
+    sidebarItems.forEach((i) => i.classList.remove("active"));
+    dashboardSections.forEach((s) => (s.style.display = "none"));
+
+    targetSidebarItem.classList.add("active");
+    targetSection.style.display = "block";
+  }
+
+  // Mobile/tablet options menu (three-dot menu)
+  if (menuToggleBtn && sidebarMenu) {
+    menuToggleBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      const isOpen = sidebarMenu.classList.toggle("menu-open");
+      menuToggleBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    });
+
+    document.addEventListener("click", function (e) {
+      const clickedInsideMenu = sidebarMenu.contains(e.target);
+      const clickedToggle = menuToggleBtn.contains(e.target);
+
+      if (!clickedInsideMenu && !clickedToggle) {
+        sidebarMenu.classList.remove("menu-open");
+        menuToggleBtn.setAttribute("aria-expanded", "false");
+      }
+    });
+  }
 
   sidebarItems.forEach((item) => {
     item.addEventListener("click", function (e) {
-      // Check if this is an external page link
+      if (menuToggleBtn && sidebarMenu && window.innerWidth <= 1024) {
+        sidebarMenu.classList.remove("menu-open");
+        menuToggleBtn.setAttribute("aria-expanded", "false");
+      }
+
+      // Check if this is a page navigation link (supports .html and .html#hash)
       const href = this.getAttribute("href");
-      if (href && href.endsWith(".html")) {
-        // Allow navigation to external pages
+      const sectionName = this.dataset.section;
+      const isDashboardHashLink = href && href.startsWith("dashboard.html#");
+      const isOnDashboardPage = window.location.pathname.endsWith(
+        "/dashboard.html",
+      );
+
+      // Handle dashboard hash links explicitly for reliable cross-page behavior
+      if (isDashboardHashLink && sectionName) {
+        e.preventDefault();
+
+        if (isOnDashboardPage) {
+          history.replaceState(null, "", `#${sectionName}`);
+          activateDashboardSection(sectionName);
+        } else {
+          window.location.href = href;
+        }
+
+        return;
+      }
+
+      if (href && href.includes(".html")) {
+        // Allow browser navigation to target page
         return;
       }
 
@@ -1589,22 +1670,15 @@ function initializeDashboard() {
   // Handle hash-based section navigation (e.g. dashboard.html#connected-apps)
   const hash = window.location.hash.replace("#", "");
   if (hash) {
-    const targetSidebarItem = document.querySelector(
-      `.sidebar-item[data-section="${hash}"]`,
-    );
-    if (targetSidebarItem) {
-      // Remove active from all sidebar items and sections
-      sidebarItems.forEach((i) => i.classList.remove("active"));
-      dashboardSections.forEach((s) => (s.style.display = "none"));
-
-      // Activate the target
-      targetSidebarItem.classList.add("active");
-      const targetSection = document.getElementById(`section-${hash}`);
-      if (targetSection) {
-        targetSection.style.display = "block";
-      }
-    }
+    activateDashboardSection(hash);
   }
+
+  window.addEventListener("hashchange", function () {
+    const changedHash = window.location.hash.replace("#", "");
+    if (changedHash) {
+      activateDashboardSection(changedHash);
+    }
+  });
 }
 
 // ===== Search Results Functions =====

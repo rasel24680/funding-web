@@ -317,11 +317,7 @@ body {
 
 /* Decorative Vectors */
 .decor-vector {
-  position: fixed;
-  opacity: 0.9;
-  z-index: 1;
-  pointer-events: none;
-  animation: float 6s ease-in-out infinite;
+  display: none;
 }
 
 .decor-1 {
@@ -1994,15 +1990,118 @@ body {
 
 .applications-list {
   min-height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
 }
 
 .no-applications,
 .no-documents {
   color: var(--text-light);
   font-size: 1rem;
+}
+
+.applications-list > .no-applications {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.application-card {
+  width: 100%;
+  background: #fff;
+  border: 1px solid #e7eaef;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.application-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid #edf0f4;
+}
+
+.application-info h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.application-id {
+  color: #475467;
+  font-size: 0.92rem;
+}
+
+.application-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: rgba(243, 156, 18, 0.15);
+  color: #d68910;
+  text-transform: uppercase;
+}
+
+.application-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+.application-details .detail-row {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.application-details .detail-label {
+  color: #667085;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+}
+
+.application-details .detail-value {
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.application-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.btn-view-results,
+.btn-edit-application {
+  border: none;
+  border-radius: 10px;
+  padding: 0.65rem 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-view-results {
+  background: linear-gradient(90deg, #f96c34, #f2217b);
+  color: #fff;
+}
+
+.btn-edit-application {
+  background: #eef2f6;
+  color: #1f2937;
 }
 
 .section-info {
@@ -2227,6 +2326,24 @@ body {
 
   .applications-tabs {
     flex-direction: column;
+  }
+
+  .application-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .application-details {
+    grid-template-columns: 1fr;
+  }
+
+  .application-actions {
+    flex-direction: column;
+  }
+
+  .btn-view-results,
+  .btn-edit-application {
+    width: 100%;
   }
 }
 
@@ -2869,11 +2986,15 @@ body {
 
 /* ===== Search Results Section ===== */
 .search-results-section {
-  margin-top: 70px;
   padding: 2rem;
+  padding-top: 100px;
   max-width: 1400px;
   margin-left: auto;
   margin-right: auto;
+}
+
+.search-results-section .great-news-banner {
+  margin-top: 0;
 }
 
 .search-results-header {
@@ -3067,7 +3188,9 @@ body {
 /* Responsive Search Results */
 @media (max-width: 768px) {
   .search-results-section {
+    margin-top: 0;
     padding: 1rem;
+    padding-top: 1rem;
   }
 
   .search-results-header {
@@ -3568,6 +3691,7 @@ body {
   background: linear-gradient(135deg, #1a2b3d 0%, #2c3e50 100%);
   border-radius: 16px;
   margin-top: 2.5rem;
+  margin-bottom: 1.5rem;
   overflow: hidden;
   color: #fff;
 }
@@ -3575,7 +3699,7 @@ body {
 .great-news-banner .banner-content {
   display: flex;
   align-items: stretch;
-  gap: 0;
+  gap: 0.85rem;
 }
 
 .great-news-banner .banner-text {
@@ -3642,6 +3766,8 @@ body {
   align-items: flex-end;
   justify-content: flex-end;
   overflow: hidden;
+  margin: 0.75rem 0.75rem 0.75rem 0;
+  border-radius: 12px;
 }
 
 .great-news-banner .banner-image img {
@@ -3652,14 +3778,23 @@ body {
 }
 
 @media (max-width: 768px) {
+  .great-news-banner {
+    margin-top: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+
   .great-news-banner .banner-content {
     flex-direction: column;
+    gap: 0.65rem;
   }
+
   .great-news-banner .banner-text {
     padding: 1.5rem;
   }
+
   .great-news-banner .banner-image {
     flex: 0 0 200px;
+    margin: 0 1rem 1rem;
   }
 }
 
@@ -3956,5 +4091,393 @@ body {
   .application-header-actions {
     flex-wrap: wrap;
     justify-content: flex-end;
+  }
+}
+
+/* ===== Global Responsive Hardening ===== */
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+}
+
+img,
+svg,
+video,
+canvas,
+iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+button,
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
+.summary-item,
+.detail-value,
+.company-name,
+.funder-name,
+.manager-name,
+.user-company,
+.section-text,
+.section-info,
+.contact-detail a {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.mobile-options-bar {
+  display: none;
+}
+
+.dashboard-options-toggle {
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #1a2b3d;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(26, 43, 61, 0.2);
+}
+
+.dashboard-options-toggle .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+@media (max-width: 1024px) {
+  .mobile-options-bar {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0.75rem 1rem 0;
+    background: #f5f7f4;
+  }
+
+  .navbar {
+    padding: 0.85rem 1rem;
+  }
+
+  .nav-container {
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .nav-menu {
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .nav-actions {
+    gap: 0.65rem;
+    flex-wrap: wrap;
+  }
+
+  .dashboard-sidebar {
+    display: none;
+    width: 100%;
+    position: relative;
+    top: auto;
+    height: auto;
+    padding: 0.5rem;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .dashboard-sidebar.menu-open {
+    display: block;
+  }
+
+  .dashboard-main,
+  .dashboard-footer {
+    margin-left: 0;
+  }
+
+  .dashboard-container {
+    display: block;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0;
+    background: #fff;
+    border: 1px solid #e3e8ef;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+  }
+
+  .sidebar-item {
+    flex: 1 1 auto;
+    border-left: none;
+    border-top: 1px solid #edf0f4;
+    border-radius: 0;
+    background: #fff;
+    padding: 0.75rem 0.85rem;
+  }
+
+  .sidebar-item:first-child {
+    border-top: none;
+  }
+
+  .sidebar-item.active {
+    border-left: none;
+    border-top-color: var(--accent-red);
+    background: #fff6f4;
+  }
+
+  .sidebar-user-info {
+    display: none;
+  }
+
+  #section-connected-apps,
+  #section-applications {
+    overflow-x: hidden;
+  }
+
+  .documents-main,
+  .results-content {
+    gap: 1.25rem;
+  }
+
+  .search-results-section,
+  .documents-section,
+  .dashboard-main,
+  .dashboard-footer,
+  .results-section,
+  .funding-section {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    position: static;
+    padding: 0.75rem;
+  }
+
+  .nav-container {
+    align-items: flex-start;
+  }
+
+  .nav-menu {
+    width: 100%;
+    order: 3;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+
+  .nav-link {
+    display: block;
+    padding: 0.45rem 0;
+  }
+
+  .nav-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .find-funding-btn,
+  .login-btn,
+  .user-profile-header {
+    padding: 0.55rem 0.9rem;
+    font-size: 0.84rem;
+  }
+
+  .user-dropdown-menu {
+    left: 0;
+    right: auto;
+    min-width: min(92vw, 280px);
+  }
+
+  .auth-section-new,
+  .dashboard-container,
+  .documents-section,
+  .search-results-section,
+  .results-section,
+  .funding-section {
+    margin-top: 0 !important;
+  }
+
+  .dashboard-container {
+    min-height: auto;
+  }
+
+  .dashboard-sidebar {
+    padding: 0.35rem;
+  }
+
+  .sidebar-item {
+    flex-direction: row;
+    justify-content: flex-start;
+    text-align: left;
+    border-top: none;
+    border-left: 4px solid transparent;
+    padding: 0.85rem 1rem;
+  }
+
+  .sidebar-item.active {
+    border-top-color: transparent;
+    border-left-color: var(--accent-red);
+  }
+
+  .dashboard-main,
+  .dashboard-footer {
+    margin-left: 0;
+    padding: 1rem;
+  }
+
+  .dashboard-main h1,
+  .documents-content h1,
+  .results-info h1 {
+    font-size: 1.55rem;
+  }
+
+  .dashboard-section,
+  .admin-section,
+  .account-manager-card,
+  .contact-section,
+  .contact-form-section,
+  .results-message,
+  .results-header {
+    padding: 1.1rem;
+  }
+
+  .applications-tabs,
+  .search-box,
+  .card-footer,
+  .matched-fund-card .card-header,
+  .matched-fund-card .card-footer,
+  .funding-card .card-header,
+  .funding-card .card-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .search-btn,
+  .apply-btn,
+  .matched-fund-card .apply-btn,
+  .results-button,
+  .back-button {
+    width: 100%;
+  }
+
+  /* Funding form step buttons: stack on mobile so Continue never gets pushed off-screen */
+  .funding-form .form-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .funding-form .form-buttons .back-button,
+  .funding-form .form-buttons .continue-button,
+  .funding-form .form-buttons .results-button {
+    width: 100%;
+    flex: 0 0 auto;
+  }
+
+  .form-row,
+  .summary-row,
+  .card-details,
+  .matched-fund-card .card-details,
+  .upload-options {
+    grid-template-columns: 1fr;
+  }
+
+  .section-content,
+  .section-content.active {
+    padding-left: 0;
+  }
+
+  .great-news-banner .banner-image {
+    flex: 0 0 170px;
+  }
+
+  .documents-section,
+  .search-results-section,
+  .results-section,
+  .funding-section {
+    padding: 1rem;
+  }
+
+  .login-modal-card,
+  .phone-verify-card {
+    box-sizing: border-box;
+    width: calc(100% - 1.5rem);
+    margin: 0.75rem;
+  }
+
+  .matched-funds-header,
+  .matched-funds-header .results-sort {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .matched-funds-header .results-sort select {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-img {
+    height: 36px;
+  }
+
+  .nav-menu {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-main h1,
+  .documents-content h1,
+  .results-header h1,
+  .auth-left-content h1 {
+    font-size: 1.3rem;
+  }
+
+  .dashboard-section,
+  .admin-section,
+  .account-manager-card,
+  .contact-section,
+  .contact-form-section,
+  .results-message,
+  .results-header,
+  .matched-fund-card,
+  .funding-card {
+    padding: 0.9rem;
+    border-radius: 10px;
+  }
+
+  .tab-btn,
+  .auth-tab {
+    width: 100%;
+    text-align: center;
+  }
+
+  .application-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .no-applications-state {
+    padding: 1.25rem 0.9rem;
+  }
+
+  .login-modal-card,
+  .phone-verify-card {
+    padding: 1.25rem 1rem 1rem;
+    border-radius: 12px;
   }
 }
