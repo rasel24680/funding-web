@@ -252,12 +252,21 @@ router.post("/soft-inquiry", async (req, res) => {
       // Business info
       businessName,
       companyName,
+      companyNumber,
 
       // Contact info
       firstName,
       lastName,
       email,
       phone,
+      dateOfBirth,
+
+      // Address
+      houseNumber,
+      houseName,
+      street,
+      town,
+      postcode,
 
       // Funding request
       fundingAmount,
@@ -306,10 +315,17 @@ router.post("/soft-inquiry", async (req, res) => {
     // Build application data for lenders
     const applicationData = {
       businessName: businessName || companyName || "Not Provided",
+      companyNumber: companyNumber || "",
       firstName: firstName || "Not Provided",
       lastName: lastName || "Not Provided",
       email: email,
       phone: phone,
+      dateOfBirth: dateOfBirth || "",
+      houseNumber: houseNumber || "",
+      houseName: houseName || "",
+      street: street || "",
+      town: town || "",
+      postcode: postcode || "",
       fundingAmount: parseFloat(fundingAmount),
       fundingPurpose: fundingPurpose || "Working Capital",
       annualTurnover: parseFloat(annualTurnover) || 0,
@@ -405,12 +421,26 @@ router.post("/soft-inquiry", async (req, res) => {
     const successful = results.filter((r) => r.success);
     const failed = results.filter((r) => !r.success);
 
+    // If all submissions failed, return error response
+    if (successful.length === 0) {
+      const errorMessages = failed.map((r) => r.error || "Unknown error");
+      return res.status(400).json({
+        success: false,
+        error: errorMessages.join("; "),
+        message: "Could not submit to any lenders at this time.",
+        results: results,
+        applicationId: applicationId,
+        summary: {
+          totalLenders: results.length,
+          successful: 0,
+          failed: failed.length,
+        },
+      });
+    }
+
     res.json({
       success: true,
-      message:
-        successful.length > 0
-          ? `Submitted to ${successful.length} lender(s). Check your email for next steps.`
-          : "Could not submit to any lenders at this time.",
+      message: `Submitted to ${successful.length} lender(s). Check your email for next steps.`,
       results: results,
       applicationId: applicationId,
       summary: {

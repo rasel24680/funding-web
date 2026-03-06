@@ -543,8 +543,7 @@ class MyPulseLender extends BaseLender {
       phoneNumber = phoneNumber.substring(0, 11);
     }
 
-    // Format date of birth (DD-MM-YYYY required)
-    // If not provided, generate a placeholder DOB (applicant must be 18+)
+    // Format date of birth (YYYY-MM-DD required by MyPulse API)
     let dobFormatted = "";
     if (data.dateOfBirth) {
       const dob = new Date(data.dateOfBirth);
@@ -552,7 +551,7 @@ class MyPulseLender extends BaseLender {
         const day = String(dob.getDate()).padStart(2, "0");
         const month = String(dob.getMonth() + 1).padStart(2, "0");
         const year = dob.getFullYear();
-        dobFormatted = `${day}-${month}-${year}`;
+        dobFormatted = `${year}-${month}-${day}`;
       }
     }
     // If no DOB, we need to throw an error or set a placeholder
@@ -564,9 +563,10 @@ class MyPulseLender extends BaseLender {
     const companiesHouseId =
       data.companyNumber || data.companiesHouseId || data.crn || "";
 
-    // Build address object
+    // Build address object - API requires either house_number/flat_number OR house_name
+    const houseNum = data.houseNumber || addressParts.houseNumber || "";
     const applicantAddress = {
-      house_number: data.houseNumber || addressParts.houseNumber || "",
+      house_number: houseNum,
       flat_number: data.flatNumber || addressParts.flatNumber || "",
       house_name: data.houseName || addressParts.houseName || "",
       street: data.street || addressParts.street || "",
@@ -701,9 +701,23 @@ class MyPulseLender extends BaseLender {
       errors.push("Companies House registration number is required");
     }
 
-    // Validate funding amount
-    if (!data.fundingAmount || data.fundingAmount < 1000) {
-      errors.push("Funding amount must be at least £1,000");
+    // Validate address - either house_number/flat_number or house_name is required
+    if (!data.houseNumber && !data.flatNumber && !data.houseName) {
+      errors.push("Either house/flat number or house name is required");
+    }
+    if (!data.street) {
+      errors.push("Street is required");
+    }
+    if (!data.town) {
+      errors.push("Town/City is required");
+    }
+    if (!data.postcode) {
+      errors.push("Postcode is required");
+    }
+
+    // Validate funding amount (MyPulse requires minimum £3,000)
+    if (!data.fundingAmount || data.fundingAmount < 3000) {
+      errors.push("Funding amount must be at least £3,000 for MyPulse");
     }
     if (data.fundingAmount > 500000) {
       errors.push("MyPulse maximum loan amount is £500,000");

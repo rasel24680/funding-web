@@ -1598,9 +1598,8 @@ function initializeDashboard() {
       const href = this.getAttribute("href");
       const sectionName = this.dataset.section;
       const isDashboardHashLink = href && href.startsWith("dashboard.html#");
-      const isOnDashboardPage = window.location.pathname.endsWith(
-        "/dashboard.html",
-      );
+      const isOnDashboardPage =
+        window.location.pathname.endsWith("/dashboard.html");
 
       // Handle dashboard hash links explicitly for reliable cross-page behavior
       if (isDashboardHashLink && sectionName) {
@@ -2026,6 +2025,7 @@ function showApplicationModal(lenderKey, lenderName) {
 
   // Check if this is MyPulse (requires additional fields)
   const isMyPulse = lenderKey === "mypulse";
+  const minAmount = isMyPulse ? 3000 : 1000;
   const maxAmount = isMyPulse ? 500000 : 5000000;
 
   // Remove existing modal if present
@@ -2094,7 +2094,7 @@ function showApplicationModal(lenderKey, lenderName) {
                 <small class="field-hint">You must be 18 or over</small>
               </div>
               <div class="form-group">
-                <label for="appHomeowner">Homeowner Status</label>
+                <label for="appHomeowner">Residential Status</label>
                 <select id="appHomeowner">
                   <option value="No" ${formData.homeowner === "No" ? "selected" : ""}>Tenant/Renting</option>
                   <option value="Yes" ${formData.homeowner === "Yes" ? "selected" : ""}>Homeowner</option>
@@ -2103,13 +2103,45 @@ function showApplicationModal(lenderKey, lenderName) {
             </div>
           </div>
 
+          <div class="form-section" ${!isMyPulse ? 'style="display:none"' : ""}>
+            <h3>Address ${isMyPulse ? "*" : ""}</h3>
+            <div class="form-row two-col">
+              <div class="form-group">
+                <label for="appHouseNumber">House/Flat Number</label>
+                <input type="text" id="appHouseNumber" value="" placeholder="e.g. 42 or 5B">
+              </div>
+              <div class="form-group">
+                <label for="appHouseName">House Name</label>
+                <input type="text" id="appHouseName" value="" placeholder="e.g. Wood Acre House">
+              </div>
+            </div>
+            ${isMyPulse ? '<small class="field-hint" style="margin-bottom:8px;display:block">Either house/flat number or house name is required</small>' : ""}
+            <div class="form-row two-col">
+              <div class="form-group">
+                <label for="appStreet">Street ${isMyPulse ? "*" : ""}</label>
+                <input type="text" id="appStreet" value="" placeholder="e.g. Baker Street" ${isMyPulse ? "required" : ""}>
+              </div>
+              <div class="form-group">
+                <label for="appTown">Town/City ${isMyPulse ? "*" : ""}</label>
+                <input type="text" id="appTown" value="" placeholder="e.g. London" ${isMyPulse ? "required" : ""}>
+              </div>
+            </div>
+            <div class="form-row two-col">
+              <div class="form-group">
+                <label for="appPostcode">Postcode ${isMyPulse ? "*" : ""}</label>
+                <input type="text" id="appPostcode" value="" placeholder="e.g. NW1 6XE" ${isMyPulse ? "required" : ""}>
+              </div>
+              <div class="form-group"></div>
+            </div>
+          </div>
+
           <div class="form-section">
             <h3>Funding Request</h3>
             <div class="form-row two-col">
               <div class="form-group">
                 <label for="appFundingAmount">Amount Required (£) *</label>
-                <input type="number" id="appFundingAmount" value="${Math.min(formData.fundingAmount || 0, maxAmount) || ""}" min="1000" max="${maxAmount}" required>
-                ${isMyPulse ? `<small class="field-hint">Maximum £500,000 for this lender</small>` : ""}
+                <input type="number" id="appFundingAmount" value="${Math.min(formData.fundingAmount || 0, maxAmount) || ""}" min="${minAmount}" max="${maxAmount}" required>
+                ${isMyPulse ? `<small class="field-hint">£3,000 – £500,000 for this lender</small>` : ""}
               </div>
               <div class="form-group">
                 <label for="appFundingPurpose">Purpose *</label>
@@ -2225,6 +2257,11 @@ async function submitApplication(lenderKey, lenderName) {
     phone: document.getElementById("appPhone").value.trim(),
     dateOfBirth: document.getElementById("appDateOfBirth")?.value || "",
     homeowner: document.getElementById("appHomeowner")?.value || "No",
+    houseNumber: document.getElementById("appHouseNumber")?.value.trim() || "",
+    houseName: document.getElementById("appHouseName")?.value.trim() || "",
+    street: document.getElementById("appStreet")?.value.trim() || "",
+    town: document.getElementById("appTown")?.value.trim() || "",
+    postcode: document.getElementById("appPostcode")?.value.trim() || "",
     fundingAmount: parseFloat(
       document.getElementById("appFundingAmount").value,
     ),
@@ -2234,6 +2271,16 @@ async function submitApplication(lenderKey, lenderName) {
     tradingYears: document.getElementById("appTradingYears").value,
     lenderKey: lenderKey,
   };
+
+  // MyPulse: validate address - need either house number/flat number or house name
+  if (lenderKey === "mypulse") {
+    if (!applicationData.houseNumber && !applicationData.houseName) {
+      messageEl.textContent =
+        "Please enter either a house/flat number or house name";
+      messageEl.className = "form-message error";
+      return;
+    }
+  }
 
   // Client-side validation for names (letters only)
   const nameRegex = /^[A-Za-z\s\-']+$/;
@@ -2273,8 +2320,16 @@ async function submitApplication(lenderKey, lenderName) {
 
     const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.error || "Failed to submit application");
+    if (!response.ok || !data.success) {
+      // Extract readable error from API response
+      let errorMsg = data.error || "Failed to submit application";
+      if (data.results && data.results.length > 0) {
+        const failedResult = data.results.find((r) => !r.success);
+        if (failedResult && failedResult.error) {
+          errorMsg = failedResult.error;
+        }
+      }
+      throw new Error(errorMsg);
     }
 
     // Success - show confirmation
