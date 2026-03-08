@@ -68,7 +68,7 @@ router.post(
           );
 
           await twilio.messages.create({
-            body: `Your FundOnion verification code is: ${code}. Valid for 10 minutes.`,
+            body: `Your Pellopay verification code is: ${code}. Valid for 10 minutes.`,
             from: process.env.TWILIO_PHONE_NUMBER,
             to: phone,
           });
@@ -228,7 +228,7 @@ router.post("/resend", authMiddleware, async (req, res) => {
         );
 
         await twilio.messages.create({
-          body: `Your FundOnion verification code is: ${code}. Valid for 10 minutes.`,
+          body: `Your Pellopay verification code is: ${code}. Valid for 10 minutes.`,
           from: process.env.TWILIO_PHONE_NUMBER,
           to: users[0].phone,
         });

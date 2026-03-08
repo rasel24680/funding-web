@@ -7,6 +7,9 @@ const path = require("path");
 
 const app = express();
 
+// Trust proxy (Hostinger runs a reverse proxy in front of Node.js)
+app.set("trust proxy", 1);
+
 // Security Middleware - relaxed for production
 app.use(
   helmet({
@@ -49,6 +52,8 @@ app.use("/api/funding", require("./routes/funding"));
 app.use("/api/contact", require("./routes/contact"));
 app.use("/api/lenders", require("./routes/lenders"));
 app.use("/api/company", require("./routes/company"));
+app.use("/api/referral", require("./routes/referral"));
+app.use("/api/documents", require("./routes/documents"));
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {

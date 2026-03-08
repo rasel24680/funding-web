@@ -580,12 +580,29 @@ document.head.appendChild(style);
 // ===== Authentication Functions =====
 
 // Check if we're on the login page
+// Global variable to capture referral code from URL
+let capturedReferralCode = null;
+
 function initializeAuthPage() {
   const authTabs = document.querySelectorAll(".auth-tab");
   const toggleButtons = document.querySelectorAll(".toggle-btn");
   const loginForm = document.getElementById("loginForm");
   const signupForm = document.getElementById("signupForm");
   const socialButtons = document.querySelectorAll(".social-btn");
+
+  // Capture referral code from URL parameter (?ref=CODE)
+  const urlParams = new URLSearchParams(window.location.search);
+  const refCode = urlParams.get("ref");
+  if (refCode) {
+    capturedReferralCode = refCode.toUpperCase();
+    console.log("Referral code captured:", capturedReferralCode);
+
+    // Switch to signup tab if referral code present
+    const signupTab = document.querySelector('.auth-tab[data-toggle="signup"]');
+    if (signupTab) {
+      signupTab.click();
+    }
+  }
 
   // Tab switcher (new design)
   if (authTabs.length > 0) {
@@ -1044,8 +1061,14 @@ async function handleLogin(form) {
     showAuthMessage("Login successful! Redirecting...", "success", messageEl);
 
     setTimeout(() => {
-      // After login, go to funding form page
-      window.location.href = "funding-form.html";
+      // Redirect based on whether user has existing applications
+      if (data.user.hasApplications) {
+        // Returning user with applications → go to dashboard
+        window.location.href = "dashboard.html";
+      } else {
+        // New user without applications → go to funding form
+        window.location.href = "funding-form.html";
+      }
     }, 1000);
   } catch (error) {
     console.error("Login error:", error);
@@ -1140,6 +1163,7 @@ async function handleSignup(form) {
         password,
         businessName: companyName,
         sessionId,
+        referralCode: capturedReferralCode,
       }),
     });
 
@@ -1185,6 +1209,375 @@ function showAuthMessage(message, type, messageEl) {
 function isValidEmail(email) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
+}
+
+// Setup referral code input - pre-fill from URL and validate
+function setupReferralCodeInput() {
+  const referralCodeInput = document.getElementById("referralCode");
+  const referralCodeStatus = document.getElementById("referralCodeStatus");
+
+  if (!referralCodeInput) return;
+
+  // Check for ?ref= URL parameter and pre-fill
+  const urlParams = new URLSearchParams(window.location.search);
+  const refCode = urlParams.get("ref");
+
+  if (refCode) {
+    referralCodeInput.value = refCode;
+    validateReferralCode(refCode, referralCodeInput, referralCodeStatus);
+
+    // Switch to signup tab if on login tab
+    const signupTab = document.querySelector('.auth-tab[data-toggle="signup"]');
+    if (signupTab) {
+      signupTab.click();
+    }
+  }
+
+  // Validate referral code on input with debounce
+  let debounceTimer;
+  referralCodeInput.addEventListener("input", function () {
+    const code = this.value.trim();
+
+    // Clear previous status
+    clearTimeout(debounceTimer);
+
+    if (!code) {
+      referralCodeStatus.textContent = "";
+      referralCodeInput.classList.remove("valid", "invalid");
+      return;
+    }
+
+    if (code.length < 4) {
+      referralCodeStatus.className = "referral-code-status";
+      referralCodeStatus.textContent = "";
+      return;
+    }
+
+    referralCodeStatus.className = "referral-code-status checking";
+    referralCodeStatus.textContent = "Checking code...";
+
+    debounceTimer = setTimeout(() => {
+      validateReferralCode(code, referralCodeInput, referralCodeStatus);
+    }, 500);
+  });
+}
+
+// Validate referral code via API
+async function validateReferralCode(code, inputEl, statusEl) {
+  try {
+    const response = await fetch(
+      `${API_BASE}/referral/validate/${encodeURIComponent(code)}`,
+    );
+    const data = await response.json();
+
+    if (response.ok && data.valid) {
+      statusEl.className = "referral-code-status valid";
+      statusEl.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Valid code from ${data.referrerName}
+      `;
+      inputEl.classList.add("valid");
+      inputEl.classList.remove("invalid");
+    } else {
+      statusEl.className = "referral-code-status invalid";
+      statusEl.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="15" y1="9" x2="9" y2="15"/>
+          <line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+        Invalid referral code
+      `;
+      inputEl.classList.add("invalid");
+      inputEl.classList.remove("valid");
+    }
+  } catch (error) {
+    console.error("Error validating referral code:", error);
+    statusEl.className = "referral-code-status";
+    statusEl.textContent = "";
+  }
+}
+
+// ===== Admin Referral Management Functions =====
+let allAdminReferrals = [];
+
+async function loadAdminReferralData() {
+  const adminReferralSection = document.getElementById(
+    "section-admin-referrals",
+  );
+  if (!adminReferralSection) return;
+
+  try {
+    const authToken = localStorage.getItem("authToken");
+
+    // Load admin's own referral link
+    const codeResponse = await fetch(`${API_BASE}/referral/my-code`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+
+    if (codeResponse.ok) {
+      const codeData = await codeResponse.json();
+      const adminLinkInput = document.getElementById("adminReferralLink");
+      if (adminLinkInput) {
+        adminLinkInput.value = codeData.referralLink;
+      }
+    }
+
+    // Load admin stats
+    const statsResponse = await fetch(`${API_BASE}/referral/admin/stats`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+
+    if (statsResponse.ok) {
+      const stats = await statsResponse.json();
+      updateAdminReferralStats(stats);
+    }
+
+    // Load all referrals
+    const listResponse = await fetch(`${API_BASE}/referral/admin/all`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+
+    if (listResponse.ok) {
+      const listData = await listResponse.json();
+      allAdminReferrals = listData.referrals || [];
+      renderAdminReferralTable(allAdminReferrals);
+    }
+  } catch (error) {
+    console.error("Error loading admin referral data:", error);
+    const tableBody = document.getElementById("adminReferralTableBody");
+    if (tableBody) {
+      tableBody.innerHTML =
+        '<tr><td colspan="7" class="no-data-row">Error loading referrals</td></tr>';
+    }
+  }
+}
+
+function updateAdminReferralStats(stats) {
+  const elements = {
+    adminTotalReferrals: stats.totalReferrals || 0,
+    adminPendingReferrals: stats.pendingReferrals || 0,
+    adminQualifiedReferrals: stats.qualifiedReferrals || 0,
+    adminRewardedReferrals: stats.rewardedReferrals || 0,
+    adminTotalPaid: `£${stats.totalRewardsPaid || 0}`,
+  };
+
+  Object.entries(elements).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  });
+}
+
+function renderAdminReferralTable(referrals) {
+  const tableBody = document.getElementById("adminReferralTableBody");
+  if (!tableBody) return;
+
+  if (!referrals || referrals.length === 0) {
+    tableBody.innerHTML =
+      '<tr><td colspan="7" class="no-data-row">No referrals found</td></tr>';
+    return;
+  }
+
+  tableBody.innerHTML = referrals
+    .map(
+      (ref) => `
+    <tr data-referral-id="${ref.id}">
+      <td>#${ref.id}</td>
+      <td>${ref.referrerEmail || "N/A"}</td>
+      <td>${ref.referredEmail || "N/A"}</td>
+      <td>${formatDate(ref.createdAt)}</td>
+      <td><span class="referral-status ${ref.status}">${ref.status.charAt(0).toUpperCase() + ref.status.slice(1)}</span></td>
+      <td>${ref.rewardAmount ? `£${ref.rewardAmount}` : "-"}</td>
+      <td>
+        <div class="referral-actions">
+          ${
+            ref.status === "pending"
+              ? `
+            <button class="action-btn qualify" onclick="qualifyReferral(${ref.id})">Qualify</button>
+            <button class="action-btn expire" onclick="expireReferral(${ref.id})">Expire</button>
+          `
+              : ""
+          }
+          ${
+            ref.status === "qualified"
+              ? `
+            <button class="action-btn reward" onclick="rewardReferral(${ref.id})">Reward</button>
+          `
+              : ""
+          }
+          ${ref.status === "rewarded" ? '<span style="color: #155724; font-size: 0.8rem;">✓ Completed</span>' : ""}
+          ${ref.status === "expired" ? '<span style="color: #721c24; font-size: 0.8rem;">Expired</span>' : ""}
+        </div>
+      </td>
+    </tr>
+  `,
+    )
+    .join("");
+}
+
+function filterAdminReferrals() {
+  const statusFilter =
+    document.getElementById("referralStatusFilter")?.value || "";
+  const searchFilter =
+    document.getElementById("referralSearchInput")?.value.toLowerCase() || "";
+
+  let filtered = allAdminReferrals;
+
+  if (statusFilter) {
+    filtered = filtered.filter((ref) => ref.status === statusFilter);
+  }
+
+  if (searchFilter) {
+    filtered = filtered.filter(
+      (ref) =>
+        (ref.referrerEmail &&
+          ref.referrerEmail.toLowerCase().includes(searchFilter)) ||
+        (ref.referredEmail &&
+          ref.referredEmail.toLowerCase().includes(searchFilter)),
+    );
+  }
+
+  renderAdminReferralTable(filtered);
+}
+
+async function qualifyReferral(referralId) {
+  if (!confirm("Mark this referral as qualified?")) return;
+
+  try {
+    const authToken = localStorage.getItem("authToken");
+    const response = await fetch(
+      `${API_BASE}/referral/admin/qualify/${referralId}`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${authToken}` },
+      },
+    );
+
+    if (response.ok) {
+      showAlert("Referral marked as qualified", "success");
+      loadAdminReferralData();
+    } else {
+      const data = await response.json();
+      showAlert(data.error || "Failed to qualify referral", "error");
+    }
+  } catch (error) {
+    console.error("Error qualifying referral:", error);
+    showAlert("Error qualifying referral", "error");
+  }
+}
+
+async function rewardReferral(referralId) {
+  if (!confirm("Process £75 reward for this referral?")) return;
+
+  try {
+    const authToken = localStorage.getItem("authToken");
+    const response = await fetch(
+      `${API_BASE}/referral/admin/reward/${referralId}`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${authToken}` },
+      },
+    );
+
+    if (response.ok) {
+      showAlert("Reward processed successfully", "success");
+      loadAdminReferralData();
+    } else {
+      const data = await response.json();
+      showAlert(data.error || "Failed to process reward", "error");
+    }
+  } catch (error) {
+    console.error("Error processing reward:", error);
+    showAlert("Error processing reward", "error");
+  }
+}
+
+async function expireReferral(referralId) {
+  if (!confirm("Mark this referral as expired?")) return;
+
+  try {
+    const authToken = localStorage.getItem("authToken");
+    const response = await fetch(
+      `${API_BASE}/referral/admin/expire/${referralId}`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${authToken}` },
+      },
+    );
+
+    if (response.ok) {
+      showAlert("Referral marked as expired", "success");
+      loadAdminReferralData();
+    } else {
+      const data = await response.json();
+      showAlert(data.error || "Failed to expire referral", "error");
+    }
+  } catch (error) {
+    console.error("Error expiring referral:", error);
+    showAlert("Error expiring referral", "error");
+  }
+}
+
+async function exportReferrals() {
+  try {
+    const authToken = localStorage.getItem("authToken");
+    const response = await fetch(`${API_BASE}/referral/admin/export`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+
+    if (response.ok) {
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `referrals-${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      showAlert("CSV exported successfully", "success");
+    } else {
+      showAlert("Failed to export CSV", "error");
+    }
+  } catch (error) {
+    console.error("Error exporting referrals:", error);
+    showAlert("Error exporting referrals", "error");
+  }
+}
+
+function copyAdminReferralLink() {
+  const linkInput = document.getElementById("adminReferralLink");
+  const copyBtn = document.getElementById("copyAdminLinkBtn");
+
+  if (!linkInput || !linkInput.value) {
+    showAlert("No referral link to copy", "error");
+    return;
+  }
+
+  navigator.clipboard
+    .writeText(linkInput.value)
+    .then(() => {
+      if (copyBtn) {
+        const originalText = copyBtn.innerHTML;
+        copyBtn.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Copied!
+      `;
+        setTimeout(() => {
+          copyBtn.innerHTML = originalText;
+        }, 2000);
+      }
+      showAlert("Referral link copied!", "success");
+    })
+    .catch(() => {
+      linkInput.select();
+      document.execCommand("copy");
+      showAlert("Referral link copied!", "success");
+    });
 }
 
 // Handle forgot password
@@ -1376,7 +1769,8 @@ function initializeUserNavbar() {
       e.preventDefault();
       closeUserDropdownMenu();
 
-      const isPhoneVerified = localStorage.getItem("isPhoneVerified") === "true";
+      const isPhoneVerified =
+        localStorage.getItem("isPhoneVerified") === "true";
       if (!isPhoneVerified) {
         showDashboardPhoneVerificationModal();
         return;
@@ -1552,6 +1946,9 @@ function initializeDashboard() {
 
   // Load and display user's application
   loadUserApplication();
+
+  // Load referral data for Refer & Earn section
+  loadReferralData();
 
   // Initialize sidebar navigation
   const sidebarItems = document.querySelectorAll(".sidebar-item");
@@ -2616,21 +3013,15 @@ function initializeDocumentsPage() {
     return;
   }
 
-  // Document storage key
-  const DOCS_KEY = "uploadedDocuments";
+  // Initialize sidebar user info
+  initializeSidebarUserInfo();
 
-  // Load saved documents from localStorage
-  function getSavedDocs() {
-    try {
-      return JSON.parse(localStorage.getItem(DOCS_KEY) || "{}");
-    } catch (e) {
-      return {};
-    }
-  }
-
-  function saveDocs(docs) {
-    localStorage.setItem(DOCS_KEY, JSON.stringify(docs));
-  }
+  // Store loaded documents from server
+  let serverDocs = {
+    "bank-statements": [],
+    "financial-accounts": [],
+    "applicant-info": [],
+  };
 
   // Format file size
   function formatSize(bytes) {
@@ -2653,13 +3044,37 @@ function initializeDocumentsPage() {
     return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>';
   }
 
+  // Load documents from server
+  async function loadDocumentsFromServer() {
+    try {
+      const authToken = localStorage.getItem("authToken");
+      const response = await fetch(`${API_BASE}/documents`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        serverDocs = data.documents;
+
+        // Render all sections
+        ["bank-statements", "financial-accounts", "applicant-info"].forEach(
+          (sectionId) => {
+            renderFileList(sectionId);
+          },
+        );
+        updateProgress();
+      }
+    } catch (error) {
+      console.error("Error loading documents:", error);
+    }
+  }
+
   // Render uploaded files list for a section
   function renderFileList(sectionId) {
     const container = document.getElementById("files-" + sectionId);
     if (!container) return;
 
-    const docs = getSavedDocs();
-    const files = docs[sectionId] || [];
+    const files = serverDocs[sectionId] || [];
 
     if (files.length === 0) {
       container.innerHTML = "";
@@ -2675,14 +3090,17 @@ function initializeDocumentsPage() {
       </div>
       ${files
         .map(
-          (file, idx) => `
-        <div class="uploaded-file-row" data-section="${sectionId}" data-index="${idx}">
+          (file) => `
+        <div class="uploaded-file-row" data-section="${sectionId}" data-id="${file.id}">
           <div class="file-icon">${getFileIcon(file.name)}</div>
           <div class="file-info">
             <span class="file-name">${file.name}</span>
             <span class="file-meta">${formatSize(file.size)} &bull; ${file.date}</span>
           </div>
-          <button class="file-remove-btn" data-section="${sectionId}" data-index="${idx}" title="Remove file">
+          <button class="file-download-btn" data-id="${file.id}" title="Download file">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+          <button class="file-remove-btn" data-section="${sectionId}" data-id="${file.id}" title="Remove file">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
@@ -2691,23 +3109,66 @@ function initializeDocumentsPage() {
         .join("")}
     `;
 
+    // Attach download handlers
+    container.querySelectorAll(".file-download-btn").forEach((btn) => {
+      btn.addEventListener("click", async function () {
+        const docId = this.getAttribute("data-id");
+        await downloadDocument(docId);
+      });
+    });
+
     // Attach remove handlers
     container.querySelectorAll(".file-remove-btn").forEach((btn) => {
-      btn.addEventListener("click", function () {
+      btn.addEventListener("click", async function () {
+        const docId = this.getAttribute("data-id");
         const sec = this.getAttribute("data-section");
-        const idx = parseInt(this.getAttribute("data-index"));
-        const allDocs = getSavedDocs();
-        if (allDocs[sec]) {
-          allDocs[sec].splice(idx, 1);
-          if (allDocs[sec].length === 0) delete allDocs[sec];
-          saveDocs(allDocs);
-          renderFileList(sec);
-          updateProgress();
-        }
+        await deleteDocument(docId, sec);
       });
     });
 
     updateSectionStatus(sectionId, true);
+  }
+
+  // Download a document
+  async function downloadDocument(docId) {
+    try {
+      const authToken = localStorage.getItem("authToken");
+      window.open(
+        `${API_BASE}/documents/download/${docId}?token=${authToken}`,
+        "_blank",
+      );
+    } catch (error) {
+      console.error("Download error:", error);
+      showDocAlert("Failed to download file", "error");
+    }
+  }
+
+  // Delete a document
+  async function deleteDocument(docId, sectionId) {
+    if (!confirm("Are you sure you want to delete this file?")) return;
+
+    try {
+      const authToken = localStorage.getItem("authToken");
+      const response = await fetch(`${API_BASE}/documents/${docId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+
+      if (response.ok) {
+        // Remove from local cache and re-render
+        serverDocs[sectionId] = serverDocs[sectionId].filter(
+          (f) => f.id !== parseInt(docId),
+        );
+        renderFileList(sectionId);
+        updateProgress();
+        showDocAlert("File deleted successfully", "success");
+      } else {
+        showDocAlert("Failed to delete file", "error");
+      }
+    } catch (error) {
+      console.error("Delete error:", error);
+      showDocAlert("Failed to delete file", "error");
+    }
   }
 
   // Update section header to show completion status
@@ -2720,7 +3181,6 @@ function initializeDocumentsPage() {
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>';
       numEl.classList.add("completed");
     } else {
-      // Restore original number
       const allHeaders = document.querySelectorAll(".section-header");
       allHeaders.forEach((h, i) => {
         if (h.getAttribute("data-section") === sectionId) {
@@ -2733,14 +3193,13 @@ function initializeDocumentsPage() {
 
   // Update overall progress bar
   function updateProgress() {
-    const docs = getSavedDocs();
     const sections = [
       "bank-statements",
       "financial-accounts",
       "applicant-info",
     ];
     const completed = sections.filter(
-      (s) => docs[s] && docs[s].length > 0,
+      (s) => serverDocs[s] && serverDocs[s].length > 0,
     ).length;
     const total = sections.length;
     const pct = Math.round((completed / total) * 100);
@@ -2752,15 +3211,35 @@ function initializeDocumentsPage() {
       progressText.textContent =
         completed + " of " + total + " sections completed";
 
-    // Show/hide completion message
     const completeMsg = document.getElementById("docsCompleteMsg");
     if (completeMsg) {
       completeMsg.style.display = completed === total ? "block" : "none";
     }
   }
 
+  // Upload file to server
+  async function uploadFileToServer(file, sectionId) {
+    const authToken = localStorage.getItem("authToken");
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("category", sectionId);
+
+    const response = await fetch(`${API_BASE}/documents/upload`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${authToken}` },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || "Upload failed");
+    }
+
+    return response.json();
+  }
+
   // Handle file selection (from input or drop)
-  function handleFiles(fileList, sectionId) {
+  async function handleFiles(fileList, sectionId) {
     if (!fileList || fileList.length === 0) return;
 
     const allowedTypes = [
@@ -2777,13 +3256,12 @@ function initializeDocumentsPage() {
     ];
     const maxSize = 10 * 1024 * 1024; // 10MB
 
-    const docs = getSavedDocs();
-    if (!docs[sectionId]) docs[sectionId] = [];
-
     let errors = [];
+    let successCount = 0;
 
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
+
       if (!allowedTypes.includes(file.type)) {
         errors.push(file.name + ": unsupported file type");
         continue;
@@ -2792,39 +3270,30 @@ function initializeDocumentsPage() {
         errors.push(file.name + ": file too large (max 10MB)");
         continue;
       }
-      // Check duplicate
-      if (
-        docs[sectionId].some(
-          (d) => d.name === file.name && d.size === file.size,
-        )
-      ) {
-        errors.push(file.name + ": already uploaded");
-        continue;
-      }
 
-      docs[sectionId].push({
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        date: new Date().toLocaleDateString("en-GB", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        }),
-      });
+      try {
+        showDocAlert(`Uploading ${file.name}...`, "info");
+        const result = await uploadFileToServer(file, sectionId);
+
+        // Add to local cache
+        if (!serverDocs[sectionId]) serverDocs[sectionId] = [];
+        serverDocs[sectionId].push(result.document);
+        successCount++;
+      } catch (error) {
+        errors.push(file.name + ": " + error.message);
+      }
     }
 
-    saveDocs(docs);
     renderFileList(sectionId);
     updateProgress();
 
     if (errors.length > 0) {
-      showDocAlert(errors.join("\\n"), "error");
-    } else {
+      showDocAlert(errors.join("\n"), "error");
+    } else if (successCount > 0) {
       showDocAlert(
-        fileList.length +
+        successCount +
           " file" +
-          (fileList.length > 1 ? "s" : "") +
+          (successCount > 1 ? "s" : "") +
           " uploaded successfully!",
         "success",
       );
@@ -2894,7 +3363,7 @@ function initializeDocumentsPage() {
     // File input change handler
     fileInput.addEventListener("change", function () {
       handleFiles(this.files, sectionId);
-      this.value = ""; // reset so same file can be re-uploaded
+      this.value = "";
     });
 
     // Drop zone
@@ -2912,14 +3381,10 @@ function initializeDocumentsPage() {
         this.classList.remove("dragover");
         handleFiles(e.dataTransfer.files, sectionId);
       });
-      // Clicking on drop zone also triggers file input
       dropZone.addEventListener("click", function () {
         fileInput.click();
       });
     }
-
-    // Render existing files
-    renderFileList(sectionId);
   });
 
   // Connect open banking button
@@ -2929,7 +3394,6 @@ function initializeDocumentsPage() {
       e.preventDefault();
       e.stopPropagation();
 
-      // Create connection modal
       let modal = document.getElementById("openBankingModal");
       if (modal) modal.remove();
 
@@ -2969,13 +3433,12 @@ function initializeDocumentsPage() {
         if (ev.target === modal) modal.remove();
       });
 
-      // Bank selection handler
+      // Bank selection handler (simulated - Open Banking would need real integration)
       modal.querySelectorAll(".ob-bank-btn").forEach((bankBtn) => {
         bankBtn.addEventListener("click", function () {
           const bank = this.getAttribute("data-bank");
           const statusEl = document.getElementById("obStatus");
 
-          // Disable all bank buttons
           modal.querySelectorAll(".ob-bank-btn").forEach((b) => {
             b.disabled = true;
           });
@@ -2983,45 +3446,13 @@ function initializeDocumentsPage() {
           statusEl.textContent = "Connecting to " + bank + "...";
           statusEl.style.color = "#F96C34";
 
-          // Simulate connection process
           setTimeout(() => {
             statusEl.textContent = "Authenticating with " + bank + "...";
             setTimeout(() => {
               statusEl.textContent = "Retrieving bank statements...";
               setTimeout(() => {
-                // Save simulated bank statements
-                const docs = getSavedDocs();
-                if (!docs["bank-statements"]) docs["bank-statements"] = [];
-
-                // Add simulated statements
-                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
-                const year = new Date().getFullYear();
-                months.forEach((m) => {
-                  const fname = bank + "_Statement_" + m + "_" + year + ".pdf";
-                  if (!docs["bank-statements"].some((d) => d.name === fname)) {
-                    docs["bank-statements"].push({
-                      name: fname,
-                      size: Math.floor(Math.random() * 500000) + 100000,
-                      type: "application/pdf",
-                      date: new Date().toLocaleDateString("en-GB", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      }),
-                      source: "Open Banking - " + bank,
-                    });
-                  }
-                });
-
-                saveDocs(docs);
-                renderFileList("bank-statements");
-                updateProgress();
-
                 statusEl.innerHTML =
-                  '<span style="color:#10b981; font-weight:600;">&#10003; Connected successfully! 6 statements imported from ' +
-                  bank +
-                  ".</span>";
-
+                  '<span style="color:#10b981; font-weight:600;">&#10003; Connected successfully! Open Banking integration requires additional setup.</span>';
                 setTimeout(() => modal.remove(), 2500);
               }, 1200);
             }, 1000);
@@ -3031,8 +3462,8 @@ function initializeDocumentsPage() {
     });
   });
 
-  // Initialize progress
-  updateProgress();
+  // Load documents from server on page load
+  loadDocumentsFromServer();
 }
 
 // ===== Admin Page Functions =====
@@ -3050,6 +3481,9 @@ function initializeAdminPage() {
   // Initialize sidebar user info, avatar & profile picture
   initializeSidebarUserInfo();
 
+  // Load user's referral code for display
+  loadSimpleReferralCode();
+
   // Initialize sidebar navigation
   const sidebarItems = document.querySelectorAll(".sidebar-item");
 
@@ -3065,33 +3499,53 @@ function initializeAdminPage() {
       e.preventDefault();
     });
   });
+}
 
-  // Initialize copy link button
-  const copyLinkBtn = document.getElementById("copyLinkBtn");
-  if (copyLinkBtn) {
-    copyLinkBtn.addEventListener("click", function () {
-      const referralLink = document.getElementById("referralLink");
-      const linkValue = referralLink.value;
+// Load simple referral code for minimal admin page
+async function loadSimpleReferralCode() {
+  const linkText = document.getElementById("referralLinkText");
+  const codeValue = document.getElementById("referralCodeValue");
 
-      // Copy to clipboard using modern API with fallback
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard
-          .writeText(linkValue)
-          .then(() => {
-            showCopyFeedback(copyLinkBtn);
-          })
-          .catch(() => {
-            // Fallback for older browsers
-            referralLink.select();
-            document.execCommand("copy");
-            showCopyFeedback(copyLinkBtn);
-          });
-      } else {
-        referralLink.select();
-        document.execCommand("copy");
-        showCopyFeedback(copyLinkBtn);
-      }
+  try {
+    const authToken = localStorage.getItem("authToken");
+
+    if (!authToken) {
+      console.error("No auth token found");
+      if (linkText)
+        linkText.textContent = "Please log in to see your referral link";
+      if (codeValue) codeValue.textContent = "------";
+      return;
+    }
+
+    const response = await fetch(`${API_BASE}/referral/my-code`, {
+      headers: { Authorization: `Bearer ${authToken}` },
     });
+
+    if (response.ok) {
+      const data = await response.json();
+
+      // Update referral link text
+      if (linkText) {
+        linkText.textContent = data.referralLink || "Link not available";
+      }
+
+      // Update referral code box
+      if (codeValue) {
+        codeValue.textContent = data.referralCode || "------";
+      }
+    } else {
+      console.error(
+        "Referral API error:",
+        response.status,
+        response.statusText,
+      );
+      if (linkText) linkText.textContent = "Unable to load referral link";
+      if (codeValue) codeValue.textContent = "------";
+    }
+  } catch (error) {
+    console.error("Error loading referral code:", error);
+    if (linkText) linkText.textContent = "Error loading referral link";
+    if (codeValue) codeValue.textContent = "------";
   }
 }
 
@@ -3488,6 +3942,144 @@ async function refreshApplicationStatus(applicationId) {
       refreshBtn.disabled = false;
     }
   }
+}
+
+// ===== Referral Functions =====
+async function loadReferralData() {
+  const referralLinkInput = document.getElementById("referralLinkInput");
+  const referralCodeDisplay = document.getElementById("referralCodeDisplay");
+
+  if (!referralLinkInput) return;
+
+  try {
+    const authToken = localStorage.getItem("authToken");
+
+    // Get referral code
+    const codeResponse = await fetch(`${API_BASE}/referral/my-code`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+
+    if (codeResponse.ok) {
+      const codeData = await codeResponse.json();
+      referralLinkInput.value = codeData.referralLink;
+      referralCodeDisplay.textContent = codeData.referralCode;
+    }
+
+    // Get referral stats
+    const statsResponse = await fetch(`${API_BASE}/referral/stats`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+
+    if (statsResponse.ok) {
+      const statsData = await statsResponse.json();
+
+      const totalReferrals = document.getElementById("totalReferrals");
+      const pendingReferrals = document.getElementById("pendingReferrals");
+      const qualifiedReferrals = document.getElementById("qualifiedReferrals");
+      const totalRewardsEarned = document.getElementById("totalRewardsEarned");
+
+      if (totalReferrals)
+        totalReferrals.textContent = statsData.totalReferrals || 0;
+      if (pendingReferrals)
+        pendingReferrals.textContent = statsData.pendingReferrals || 0;
+      if (qualifiedReferrals)
+        qualifiedReferrals.textContent = statsData.qualifiedReferrals || 0;
+      if (totalRewardsEarned)
+        totalRewardsEarned.textContent = `£${statsData.totalRewardsEarned || 0}`;
+    }
+
+    // Get referral list
+    const listResponse = await fetch(`${API_BASE}/referral/list`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+
+    if (listResponse.ok) {
+      const listData = await listResponse.json();
+      renderReferralList(listData.referrals || []);
+    }
+  } catch (error) {
+    console.error("Error loading referral data:", error);
+    if (referralLinkInput) {
+      referralLinkInput.placeholder = "Unable to load referral link";
+    }
+  }
+}
+
+function renderReferralList(referrals) {
+  const referralList = document.getElementById("referralList");
+  if (!referralList) return;
+
+  if (!referrals || referrals.length === 0) {
+    referralList.innerHTML =
+      '<p class="no-referrals">No referrals yet. Share your link to start earning!</p>';
+    return;
+  }
+
+  referralList.innerHTML = referrals
+    .map(
+      (ref) => `
+    <div class="referral-item">
+      <div class="referral-item-info">
+        <span class="referral-item-email">${maskEmail(ref.referredEmail)}</span>
+        <span class="referral-item-date">Referred on ${formatDate(ref.createdAt)}</span>
+      </div>
+      <span class="referral-status ${ref.status}">${ref.status.charAt(0).toUpperCase() + ref.status.slice(1)}</span>
+    </div>
+  `,
+    )
+    .join("");
+}
+
+function maskEmail(email) {
+  if (!email) return "***@***";
+  const [localPart, domain] = email.split("@");
+  if (!domain) return "***@***";
+  const maskedLocal =
+    localPart.charAt(0) + "***" + localPart.charAt(localPart.length - 1);
+  return maskedLocal + "@" + domain;
+}
+
+function copyReferralLink() {
+  const referralLinkInput = document.getElementById("referralLinkInput");
+  const copyBtn = document.querySelector(".copy-referral-btn");
+
+  if (!referralLinkInput || !referralLinkInput.value) {
+    showAlert("No referral link to copy", "error");
+    return;
+  }
+
+  navigator.clipboard
+    .writeText(referralLinkInput.value)
+    .then(() => {
+      if (copyBtn) {
+        const originalText = copyBtn.innerHTML;
+        copyBtn.innerHTML = `
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Copied!
+      `;
+        copyBtn.classList.add("copied");
+
+        setTimeout(() => {
+          copyBtn.innerHTML = originalText;
+          copyBtn.classList.remove("copied");
+        }, 2000);
+      }
+      showAlert("Referral link copied to clipboard!", "success");
+    })
+    .catch(() => {
+      // Fallback for older browsers
+      referralLinkInput.select();
+      document.execCommand("copy");
+      showAlert("Referral link copied!", "success");
+    });
 }
 
 // ===== Logout Handler =====

@@ -750,7 +750,7 @@ class MyPulseLender extends BaseLender {
    */
   buildNotes(data) {
     const notes = [];
-    notes.push(`Submitted via Pellopay/FundOnion platform.`);
+    notes.push(`Submitted via Pellopay platform.`);
     if (data.fundingPurpose) {
       notes.push(`Funding purpose: ${data.fundingPurpose}.`);
     }

@@ -358,7 +358,10 @@ class BizcapLender extends BaseLender {
         businessStartDate: businessStartDate || undefined,
 
         // UK specific (CRN - Company Registration Number)
-        // crn: applicationData.companyNumber || undefined,
+        crn: applicationData.companyNumber || undefined,
+
+        // Date of birth
+        dateOfBirth: applicationData.dateOfBirth || undefined,
 
         // Partner reference - link back to our system
         partnerLeadReferenceId: applicationData.id
@@ -366,7 +369,7 @@ class BizcapLender extends BaseLender {
           : undefined,
 
         // Notes
-        notes: `Submitted via Pellopay/FundOnion platform. Funding purpose: ${applicationData.funding_purpose || applicationData.fundingPurpose}. Priority: ${applicationData.importance || "Not specified"}.`,
+        notes: `Submitted via Pellopay platform. Funding purpose: ${applicationData.funding_purpose || applicationData.fundingPurpose}. Priority: ${applicationData.importance || "Not specified"}.`,
       },
     };
   }

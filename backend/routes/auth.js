@@ -78,6 +78,7 @@ router.post("/register", registerValidation, async (req, res) => {
       businessName,
       businessType,
       phone,
+      referralCode,
     } = req.body;
 
     // Check if user already exists
@@ -90,14 +91,28 @@ router.post("/register", registerValidation, async (req, res) => {
       return res.status(400).json({ error: "Email already registered" });
     }
 
+    // Check referral code if provided
+    let referrerId = null;
+    let validReferralCode = null;
+    if (referralCode) {
+      const [referrers] = await db.query(
+        "SELECT id, referral_code FROM users WHERE referral_code = ?",
+        [referralCode.toUpperCase()],
+      );
+      if (referrers.length > 0) {
+        referrerId = referrers[0].id;
+        validReferralCode = referrers[0].referral_code;
+      }
+    }
+
     // Hash password
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Insert new user
+    // Insert new user with referred_by if applicable
     const [result] = await db.query(
-      `INSERT INTO users (first_name, last_name, email, password, business_name, business_type, phone) 
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO users (first_name, last_name, email, password, business_name, business_type, phone, referred_by) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         firstName,
         lastName,
@@ -106,8 +121,18 @@ router.post("/register", registerValidation, async (req, res) => {
         businessName,
         businessType || null,
         phone || null,
+        referrerId,
       ],
     );
+
+    // Create referral record if user was referred
+    if (referrerId && validReferralCode) {
+      await db.query(
+        `INSERT INTO referrals (referrer_id, referred_id, referral_code, status, qualification_type)
+         VALUES (?, ?, ?, 'pending', 'open_banking')`,
+        [referrerId, result.insertId, validReferralCode],
+      );
+    }
 
     // Generate JWT token
     const token = jwt.sign(
@@ -202,6 +227,13 @@ router.post("/login", loginValidation, async (req, res) => {
       );
     }
 
+    // Check if user has any funding applications
+    const [applications] = await db.query(
+      "SELECT COUNT(*) as count FROM funding_applications WHERE user_id = ?",
+      [user.id],
+    );
+    const hasApplications = applications[0].count > 0;
+
     res.json({
       success: true,
       message: "Login successful",
@@ -215,6 +247,7 @@ router.post("/login", loginValidation, async (req, res) => {
         businessType: user.business_type,
         phone: user.phone,
         phoneVerified: user.phone_verified,
+        hasApplications: hasApplications,
       },
     });
   } catch (error) {

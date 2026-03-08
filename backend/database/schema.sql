@@ -1,12 +1,12 @@
 -- =============================================
--- FundOnion Database Schema
+-- Pellopay Database Schema
 -- JWT Authentication + Phone Verification
 -- =============================================
 
 -- Use the database (change based on environment)
 -- For Hostinger: USE u683316176_pellopay;
 -- For local: USE pellopay;
-USE pellopay;
+USE pellopay1;
 
 
 -- =============================================
@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS users (
     business_type ENUM('Limited company', 'Limited partnership', 'Partnership', 'Sole trader', 'Other') DEFAULT NULL,
     business_name VARCHAR(255),
     phone VARCHAR(50),
+    referral_code VARCHAR(20) UNIQUE,
+    referred_by INT,
     phone_verified BOOLEAN DEFAULT FALSE,
     is_active BOOLEAN DEFAULT TRUE,
     email_verified BOOLEAN DEFAULT FALSE,
@@ -31,7 +33,10 @@ CREATE TABLE IF NOT EXISTS users (
     
     INDEX idx_email (email),
     INDEX idx_phone_verified (phone_verified),
-    INDEX idx_role (role)
+    INDEX idx_role (role),
+    INDEX idx_referral_code (referral_code),
+    INDEX idx_referred_by (referred_by),
+    FOREIGN KEY (referred_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================
@@ -209,3 +214,60 @@ INSERT IGNORE INTO funders (name, base_rate, min_amount, max_amount, approval_sp
 ('Asset Finance Plus', 4.25, 10000, 500000, '3-5 business days', 'Asset Finance Specialist', 'Specialized in asset financing', FALSE, FALSE, 1, '["Asset Finance"]', '["Vehicles", "Equipment", "Machinery"]', 'sales@assetfinanceplus.co.uk', 'https://www.assetfinanceplus.co.uk', TRUE),
 ('Growth Capital Partners', 5.99, 25000, 2000000, '1-2 weeks', 'Personal Support', 'Dedicated relationship managers', FALSE, TRUE, 3, '["Growth"]', '[]', 'hello@growthcapital.co.uk', 'https://www.growthcapital.co.uk', TRUE),
 ('SME Funding Direct', 6.50, 5000, 750000, '3-4 business days', 'Low Credit Options', 'Flexible lending for impaired credit', TRUE, FALSE, 0, '["Growth", "Cashflow"]', '[]', 'support@smefundingdirect.co.uk', 'https://www.smefundingdirect.co.uk', TRUE);
+
+-- =============================================
+-- Referral System Tables
+-- =============================================
+
+-- If users table already exists, run these ALTER statements:
+-- ALTER TABLE users ADD COLUMN referral_code VARCHAR(20) UNIQUE AFTER phone;
+-- ALTER TABLE users ADD COLUMN referred_by INT AFTER referral_code;
+-- ALTER TABLE users ADD INDEX idx_referral_code (referral_code);
+-- ALTER TABLE users ADD INDEX idx_referred_by (referred_by);
+-- ALTER TABLE users ADD CONSTRAINT fk_referred_by FOREIGN KEY (referred_by) REFERENCES users(id) ON DELETE SET NULL;
+
+-- Referrals Table (tracks all referral relationships and rewards)
+CREATE TABLE IF NOT EXISTS referrals (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    referrer_id INT NOT NULL,
+    referred_id INT NOT NULL,
+    referral_code VARCHAR(20) NOT NULL,
+    status ENUM('pending', 'qualified', 'rewarded', 'expired') DEFAULT 'pending',
+    reward_amount DECIMAL(10, 2) DEFAULT 75.00,
+    reward_type ENUM('amazon_voucher', 'cash', 'credit') DEFAULT 'amazon_voucher',
+    qualification_type ENUM('signup', 'open_banking', 'funded') DEFAULT 'open_banking',
+    qualified_at DATETIME,
+    rewarded_at DATETIME,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (referrer_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (referred_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_referrer_id (referrer_id),
+    INDEX idx_referred_id (referred_id),
+    INDEX idx_referral_code (referral_code),
+    INDEX idx_status (status),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Referral Rewards Table (tracks reward payouts)
+CREATE TABLE IF NOT EXISTS referral_rewards (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    referral_id INT NOT NULL,
+    user_id INT NOT NULL,
+    reward_type ENUM('amazon_voucher', 'cash', 'credit') NOT NULL,
+    reward_amount DECIMAL(10, 2) NOT NULL,
+    voucher_code VARCHAR(100),
+    status ENUM('pending', 'sent', 'claimed', 'expired') DEFAULT 'pending',
+    sent_at DATETIME,
+    claimed_at DATETIME,
+    expires_at DATETIME,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (referral_id) REFERENCES referrals(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_referral_id (referral_id),
+    INDEX idx_user_id (user_id),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
