@@ -62,7 +62,7 @@ app.get("/api/health", (req, res) => {
 
 // Serve frontend for all other routes (SPA support)
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public/login.html"));
+  res.sendFile(path.join(__dirname, "public/funding-form.html"));
 });
 
 // Global Error Handler

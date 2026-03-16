@@ -34,7 +34,12 @@ function showStep(stepNumber) {
 
 // ===== Validate Step 1 =====
 function validateStep1() {
-  const fundingAmount = document.getElementById("fundingAmount").value;
+  const fundingInput = document.getElementById("fundingAmount");
+  // Get clean numeric value (remove commas)
+  const fundingAmount = parseInt(
+    fundingInput.dataset.cleanValue || fundingInput.value.replace(/\D/g, ""),
+    10,
+  );
   const fundingPurpose = document.querySelector(
     'input[name="fundingPurpose"]:checked',
   );
@@ -42,7 +47,7 @@ function validateStep1() {
     fundingPurpose && fundingPurpose.value === "Asset Finance";
   const assetType = document.querySelector('input[name="assetType"]:checked');
 
-  if (!fundingAmount) {
+  if (!fundingAmount || fundingAmount === 0) {
     showAlert("Please enter a funding amount", "error");
     return false;
   }
@@ -79,7 +84,13 @@ function validateStep2() {
 
 // ===== Validate Step 3 =====
 function validateStep3() {
-  const annualTurnover = document.getElementById("annualTurnover").value;
+  const annualTurnoverInput = document.getElementById("annualTurnover");
+  // Get clean numeric value (remove commas)
+  const annualTurnover = parseInt(
+    annualTurnoverInput.dataset.cleanValue ||
+      annualTurnoverInput.value.replace(/\D/g, ""),
+    10,
+  );
   const tradingYears = document.querySelector(
     'input[name="tradingYears"]:checked',
   );
@@ -89,7 +100,7 @@ function validateStep3() {
   const tradingMonths = document.getElementById("tradingMonths").value;
   const homeowner = document.querySelector('input[name="homeowner"]:checked');
 
-  if (!annualTurnover) {
+  if (!annualTurnover || annualTurnover === 0) {
     showAlert("Please enter your annual turnover", "error");
     return false;
   }
@@ -119,6 +130,45 @@ function validateStep3() {
 document.addEventListener("DOMContentLoaded", function () {
   // Only run funding form logic if on the funding form page
   if (!document.getElementById("fundingForm")) return;
+
+  // Initialize navbar on funding form page
+  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const navLoginBtn = document.getElementById("navLoginBtn");
+  const navMenu = document.getElementById("navMenu");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  if (isLoggedIn) {
+    if (navLoginBtn) navLoginBtn.style.display = "none";
+    if (navMenu) navMenu.style.display = "flex";
+  } else {
+    if (navLoginBtn) navLoginBtn.style.display = "inline-block";
+    if (navMenu) navMenu.style.display = "none";
+  }
+
+  if (logoutBtn && !logoutBtn.dataset.bound) {
+    logoutBtn.dataset.bound = "true";
+    logoutBtn.addEventListener("click", function (e) {
+      e.preventDefault();
+      if (typeof handleLogout === "function") {
+        handleLogout();
+        return;
+      }
+
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("fundingFormData");
+      localStorage.removeItem("userCompanyName");
+      localStorage.removeItem("userData");
+      localStorage.removeItem("isPhoneVerified");
+      localStorage.removeItem("userPhone");
+      localStorage.removeItem("userProfilePicture");
+      localStorage.removeItem("applicationId");
+      localStorage.removeItem("guestSessionId");
+      localStorage.removeItem("pendingPhoneVerification");
+      window.location.href = "login.html";
+    });
+  }
 
   // Setup number input formatting
   setupNumberInputFormatting();
@@ -179,10 +229,22 @@ document.addEventListener("DOMContentLoaded", function () {
         submitBtn.innerHTML = "⏳ Processing...";
 
         // Collect all form data
+        const fundingInput = document.getElementById("fundingAmount");
+        const cleanFundingAmount = parseInt(
+          fundingInput.dataset.cleanValue ||
+            fundingInput.value.replace(/\D/g, ""),
+          10,
+        );
+
+        const annualTurnoverInput = document.getElementById("annualTurnover");
+        const cleanAnnualTurnover = parseInt(
+          annualTurnoverInput.dataset.cleanValue ||
+            annualTurnoverInput.value.replace(/\D/g, ""),
+          10,
+        );
+
         const formData = {
-          fundingAmount: parseFloat(
-            document.getElementById("fundingAmount").value,
-          ),
+          fundingAmount: cleanFundingAmount,
           fundingPurpose: document.querySelector(
             'input[name="fundingPurpose"]:checked',
           ).value,
@@ -191,8 +253,7 @@ document.addEventListener("DOMContentLoaded", function () {
             null,
           importance: document.querySelector('input[name="importance"]:checked')
             .value,
-          annualTurnover:
-            parseFloat(document.getElementById("annualTurnover").value) || null,
+          annualTurnover: cleanAnnualTurnover || null,
           tradingYears: document.querySelector(
             'input[name="tradingYears"]:checked',
           ).value,
@@ -322,8 +383,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Populate Step 1 fields
         if (formData.fundingAmount) {
-          document.getElementById("fundingAmount").value =
-            formData.fundingAmount;
+          const fundingInput = document.getElementById("fundingAmount");
+          fundingInput.value = formatNumber(formData.fundingAmount.toString());
+          fundingInput.dataset.cleanValue = formData.fundingAmount.toString();
+        }
+
+        // Populate Step 3 - Annual Turnover
+        if (formData.annualTurnover) {
+          const turnoverInput = document.getElementById("annualTurnover");
+          turnoverInput.value = formatNumber(
+            formData.annualTurnover.toString(),
+          );
+          turnoverInput.dataset.cleanValue = formData.annualTurnover.toString();
         }
         if (formData.fundingPurpose) {
           const fundingRadio = document.querySelector(
@@ -467,36 +538,39 @@ function formatNumber(num) {
 
 // ===== Format Input Fields with Live Formatting =====
 function setupNumberInputFormatting() {
-  const numberInputs = document.querySelectorAll('input[type="number"]');
+  // Fields to format with comma separators
+  const fieldsToFormat = ["fundingAmount", "annualTurnover"];
 
-  numberInputs.forEach((input) => {
-    // Store original input value
-    input.addEventListener("input", function () {
-      // Keep the numeric value for form submission
-      // Visual display will show formatted version via placeholder/label updates
-      const value = this.value;
+  fieldsToFormat.forEach((fieldId) => {
+    const input = document.getElementById(fieldId);
 
-      if (value && this.id === "fundingAmount") {
-        this.dataset.formattedValue = formatNumber(value);
-        // Update placeholder to show format
-        const displayValue = formatNumber(value);
-        if (this.value && this.value.length > 4) {
-          const event = new CustomEvent("formatted", {
-            detail: { formatted: displayValue },
-          });
-          this.dispatchEvent(event);
+    if (input) {
+      input.addEventListener("input", function () {
+        // Remove non-digit characters
+        let value = this.value.replace(/[^\d]/g, "");
+
+        // Format with commas
+        let formatted = "";
+        if (value) {
+          formatted = formatNumber(value);
         }
-      }
-    });
 
-    // Add focus effect
-    input.addEventListener("focus", function () {
-      this.parentElement.style.transform = "scale(1.02)";
-    });
+        // Update the display
+        this.value = formatted;
 
-    input.addEventListener("blur", function () {
-      this.parentElement.style.transform = "scale(1)";
-    });
+        // Store clean numeric value for form submission
+        this.dataset.cleanValue = value;
+      });
+
+      // Add focus effect
+      input.addEventListener("focus", function () {
+        this.parentElement.style.transform = "scale(1.02)";
+      });
+
+      input.addEventListener("blur", function () {
+        this.parentElement.style.transform = "scale(1)";
+      });
+    }
   });
 }
 
@@ -1321,7 +1395,9 @@ async function loadAdminReferralData() {
       const codeData = await codeResponse.json();
       const adminLinkInput = document.getElementById("adminReferralLink");
       if (adminLinkInput) {
-        adminLinkInput.value = codeData.referralLink;
+        // Build referral link dynamically using current domain
+        const referralLink = `${window.location.origin}/login.html?ref=${codeData.referralCode}`;
+        adminLinkInput.value = referralLink;
       }
     }
 
@@ -1628,6 +1704,45 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Initialize search results if on search results page
   if (document.querySelector(".search-results-section")) {
+    // Initialize navbar on search results page
+    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+    const navLoginBtn = document.getElementById("navLoginBtn");
+    const navMenu = document.getElementById("navMenu");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    if (isLoggedIn) {
+      if (navLoginBtn) navLoginBtn.style.display = "none";
+      if (navMenu) navMenu.style.display = "flex";
+    } else {
+      if (navLoginBtn) navLoginBtn.style.display = "inline-block";
+      if (navMenu) navMenu.style.display = "none";
+    }
+
+    if (logoutBtn && !logoutBtn.dataset.bound) {
+      logoutBtn.dataset.bound = "true";
+      logoutBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        if (typeof handleLogout === "function") {
+          handleLogout();
+          return;
+        }
+
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("userEmail");
+        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("fundingFormData");
+        localStorage.removeItem("userCompanyName");
+        localStorage.removeItem("userData");
+        localStorage.removeItem("isPhoneVerified");
+        localStorage.removeItem("userPhone");
+        localStorage.removeItem("userProfilePicture");
+        localStorage.removeItem("applicationId");
+        localStorage.removeItem("guestSessionId");
+        localStorage.removeItem("pendingPhoneVerification");
+        window.location.href = "login.html";
+      });
+    }
+
     initializeSearchResults();
   }
 
@@ -3524,9 +3639,12 @@ async function loadSimpleReferralCode() {
     if (response.ok) {
       const data = await response.json();
 
+      // Build referral link dynamically using current domain
+      const referralLink = `${window.location.origin}/login.html?ref=${data.referralCode}`;
+
       // Update referral link text
       if (linkText) {
-        linkText.textContent = data.referralLink || "Link not available";
+        linkText.textContent = referralLink;
       }
 
       // Update referral code box
@@ -3963,8 +4081,11 @@ async function loadReferralData() {
 
     if (codeResponse.ok) {
       const codeData = await codeResponse.json();
-      referralLinkInput.value = codeData.referralLink;
-      referralCodeDisplay.textContent = codeData.referralCode;
+      // Build referral link dynamically using current domain
+      const referralLink = `${window.location.origin}/login.html?ref=${codeData.referralCode}`;
+      referralLinkInput.value = referralLink;
+      if (referralCodeDisplay)
+        referralCodeDisplay.textContent = codeData.referralCode;
     }
 
     // Get referral stats

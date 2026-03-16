@@ -282,7 +282,7 @@ class MyPulseLender extends BaseLender {
       return null;
     }
 
-    const endpoint = `/v1/get-officers/${crn}`;
+    const endpoint = `/v1/get-officers/${crn}?Offset=0&Limit=50`;
 
     try {
       const response = await this.makeRequest("GET", endpoint);

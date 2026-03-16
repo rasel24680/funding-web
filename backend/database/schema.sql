@@ -251,6 +251,7 @@ CREATE TABLE IF NOT EXISTS referrals (
     INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+
 -- Referral Rewards Table (tracks reward payouts)
 CREATE TABLE IF NOT EXISTS referral_rewards (
     id INT AUTO_INCREMENT PRIMARY KEY,

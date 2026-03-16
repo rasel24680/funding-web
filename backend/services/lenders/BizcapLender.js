@@ -5,14 +5,40 @@
  */
 const BaseLender = require("./BaseLender");
 
+// Helper function to clean API key (remove quotes and invalid characters)
+function cleanApiKey(key) {
+  if (!key) return "";
+  const originalLength = key.length;
+
+  // Debug: Show first and last 3 characters with their char codes
+  console.log(
+    `[Bizcap] First 3 chars: "${key.slice(0, 3)}" codes: [${key.charCodeAt(0)}, ${key.charCodeAt(1)}, ${key.charCodeAt(2)}]`,
+  );
+  console.log(
+    `[Bizcap] Last 3 chars: "${key.slice(-3)}" codes: [${key.charCodeAt(key.length - 3)}, ${key.charCodeAt(key.length - 2)}, ${key.charCodeAt(key.length - 1)}]`,
+  );
+
+  // Remove ALL types of quotes and whitespace:
+  // ' " ` ' ' " " and any other non-essential characters
+  // Only keep: a-z A-Z 0-9 $ . /
+  let cleaned = key.replace(/[^a-zA-Z0-9$./]/g, "");
+
+  console.log(
+    `[Bizcap] API Key cleaning: ${originalLength} chars -> ${cleaned.length} chars`,
+  );
+  return cleaned;
+}
+
 class BizcapLender extends BaseLender {
   constructor() {
+    const cleanedApiKey = cleanApiKey(process.env.BIZCAP_API_KEY || "");
+
     super({
       name: "bizcap", // Internal identifier (hidden from users)
       displayName:
         process.env.BIZCAP_DISPLAY_NAME || "Business Finance Partner", // User-facing name
       apiBaseUrl: "https://bizmate.fasttask.net/api/v1",
-      apiKey: process.env.BIZCAP_API_KEY || "",
+      apiKey: cleanedApiKey,
       enabled: process.env.BIZCAP_ENABLED !== "false",
       timeout: 30000,
     });
@@ -21,6 +47,11 @@ class BizcapLender extends BaseLender {
     this.partnerId = process.env.BIZCAP_PARTNER_ID || "";
     this.partnerContactId = process.env.BIZCAP_PARTNER_CONTACT_ID || "";
     this.referralUrl = process.env.BIZCAP_REFERRAL_URL || "";
+
+    // Debug: Log API key status (not the actual key for security)
+    console.log(
+      `[Bizcap] API Key loaded: ${this.apiKey ? "Yes (" + this.apiKey.length + " chars)" : "NO - MISSING!"}`,
+    );
   }
 
   /**
