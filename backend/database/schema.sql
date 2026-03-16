@@ -233,7 +233,7 @@ CREATE TABLE IF NOT EXISTS referrals (
     referred_id INT NOT NULL,
     referral_code VARCHAR(20) NOT NULL,
     status ENUM('pending', 'qualified', 'rewarded', 'expired') DEFAULT 'pending',
-    reward_amount DECIMAL(10, 2) DEFAULT 75.00,
+    reward_amount DECIMAL(10, 2) DEFAULT 200.00,
     reward_type ENUM('amazon_voucher', 'cash', 'credit') DEFAULT 'amazon_voucher',
     qualification_type ENUM('signup', 'open_banking', 'funded') DEFAULT 'open_banking',
     qualified_at DATETIME,

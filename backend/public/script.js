@@ -1545,7 +1545,7 @@ async function qualifyReferral(referralId) {
 }
 
 async function rewardReferral(referralId) {
-  if (!confirm("Process £75 reward for this referral?")) return;
+  if (!confirm("Process £200 reward for this referral?")) return;
 
   try {
     const authToken = localStorage.getItem("authToken");
@@ -2557,7 +2557,14 @@ function showApplicationModal(lenderKey, lenderName) {
   modal.innerHTML = `
     <div class="application-modal">
       <div class="modal-header">
-        <h2>Apply to ${lenderName}</h2>
+        <div class="header-content">
+          <h2>Apply to ${lenderName}</h2>
+          <div class="form-progress">
+            <span class="progress-step active" data-step="1">📋 Your Details</span>
+            <span class="progress-step" data-step="2">💼 Funding</span>
+            <span class="progress-step" data-step="3">✓ Review</span>
+          </div>
+        </div>
         <button class="modal-close-btn" id="closeApplicationModal">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -2566,52 +2573,48 @@ function showApplicationModal(lenderKey, lenderName) {
         </button>
       </div>
       <div class="modal-body">
-        <p class="modal-description">Review your application details before submitting. The lender will contact you directly about your funding request.</p>
-        
-        <form id="applicationForm" class="application-form">
-          <div class="form-section">
-            <h3>Business Information</h3>
-            <div class="form-row two-col">
-              <div class="form-group">
-                <label for="appBusinessName">Business Name *</label>
-                <input type="text" id="appBusinessName" value="${userData.companyName || formData.businessName || ""}" required>
-              </div>
-              <div class="form-group">
-                <label for="appCompanyNumber">Company Registration Number ${isMyPulse ? "*" : ""}</label>
-                <input type="text" id="appCompanyNumber" value="${userData.companyNumber || formData.companyNumber || ""}" placeholder="e.g. 12345678" ${isMyPulse ? "required" : ""}>
-                <small class="field-hint">8-digit Companies House number</small>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-section">
-            <h3>Contact Details</h3>
-            <div class="form-row two-col">
+        <form id="applicationForm" class="application-form stepped-form">
+          <!-- STEP 1: Personal Details -->
+          <div class="form-step active" data-step="1">
+            <h3>Your Contact Details</h3>
+            
+            <div class="form-row">
               <div class="form-group">
                 <label for="appFirstName">First Name *</label>
                 <input type="text" id="appFirstName" value="${userData.firstName || formData.firstName || ""}" pattern="[A-Za-z\\s\\-']+" title="Please enter a valid name (letters only)" required>
               </div>
+            </div>
+            
+            <div class="form-row">
               <div class="form-group">
                 <label for="appLastName">Last Name *</label>
                 <input type="text" id="appLastName" value="${userData.lastName || formData.lastName || ""}" pattern="[A-Za-z\\s\\-']+" title="Please enter a valid name (letters only)" required>
               </div>
             </div>
-            <div class="form-row two-col">
+            
+            <div class="form-row">
               <div class="form-group">
                 <label for="appEmail">Email *</label>
                 <input type="email" id="appEmail" value="${userData.email || formData.email || ""}" required>
               </div>
+            </div>
+            
+            <div class="form-row">
               <div class="form-group">
                 <label for="appPhone">Phone * <small>(UK mobile/landline)</small></label>
                 <input type="tel" id="appPhone" value="${userData.phone || formData.phone || ""}" pattern="[0-9]{10,11}" title="Please enter a valid UK phone number (10-11 digits)" required>
               </div>
             </div>
-            <div class="form-row two-col">
+            
+            <div class="form-row">
               <div class="form-group">
-                <label for="appDateOfBirth">Date of Birth ${isMyPulse ? "*" : ""}</label>
-                <input type="date" id="appDateOfBirth" value="${userData.dateOfBirth || formData.dateOfBirth || ""}" max="${new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split("T")[0]}" ${isMyPulse ? "required" : ""}>
+                <label for="appDateOfBirth">Date of Birth * <span class="badge-new">Required</span></label>
+                <input type="date" id="appDateOfBirth" value="${userData.dateOfBirth || formData.dateOfBirth || ""}" max="${new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split("T")[0]}" required>
                 <small class="field-hint">You must be 18 or over</small>
               </div>
+            </div>
+            
+            <div class="form-row">
               <div class="form-group">
                 <label for="appHomeowner">Residential Status</label>
                 <select id="appHomeowner">
@@ -2622,49 +2625,40 @@ function showApplicationModal(lenderKey, lenderName) {
             </div>
           </div>
 
-          <div class="form-section" ${!isMyPulse ? 'style="display:none"' : ""}>
-            <h3>Address ${isMyPulse ? "*" : ""}</h3>
-            <div class="form-row two-col">
+          <!-- STEP 2: Business & Funding -->
+          <div class="form-step" data-step="2">
+            <h3>Business Information</h3>
+            
+            <div class="form-row">
               <div class="form-group">
-                <label for="appHouseNumber">House/Flat Number</label>
-                <input type="text" id="appHouseNumber" value="" placeholder="e.g. 42 or 5B">
-              </div>
-              <div class="form-group">
-                <label for="appHouseName">House Name</label>
-                <input type="text" id="appHouseName" value="" placeholder="e.g. Wood Acre House">
+                <label for="appBusinessName">Business Name *</label>
+                <input type="text" id="appBusinessName" value="${userData.companyName || formData.businessName || ""}" required>
               </div>
             </div>
-            ${isMyPulse ? '<small class="field-hint" style="margin-bottom:8px;display:block">Either house/flat number or house name is required</small>' : ""}
-            <div class="form-row two-col">
+            
+            <div class="form-row">
               <div class="form-group">
-                <label for="appStreet">Street ${isMyPulse ? "*" : ""}</label>
-                <input type="text" id="appStreet" value="" placeholder="e.g. Baker Street" ${isMyPulse ? "required" : ""}>
-              </div>
-              <div class="form-group">
-                <label for="appTown">Town/City ${isMyPulse ? "*" : ""}</label>
-                <input type="text" id="appTown" value="" placeholder="e.g. London" ${isMyPulse ? "required" : ""}>
+                <label for="appCompanyNumber">Company Registration Number ${isMyPulse ? "*" : ""}</label>
+                <input type="text" id="appCompanyNumber" value="${userData.companyNumber || formData.companyNumber || ""}" placeholder="e.g. 12345678" ${isMyPulse ? "required" : ""}>
+                <small class="field-hint">8-digit Companies House number</small>
               </div>
             </div>
-            <div class="form-row two-col">
-              <div class="form-group">
-                <label for="appPostcode">Postcode ${isMyPulse ? "*" : ""}</label>
-                <input type="text" id="appPostcode" value="" placeholder="e.g. NW1 6XE" ${isMyPulse ? "required" : ""}>
-              </div>
-              <div class="form-group"></div>
-            </div>
-          </div>
 
-          <div class="form-section">
-            <h3>Funding Request</h3>
-            <div class="form-row two-col">
+            <h3 style="margin-top: 1.5rem;">Funding Request</h3>
+            
+            <div class="form-row">
               <div class="form-group">
                 <label for="appFundingAmount">Amount Required (£) *</label>
                 <input type="number" id="appFundingAmount" value="${Math.min(formData.fundingAmount || 0, maxAmount) || ""}" min="${minAmount}" max="${maxAmount}" required>
                 ${isMyPulse ? `<small class="field-hint">£3,000 – £500,000 for this lender</small>` : ""}
               </div>
+            </div>
+            
+            <div class="form-row">
               <div class="form-group">
                 <label for="appFundingPurpose">Purpose *</label>
                 <select id="appFundingPurpose" required>
+                  <option value="">Select a purpose</option>
                   <option value="Growth" ${formData.fundingPurpose === "Growth" ? "selected" : ""}>Growth</option>
                   <option value="Cashflow" ${formData.fundingPurpose === "Cashflow" ? "selected" : ""}>Cashflow</option>
                   <option value="Refinancing" ${formData.fundingPurpose === "Refinancing" ? "selected" : ""}>Refinancing</option>
@@ -2673,34 +2667,49 @@ function showApplicationModal(lenderKey, lenderName) {
                 </select>
               </div>
             </div>
-            <div class="form-row two-col">
-              <div class="form-group">
-                <label for="appAnnualTurnover">Annual Turnover (£)</label>
-                <input type="number" id="appAnnualTurnover" value="${formData.annualTurnover || ""}" min="0">
+          </div>
+
+          <!-- STEP 3: Review & Consent -->
+          <div class="form-step" data-step="3">
+            <h3>Almost Done!</h3>
+            <p class="step-description">Please confirm your details and agree to proceed</p>
+            
+            <div class="review-summary">
+              <div class="summary-item">
+                <strong>Name:</strong> <span id="reviewName">-</span>
               </div>
-              <div class="form-group">
-                <label for="appTradingYears">Trading 3+ Years?</label>
-                <select id="appTradingYears">
-                  <option value="Yes" ${formData.tradingYears === "Yes" ? "selected" : ""}>Yes</option>
-                  <option value="No" ${formData.tradingYears === "No" ? "selected" : ""}>No</option>
-                </select>
+              <div class="summary-item">
+                <strong>Email:</strong> <span id="reviewEmail">-</span>
               </div>
+              <div class="summary-item">
+                <strong>Business:</strong> <span id="reviewBusiness">-</span>
+              </div>
+              <div class="summary-item">
+                <strong>Amount:</strong> <span id="reviewAmount">-</span>
+              </div>
+              <div class="summary-item">
+                <strong>Purpose:</strong> <span id="reviewPurpose">-</span>
+              </div>
+            </div>
+
+            <div class="form-consent">
+              <label class="consent-checkbox">
+                <input type="checkbox" id="appConsent" required>
+                <span>I agree to share my details with ${lenderName} and consent to being contacted about my funding application.</span>
+              </label>
             </div>
           </div>
 
           <div class="form-message" id="applicationMessage"></div>
-
-          <div class="form-consent">
-            <label class="consent-checkbox">
-              <input type="checkbox" id="appConsent" required>
-              <span>I agree to share my details with ${lenderName} and consent to being contacted about my funding application.</span>
-            </label>
-          </div>
         </form>
       </div>
       <div class="modal-footer">
+        <button class="btn-secondary" id="prevStepBtn" style="display:none;">← Previous</button>
         <button class="btn-secondary" id="cancelApplicationBtn">Cancel</button>
-        <button class="btn-primary" id="submitApplicationBtn" data-lender-key="${lenderKey}">
+        <button class="btn-primary" id="nextStepBtn">
+          <span class="btn-text">Next</span>
+        </button>
+        <button class="btn-primary" id="submitApplicationBtn" data-lender-key="${lenderKey}" style="display:none;">
           <span class="btn-text">Submit Application</span>
           <span class="btn-loading" style="display: none;">
             <svg class="spinner" width="20" height="20" viewBox="0 0 24 24">
@@ -2710,37 +2719,134 @@ function showApplicationModal(lenderKey, lenderName) {
           </span>
         </button>
       </div>
-    </div>
-  `;
+    </div>`;
+
+  // Add stepped form class to modal
+  const modalDiv = modal.querySelector(".application-modal");
+  modalDiv.classList.add("stepped");
 
   document.body.appendChild(modal);
 
+  // Stepped form functionality
+  let currentStep = 1;
+  const totalSteps = 3;
+
+  const formSteps = modal.querySelectorAll(".form-step");
+  const progressSteps = modal.querySelectorAll(".progress-step");
+  const nextBtn = modal.querySelector("#nextStepBtn");
+  const prevBtn = modal.querySelector("#prevStepBtn");
+  const submitBtn = modal.querySelector("#submitApplicationBtn");
+  const applicationForm = modal.querySelector("#applicationForm");
+
+  function showStep(step) {
+    currentStep = step;
+
+    // Hide all steps
+    formSteps.forEach((s) => s.classList.remove("active"));
+
+    // Show current step
+    document.querySelector(`.form-step[data-step="${step}"]`).classList.add("active");
+
+    // Update progress indicators
+    progressSteps.forEach((p) => {
+      const stepNum = parseInt(p.dataset.step);
+      if (stepNum <= step) {
+        p.classList.add("active");
+      } else {
+        p.classList.remove("active");
+      }
+    });
+
+    // Update button visibility
+    prevBtn.style.display = step === 1 ? "none" : "block";
+    nextBtn.style.display = step === totalSteps ? "none" : "block";
+    submitBtn.style.display = step === totalSteps ? "block" : "none";
+
+    // Update review summary on final step
+    if (step === totalSteps) {
+      updateReviewSummary();
+    }
+
+    // Scroll to top of modal body
+    const modalBody = modal.querySelector(".modal-body");
+    modalBody.scrollTop = 0;
+  }
+
+  function updateReviewSummary() {
+    modal.querySelector("#reviewName").textContent =
+      `${modal.querySelector("#appFirstName").value} ${modal.querySelector("#appLastName").value}`;
+    modal.querySelector("#reviewEmail").textContent =
+      modal.querySelector("#appEmail").value;
+    modal.querySelector("#reviewBusiness").textContent =
+      modal.querySelector("#appBusinessName").value;
+    modal.querySelector("#reviewAmount").textContent =
+      `£${parseFloat(modal.querySelector("#appFundingAmount").value).toLocaleString()}`;
+    modal.querySelector("#reviewPurpose").textContent =
+      modal.querySelector("#appFundingPurpose").value;
+  }
+
+  function validateCurrentStep() {
+    const currentStepEl = document.querySelector(`.form-step[data-step="${currentStep}"]`);
+    const inputs = currentStepEl.querySelectorAll("input[required], select[required]");
+
+    for (let input of inputs) {
+      if (!input.value.trim()) {
+        input.focus();
+        input.style.borderColor = "#dc3545";
+        return false;
+      }
+      // Validate date of birth if on step 1
+      if (currentStep === 1 && input.id === "appDateOfBirth" && !input.value) {
+        input.focus();
+        input.style.borderColor = "#dc3545";
+        return false;
+      }
+    }
+    return true;
+  }
+
+  nextBtn.addEventListener("click", () => {
+    if (validateCurrentStep()) {
+      if (currentStep < totalSteps) {
+        showStep(currentStep + 1);
+      }
+    } else {
+      modal.querySelector("#applicationMessage").textContent =
+        "Please fill in all required fields";
+      modal.querySelector("#applicationMessage").className =
+        "form-message error";
+    }
+  });
+
+  prevBtn.addEventListener("click", () => {
+    if (currentStep > 1) {
+      showStep(currentStep - 1);
+      modal.querySelector("#applicationMessage").textContent = "";
+    }
+  });
+
   // Close handlers
-  document
-    .getElementById("closeApplicationModal")
-    .addEventListener("click", () => modal.remove());
-  document
-    .getElementById("cancelApplicationBtn")
-    .addEventListener("click", () => modal.remove());
+  modal.querySelector("#closeApplicationModal").addEventListener("click", () => modal.remove());
+  modal.querySelector("#cancelApplicationBtn").addEventListener("click", () => modal.remove());
   modal.addEventListener("click", (e) => {
     if (e.target === modal) modal.remove();
   });
 
   // Submit handler
-  document
-    .getElementById("submitApplicationBtn")
-    .addEventListener("click", () => {
-      submitApplication(lenderKey, lenderName);
-    });
+  submitBtn.addEventListener("click", () => {
+    submitApplication(lenderKey, lenderName);
+  });
 
-  // Form validation on input
-  const form = document.getElementById("applicationForm");
-  form.querySelectorAll("input, select").forEach((input) => {
+  // Clear error styling on input
+  applicationForm.querySelectorAll("input, select").forEach((input) => {
     input.addEventListener("input", () => {
-      document.getElementById("applicationMessage").textContent = "";
-      document.getElementById("applicationMessage").className = "form-message";
+      input.style.borderColor = "";
+      modal.querySelector("#applicationMessage").textContent = "";
     });
   });
+
+  // Initialize first step
+  showStep(1);
 }
 
 // ===== Submit Application to Lender =====
