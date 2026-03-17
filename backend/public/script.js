@@ -2627,110 +2627,123 @@ function showApplicationModal(lenderKey, lenderName) {
 
           <!-- STEP 2: Business & Funding -->
           <div class="form-step" data-step="2">
-            <h3>Business Information</h3>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label for="appBusinessName">Business Name *</label>
-                <input type="text" id="appBusinessName" name="businessName" value="${userData.companyName || formData.businessName || ""}" required>
-              </div>
-            </div>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label for="appCompanyNumber">Company Registration Number ${isMyPulse ? "*" : ""}</label>
-                <input type="text" id="appCompanyNumber" name="companyNumber" value="${userData.companyNumber || formData.companyNumber || ""}" placeholder="e.g. 12345678" ${isMyPulse ? "required" : ""}>
-                <small class="field-hint">8-digit Companies House number</small>
-              </div>
-            </div>
+            <h3>Business & Funding Details</h3>
 
-            ${
-              isMyPulse
-                ? `
-            <h3 style="margin-top: 1.5rem;">Business Address *</h3>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label for="appHouseNumber">House/Flat Number</label>
-                <input type="text" id="appHouseNumber" name="houseNumber" value="${formData.houseNumber || ""}" placeholder="e.g. 33a">
-              </div>
-              <div class="form-group">
-                <label for="appHouseName">House Name</label>
-                <input type="text" id="appHouseName" name="houseName" value="${formData.houseName || ""}" placeholder="e.g. The Cottage">
-              </div>
-            </div>
+            <div class="step-accordion" id="step2Accordion">
+              <details class="form-accordion" data-accordion="business" open>
+                <summary>1. Business Information</summary>
+                <div class="accordion-content">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="appBusinessName">Business Name *</label>
+                      <input type="text" id="appBusinessName" name="businessName" value="${userData.companyName || formData.businessName || ""}" required>
+                    </div>
+                  </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label for="appStreet">Street *</label>
-                <input type="text" id="appStreet" name="street" value="${formData.street || ""}" required>
-              </div>
-            </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="appCompanyNumber">Company Registration Number ${isMyPulse ? "*" : ""}</label>
+                      <input type="text" id="appCompanyNumber" name="companyNumber" value="${userData.companyNumber || formData.companyNumber || ""}" placeholder="e.g. 12345678" ${isMyPulse ? "required" : ""}>
+                      <small class="field-hint">8-digit Companies House number</small>
+                    </div>
+                  </div>
+                </div>
+              </details>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label for="appTown">Town/City *</label>
-                <input type="text" id="appTown" name="town" value="${formData.town || ""}" required>
-              </div>
-              <div class="form-group">
-                <label for="appPostcode">Postcode *</label>
-                <input type="text" id="appPostcode" name="postcode" value="${formData.postcode || ""}" placeholder="e.g. PR7 3HN" required>
-              </div>
-            </div>
-            `
-                : ""
-            }
-
-            <h3 style="margin-top: 1.5rem;">Funding Request</h3>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label for="appFundingAmount">Amount Required (£) *</label>
-                <input type="number" id="appFundingAmount" name="fundingAmount" value="" min="${minAmount}" max="${maxAmount}" required>
-                ${isMyPulse ? `<small class="field-hint">£3,000 – £500,000 for this lender</small>` : ""}
-              </div>
               ${
                 isMyPulse
                   ? `
-              <div class="form-group">
-                <label for="appLoanTerm">Loan Term (months) *</label>
-                <input type="number" id="appLoanTerm" name="loanTerm" value="${formData.loanTerm || ""}" min="6" max="60" placeholder="e.g. 36" required>
-                <small class="field-hint">Typically 6-60 months</small>
-              </div>
+              <details class="form-accordion" data-accordion="address">
+                <summary>2. Business Address</summary>
+                <div class="accordion-content">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="appHouseNumber">House/Flat Number</label>
+                      <input type="text" id="appHouseNumber" name="houseNumber" value="${formData.houseNumber || ""}" placeholder="e.g. 33a">
+                    </div>
+                    <div class="form-group">
+                      <label for="appHouseName">House Name</label>
+                      <input type="text" id="appHouseName" name="houseName" value="${formData.houseName || ""}" placeholder="e.g. The Cottage">
+                    </div>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="appStreet">Street *</label>
+                      <input type="text" id="appStreet" name="street" value="${formData.street || ""}" required>
+                    </div>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="appTown">Town/City *</label>
+                      <input type="text" id="appTown" name="town" value="${formData.town || ""}" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="appPostcode">Postcode *</label>
+                      <input type="text" id="appPostcode" name="postcode" value="${formData.postcode || ""}" placeholder="e.g. PR7 3HN" required>
+                    </div>
+                  </div>
+                </div>
+              </details>
               `
                   : ""
               }
-            </div>
 
-            ${
-              isMyPulse
-                ? `
-            <div class="form-row">
-              <div class="form-group">
-                <label for="appAnnualTurnover">Annual Turnover (£) *</label>
-                <input type="number" id="appAnnualTurnover" name="annualTurnover" value="${userData.turnover || formData.annualTurnover || ""}" min="0" step="1000" placeholder="e.g. 123456" required>
-              </div>
-              <div class="form-group">
-                <label for="appTradingYears">Years Trading *</label>
-                <input type="number" id="appTradingYears" name="tradingYears" value="${userData.businessAge || formData.tradingYears || ""}" min="0" max="70" placeholder="e.g. 5" required>
-              </div>
-            </div>
-            `
-                : ""
-            }
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label for="appFundingPurpose">Purpose *</label>
-                <select id="appFundingPurpose" name="fundingPurpose" required>
-                  <option value="">Select a purpose</option>
-                  <option value="Growth" ${formData.fundingPurpose === "Growth" ? "selected" : ""}>Growth</option>
-                  <option value="Cashflow" ${formData.fundingPurpose === "Cashflow" ? "selected" : ""}>Cashflow</option>
-                  <option value="Refinancing" ${formData.fundingPurpose === "Refinancing" ? "selected" : ""}>Refinancing</option>
-                  <option value="Asset Finance" ${formData.fundingPurpose === "Asset Finance" ? "selected" : ""}>Asset Finance</option>
-                  <option value="Other" ${formData.fundingPurpose === "Other" ? "selected" : ""}>Other</option>
-                </select>
-              </div>
+              <details class="form-accordion" data-accordion="funding" ${isMyPulse ? "" : "open"}>
+                <summary>${isMyPulse ? "3" : "2"}. Funding Request</summary>
+                <div class="accordion-content">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="appFundingAmount">Amount Required (£) *</label>
+                      <input type="number" id="appFundingAmount" name="fundingAmount" value="" min="${minAmount}" max="${maxAmount}" required>
+                      ${isMyPulse ? `<small class="field-hint">£3,000 – £500,000 for this lender</small>` : ""}
+                    </div>
+                    ${
+                      isMyPulse
+                        ? `
+                    <div class="form-group">
+                      <label for="appLoanTerm">Loan Term (months) *</label>
+                      <input type="number" id="appLoanTerm" name="loanTerm" value="${formData.loanTerm || ""}" min="6" max="60" placeholder="e.g. 36" required>
+                      <small class="field-hint">Typically 6-60 months</small>
+                    </div>
+                    `
+                        : ""
+                    }
+                  </div>
+
+                  ${
+                    isMyPulse
+                      ? `
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="appAnnualTurnover">Annual Turnover (£) *</label>
+                      <input type="number" id="appAnnualTurnover" name="annualTurnover" value="${userData.turnover || formData.annualTurnover || ""}" min="0" step="1000" placeholder="e.g. 123456" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="appTradingYears">Years Trading *</label>
+                      <input type="number" id="appTradingYears" name="tradingYears" value="${userData.businessAge || formData.tradingYears || ""}" min="0" max="70" placeholder="e.g. 5" required>
+                    </div>
+                  </div>
+                  `
+                      : ""
+                  }
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="appFundingPurpose">Purpose *</label>
+                      <select id="appFundingPurpose" name="fundingPurpose" required>
+                        <option value="">Select a purpose</option>
+                        <option value="Growth" ${formData.fundingPurpose === "Growth" ? "selected" : ""}>Growth</option>
+                        <option value="Cashflow" ${formData.fundingPurpose === "Cashflow" ? "selected" : ""}>Cashflow</option>
+                        <option value="Refinancing" ${formData.fundingPurpose === "Refinancing" ? "selected" : ""}>Refinancing</option>
+                        <option value="Asset Finance" ${formData.fundingPurpose === "Asset Finance" ? "selected" : ""}>Asset Finance</option>
+                        <option value="Other" ${formData.fundingPurpose === "Other" ? "selected" : ""}>Other</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </details>
             </div>
           </div>
 
@@ -2836,6 +2849,22 @@ function showApplicationModal(lenderKey, lenderName) {
   const submitBtn = modal.querySelector("#submitApplicationBtn");
   const applicationForm = modal.querySelector("#applicationForm");
 
+  const step2Accordions = modal.querySelectorAll(
+    '.form-step[data-step="2"] .form-accordion',
+  );
+
+  step2Accordions.forEach((accordion) => {
+    accordion.addEventListener("toggle", () => {
+      if (accordion.open) {
+        step2Accordions.forEach((other) => {
+          if (other !== accordion) {
+            other.open = false;
+          }
+        });
+      }
+    });
+  });
+
   function showStep(step) {
     currentStep = step;
 
@@ -2843,7 +2872,7 @@ function showApplicationModal(lenderKey, lenderName) {
     formSteps.forEach((s) => s.classList.remove("active"));
 
     // Show current step
-    document
+    modal
       .querySelector(`.form-step[data-step="${step}"]`)
       .classList.add("active");
 
@@ -2865,6 +2894,13 @@ function showApplicationModal(lenderKey, lenderName) {
     // Update review summary on final step
     if (step === totalSteps) {
       updateReviewSummary();
+    }
+
+    if (step === 2 && step2Accordions.length > 0) {
+      const hasOpenSection = Array.from(step2Accordions).some((d) => d.open);
+      if (!hasOpenSection) {
+        step2Accordions[0].open = true;
+      }
     }
 
     // Scroll to top of modal body
@@ -2916,7 +2952,7 @@ function showApplicationModal(lenderKey, lenderName) {
   }
 
   function validateCurrentStep() {
-    const currentStepEl = document.querySelector(
+    const currentStepEl = modal.querySelector(
       `.form-step[data-step="${currentStep}"]`,
     );
     const inputs = currentStepEl.querySelectorAll(
@@ -2925,6 +2961,15 @@ function showApplicationModal(lenderKey, lenderName) {
 
     for (let input of inputs) {
       if (!input.value.trim()) {
+        const parentAccordion = input.closest(".form-accordion");
+        if (parentAccordion) {
+          parentAccordion.open = true;
+          step2Accordions.forEach((other) => {
+            if (other !== parentAccordion) {
+              other.open = false;
+            }
+          });
+        }
         input.focus();
         input.style.borderColor = "#dc3545";
         return false;

@@ -6,7 +6,8 @@
 -- Use the database (change based on environment)
 -- For Hostinger: USE u683316176_pellopay;
 -- For local: USE pellopay;
-USE pellopay1;
+CREATE DATABASE IF NOT EXISTS pellopay;
+USE pellopay;
 
 
 -- =============================================
