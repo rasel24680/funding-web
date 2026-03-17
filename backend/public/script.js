@@ -2581,35 +2581,35 @@ function showApplicationModal(lenderKey, lenderName) {
             <div class="form-row">
               <div class="form-group">
                 <label for="appFirstName">First Name *</label>
-                <input type="text" id="appFirstName" value="${userData.firstName || formData.firstName || ""}" pattern="[A-Za-z\\s\\-']+" title="Please enter a valid name (letters only)" required>
+                <input type="text" id="appFirstName" name="firstName" value="${userData.firstName || formData.firstName || ""}" pattern="[A-Za-z\\s\\-']+" title="Please enter a valid name (letters only)" required>
               </div>
             </div>
             
             <div class="form-row">
               <div class="form-group">
                 <label for="appLastName">Last Name *</label>
-                <input type="text" id="appLastName" value="${userData.lastName || formData.lastName || ""}" pattern="[A-Za-z\\s\\-']+" title="Please enter a valid name (letters only)" required>
+                <input type="text" id="appLastName" name="lastName" value="${userData.lastName || formData.lastName || ""}" pattern="[A-Za-z\\s\\-']+" title="Please enter a valid name (letters only)" required>
               </div>
             </div>
             
             <div class="form-row">
               <div class="form-group">
                 <label for="appEmail">Email *</label>
-                <input type="email" id="appEmail" value="${userData.email || formData.email || ""}" required>
+                <input type="email" id="appEmail" name="email" value="${userData.email || formData.email || ""}" required>
               </div>
             </div>
             
             <div class="form-row">
               <div class="form-group">
                 <label for="appPhone">Phone * <small>(UK mobile/landline)</small></label>
-                <input type="tel" id="appPhone" value="${userData.phone || formData.phone || ""}" pattern="[0-9]{10,11}" title="Please enter a valid UK phone number (10-11 digits)" required>
+                <input type="tel" id="appPhone" name="phone" value="${userData.phone || formData.phone || ""}" pattern="[0-9]{10,11}" title="Please enter a valid UK phone number (10-11 digits)" required>
               </div>
             </div>
             
             <div class="form-row">
               <div class="form-group">
                 <label for="appDateOfBirth">Date of Birth * <span class="badge-new">Required</span></label>
-                <input type="date" id="appDateOfBirth" value="${userData.dateOfBirth || formData.dateOfBirth || ""}" max="${new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split("T")[0]}" required>
+                <input type="date" id="appDateOfBirth" name="dateOfBirth" value="${userData.dateOfBirth || formData.dateOfBirth || ""}" max="${new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split("T")[0]}" required>
                 <small class="field-hint">You must be 18 or over</small>
               </div>
             </div>
@@ -2617,7 +2617,7 @@ function showApplicationModal(lenderKey, lenderName) {
             <div class="form-row">
               <div class="form-group">
                 <label for="appHomeowner">Residential Status</label>
-                <select id="appHomeowner">
+                <select id="appHomeowner" name="homeowner">
                   <option value="No" ${formData.homeowner === "No" ? "selected" : ""}>Tenant/Renting</option>
                   <option value="Yes" ${formData.homeowner === "Yes" ? "selected" : ""}>Homeowner</option>
                 </select>
@@ -2632,32 +2632,97 @@ function showApplicationModal(lenderKey, lenderName) {
             <div class="form-row">
               <div class="form-group">
                 <label for="appBusinessName">Business Name *</label>
-                <input type="text" id="appBusinessName" value="${userData.companyName || formData.businessName || ""}" required>
+                <input type="text" id="appBusinessName" name="businessName" value="${userData.companyName || formData.businessName || ""}" required>
               </div>
             </div>
             
             <div class="form-row">
               <div class="form-group">
                 <label for="appCompanyNumber">Company Registration Number ${isMyPulse ? "*" : ""}</label>
-                <input type="text" id="appCompanyNumber" value="${userData.companyNumber || formData.companyNumber || ""}" placeholder="e.g. 12345678" ${isMyPulse ? "required" : ""}>
+                <input type="text" id="appCompanyNumber" name="companyNumber" value="${userData.companyNumber || formData.companyNumber || ""}" placeholder="e.g. 12345678" ${isMyPulse ? "required" : ""}>
                 <small class="field-hint">8-digit Companies House number</small>
               </div>
             </div>
+
+            ${
+              isMyPulse
+                ? `
+            <h3 style="margin-top: 1.5rem;">Business Address *</h3>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="appHouseNumber">House/Flat Number</label>
+                <input type="text" id="appHouseNumber" name="houseNumber" value="${formData.houseNumber || ""}" placeholder="e.g. 33a">
+              </div>
+              <div class="form-group">
+                <label for="appHouseName">House Name</label>
+                <input type="text" id="appHouseName" name="houseName" value="${formData.houseName || ""}" placeholder="e.g. The Cottage">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="appStreet">Street *</label>
+                <input type="text" id="appStreet" name="street" value="${formData.street || ""}" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="appTown">Town/City *</label>
+                <input type="text" id="appTown" name="town" value="${formData.town || ""}" required>
+              </div>
+              <div class="form-group">
+                <label for="appPostcode">Postcode *</label>
+                <input type="text" id="appPostcode" name="postcode" value="${formData.postcode || ""}" placeholder="e.g. PR7 3HN" required>
+              </div>
+            </div>
+            `
+                : ""
+            }
 
             <h3 style="margin-top: 1.5rem;">Funding Request</h3>
             
             <div class="form-row">
               <div class="form-group">
                 <label for="appFundingAmount">Amount Required (£) *</label>
-                <input type="number" id="appFundingAmount" value="${Math.min(formData.fundingAmount || 0, maxAmount) || ""}" min="${minAmount}" max="${maxAmount}" required>
+                <input type="number" id="appFundingAmount" name="fundingAmount" value="" min="${minAmount}" max="${maxAmount}" required>
                 ${isMyPulse ? `<small class="field-hint">£3,000 – £500,000 for this lender</small>` : ""}
               </div>
+              ${
+                isMyPulse
+                  ? `
+              <div class="form-group">
+                <label for="appLoanTerm">Loan Term (months) *</label>
+                <input type="number" id="appLoanTerm" name="loanTerm" value="${formData.loanTerm || ""}" min="6" max="60" placeholder="e.g. 36" required>
+                <small class="field-hint">Typically 6-60 months</small>
+              </div>
+              `
+                  : ""
+              }
             </div>
+
+            ${
+              isMyPulse
+                ? `
+            <div class="form-row">
+              <div class="form-group">
+                <label for="appAnnualTurnover">Annual Turnover (£) *</label>
+                <input type="number" id="appAnnualTurnover" name="annualTurnover" value="${userData.turnover || formData.annualTurnover || ""}" min="0" step="1000" placeholder="e.g. 123456" required>
+              </div>
+              <div class="form-group">
+                <label for="appTradingYears">Years Trading *</label>
+                <input type="number" id="appTradingYears" name="tradingYears" value="${userData.businessAge || formData.tradingYears || ""}" min="0" max="70" placeholder="e.g. 5" required>
+              </div>
+            </div>
+            `
+                : ""
+            }
             
             <div class="form-row">
               <div class="form-group">
                 <label for="appFundingPurpose">Purpose *</label>
-                <select id="appFundingPurpose" required>
+                <select id="appFundingPurpose" name="fundingPurpose" required>
                   <option value="">Select a purpose</option>
                   <option value="Growth" ${formData.fundingPurpose === "Growth" ? "selected" : ""}>Growth</option>
                   <option value="Cashflow" ${formData.fundingPurpose === "Cashflow" ? "selected" : ""}>Cashflow</option>
@@ -2682,11 +2747,38 @@ function showApplicationModal(lenderKey, lenderName) {
                 <strong>Email:</strong> <span id="reviewEmail">-</span>
               </div>
               <div class="summary-item">
+                <strong>Phone:</strong> <span id="reviewPhone">-</span>
+              </div>
+              <div class="summary-item">
                 <strong>Business:</strong> <span id="reviewBusiness">-</span>
               </div>
+              ${
+                isMyPulse
+                  ? `
+              <div class="summary-item">
+                <strong>Address:</strong> <span id="reviewAddress">-</span>
+              </div>
+              <div class="summary-item">
+                <strong>Annual Turnover:</strong> <span id="reviewTurnover">-</span>
+              </div>
+              <div class="summary-item">
+                <strong>Years Trading:</strong> <span id="reviewTrading">-</span>
+              </div>
+              `
+                  : ""
+              }
               <div class="summary-item">
                 <strong>Amount:</strong> <span id="reviewAmount">-</span>
               </div>
+              ${
+                isMyPulse
+                  ? `
+              <div class="summary-item">
+                <strong>Loan Term:</strong> <span id="reviewTerm">-</span>
+              </div>
+              `
+                  : ""
+              }
               <div class="summary-item">
                 <strong>Purpose:</strong> <span id="reviewPurpose">-</span>
               </div>
@@ -2694,7 +2786,7 @@ function showApplicationModal(lenderKey, lenderName) {
 
             <div class="form-consent">
               <label class="consent-checkbox">
-                <input type="checkbox" id="appConsent" required>
+                <input type="checkbox" id="appConsent" name="consent" required>
                 <span>I agree to share my details with ${lenderName} and consent to being contacted about my funding application.</span>
               </label>
             </div>
@@ -2727,6 +2819,12 @@ function showApplicationModal(lenderKey, lenderName) {
 
   document.body.appendChild(modal);
 
+  // Populate form fields from saved data
+  const fundingAmountField = modal.querySelector("#appFundingAmount");
+  if (fundingAmountField && formData.fundingAmount) {
+    fundingAmountField.value = Math.min(formData.fundingAmount, maxAmount);
+  }
+
   // Stepped form functionality
   let currentStep = 1;
   const totalSteps = 3;
@@ -2745,7 +2843,9 @@ function showApplicationModal(lenderKey, lenderName) {
     formSteps.forEach((s) => s.classList.remove("active"));
 
     // Show current step
-    document.querySelector(`.form-step[data-step="${step}"]`).classList.add("active");
+    document
+      .querySelector(`.form-step[data-step="${step}"]`)
+      .classList.add("active");
 
     // Update progress indicators
     progressSteps.forEach((p) => {
@@ -2777,8 +2877,38 @@ function showApplicationModal(lenderKey, lenderName) {
       `${modal.querySelector("#appFirstName").value} ${modal.querySelector("#appLastName").value}`;
     modal.querySelector("#reviewEmail").textContent =
       modal.querySelector("#appEmail").value;
+    modal.querySelector("#reviewPhone").textContent =
+      modal.querySelector("#appPhone").value;
     modal.querySelector("#reviewBusiness").textContent =
       modal.querySelector("#appBusinessName").value;
+
+    // MyPulse specific fields
+    if (isMyPulse) {
+      const houseNumber =
+        modal.querySelector("#appHouseNumber")?.value.trim() || "";
+      const houseName =
+        modal.querySelector("#appHouseName")?.value.trim() || "";
+      const street = modal.querySelector("#appStreet")?.value.trim() || "";
+      const town = modal.querySelector("#appTown")?.value.trim() || "";
+      const postcode = modal.querySelector("#appPostcode")?.value.trim() || "";
+
+      const addressParts = [
+        houseNumber || houseName,
+        street,
+        town,
+        postcode,
+      ].filter(Boolean);
+
+      modal.querySelector("#reviewAddress").textContent =
+        addressParts.join(", ");
+      modal.querySelector("#reviewTurnover").textContent =
+        `£${parseFloat(modal.querySelector("#appAnnualTurnover").value).toLocaleString()}`;
+      modal.querySelector("#reviewTrading").textContent =
+        `${modal.querySelector("#appTradingYears").value} years`;
+      modal.querySelector("#reviewTerm").textContent =
+        `${modal.querySelector("#appLoanTerm").value} months`;
+    }
+
     modal.querySelector("#reviewAmount").textContent =
       `£${parseFloat(modal.querySelector("#appFundingAmount").value).toLocaleString()}`;
     modal.querySelector("#reviewPurpose").textContent =
@@ -2786,8 +2916,12 @@ function showApplicationModal(lenderKey, lenderName) {
   }
 
   function validateCurrentStep() {
-    const currentStepEl = document.querySelector(`.form-step[data-step="${currentStep}"]`);
-    const inputs = currentStepEl.querySelectorAll("input[required], select[required]");
+    const currentStepEl = document.querySelector(
+      `.form-step[data-step="${currentStep}"]`,
+    );
+    const inputs = currentStepEl.querySelectorAll(
+      "input[required], select[required]",
+    );
 
     for (let input of inputs) {
       if (!input.value.trim()) {
@@ -2826,15 +2960,19 @@ function showApplicationModal(lenderKey, lenderName) {
   });
 
   // Close handlers
-  modal.querySelector("#closeApplicationModal").addEventListener("click", () => modal.remove());
-  modal.querySelector("#cancelApplicationBtn").addEventListener("click", () => modal.remove());
+  modal
+    .querySelector("#closeApplicationModal")
+    .addEventListener("click", () => modal.remove());
+  modal
+    .querySelector("#cancelApplicationBtn")
+    .addEventListener("click", () => modal.remove());
   modal.addEventListener("click", (e) => {
     if (e.target === modal) modal.remove();
   });
 
   // Submit handler
   submitBtn.addEventListener("click", () => {
-    submitApplication(lenderKey, lenderName);
+    submitApplication(lenderKey, lenderName, modal);
   });
 
   // Clear error styling on input
@@ -2850,58 +2988,127 @@ function showApplicationModal(lenderKey, lenderName) {
 }
 
 // ===== Submit Application to Lender =====
-async function submitApplication(lenderKey, lenderName) {
-  const form = document.getElementById("applicationForm");
-  const messageEl = document.getElementById("applicationMessage");
-  const submitBtn = document.getElementById("submitApplicationBtn");
+async function submitApplication(lenderKey, lenderName, modal) {
+  const form = modal.querySelector("#applicationForm");
+  const messageEl = modal.querySelector("#applicationMessage");
+  const submitBtn = modal.querySelector("#submitApplicationBtn");
   const btnText = submitBtn.querySelector(".btn-text");
   const btnLoading = submitBtn.querySelector(".btn-loading");
 
-  // Validate form
-  if (!form.checkValidity()) {
-    form.reportValidity();
-    return;
-  }
-
-  // Check consent
-  if (!document.getElementById("appConsent").checked) {
+  // Check consent (only validation needed on final step)
+  const consentCheckbox = modal.querySelector("#appConsent");
+  if (!consentCheckbox || !consentCheckbox.checked) {
     messageEl.textContent =
       "Please agree to share your details with the lender";
     messageEl.className = "form-message error";
     return;
   }
 
-  // Gather form data
+  // Gather form data using modal context
   const applicationData = {
-    businessName: document.getElementById("appBusinessName").value.trim(),
-    companyNumber:
-      document.getElementById("appCompanyNumber")?.value.trim() || "",
-    firstName: document.getElementById("appFirstName").value.trim(),
-    lastName: document.getElementById("appLastName").value.trim(),
-    email: document.getElementById("appEmail").value.trim(),
-    phone: document.getElementById("appPhone").value.trim(),
-    dateOfBirth: document.getElementById("appDateOfBirth")?.value || "",
-    homeowner: document.getElementById("appHomeowner")?.value || "No",
-    houseNumber: document.getElementById("appHouseNumber")?.value.trim() || "",
-    houseName: document.getElementById("appHouseName")?.value.trim() || "",
-    street: document.getElementById("appStreet")?.value.trim() || "",
-    town: document.getElementById("appTown")?.value.trim() || "",
-    postcode: document.getElementById("appPostcode")?.value.trim() || "",
+    businessName: modal.querySelector("#appBusinessName")?.value.trim() || "",
+    companyNumber: modal.querySelector("#appCompanyNumber")?.value.trim() || "",
+    firstName: modal.querySelector("#appFirstName")?.value.trim() || "",
+    lastName: modal.querySelector("#appLastName")?.value.trim() || "",
+    email: modal.querySelector("#appEmail")?.value.trim() || "",
+    phone: modal.querySelector("#appPhone")?.value.trim() || "",
+    dateOfBirth: modal.querySelector("#appDateOfBirth")?.value || "",
+    homeowner: modal.querySelector("#appHomeowner")?.value || "No",
+    houseNumber: modal.querySelector("#appHouseNumber")?.value.trim() || "",
+    houseName: modal.querySelector("#appHouseName")?.value.trim() || "",
+    street: modal.querySelector("#appStreet")?.value.trim() || "",
+    town: modal.querySelector("#appTown")?.value.trim() || "",
+    postcode: modal.querySelector("#appPostcode")?.value.trim() || "",
     fundingAmount: parseFloat(
-      document.getElementById("appFundingAmount").value,
+      modal.querySelector("#appFundingAmount")?.value || "0",
     ),
-    fundingPurpose: document.getElementById("appFundingPurpose").value,
+    fundingPurpose: modal.querySelector("#appFundingPurpose")?.value || "",
+    loanTerm: parseInt(modal.querySelector("#appLoanTerm")?.value || "0"),
     annualTurnover:
-      parseFloat(document.getElementById("appAnnualTurnover").value) || 0,
-    tradingYears: document.getElementById("appTradingYears").value,
+      parseFloat(modal.querySelector("#appAnnualTurnover")?.value || "0") || 0,
+    tradingYears: parseInt(
+      modal.querySelector("#appTradingYears")?.value || "0",
+    ),
     lenderKey: lenderKey,
   };
+
+  // Validate required fields exist and have values
+  if (
+    !applicationData.firstName ||
+    !applicationData.lastName ||
+    !applicationData.email ||
+    !applicationData.phone
+  ) {
+    messageEl.textContent =
+      "Please fill in all required contact details (Name, Email, Phone)";
+    messageEl.className = "form-message error";
+    console.error("Missing required fields:", {
+      firstName: applicationData.firstName,
+      lastName: applicationData.lastName,
+      email: applicationData.email,
+      phone: applicationData.phone,
+    });
+    return;
+  }
+
+  // Validate funding amount
+  if (!applicationData.fundingAmount || applicationData.fundingAmount <= 0) {
+    messageEl.textContent = "Please enter a valid funding amount";
+    messageEl.className = "form-message error";
+    return;
+  }
+
+  // Validate funding purpose
+  if (!applicationData.fundingPurpose) {
+    messageEl.textContent = "Please select a funding purpose";
+    messageEl.className = "form-message error";
+    return;
+  }
 
   // MyPulse: validate address - need either house number/flat number or house name
   if (lenderKey === "mypulse") {
     if (!applicationData.houseNumber && !applicationData.houseName) {
       messageEl.textContent =
         "Please enter either a house/flat number or house name";
+      messageEl.className = "form-message error";
+      return;
+    }
+
+    if (!applicationData.street) {
+      messageEl.textContent = "Please enter the street address";
+      messageEl.className = "form-message error";
+      return;
+    }
+
+    if (!applicationData.town) {
+      messageEl.textContent = "Please enter the town/city";
+      messageEl.className = "form-message error";
+      return;
+    }
+
+    if (!applicationData.postcode) {
+      messageEl.textContent = "Please enter the postcode";
+      messageEl.className = "form-message error";
+      return;
+    }
+
+    if (
+      !applicationData.annualTurnover ||
+      applicationData.annualTurnover <= 0
+    ) {
+      messageEl.textContent = "Please enter a valid annual turnover";
+      messageEl.className = "form-message error";
+      return;
+    }
+
+    if (!applicationData.tradingYears || applicationData.tradingYears < 0) {
+      messageEl.textContent = "Please enter the number of years trading";
+      messageEl.className = "form-message error";
+      return;
+    }
+
+    if (!applicationData.loanTerm || applicationData.loanTerm <= 0) {
+      messageEl.textContent = "Please enter a valid loan term";
       messageEl.className = "form-message error";
       return;
     }
@@ -2961,7 +3168,7 @@ async function submitApplication(lenderKey, lenderName) {
     showApplicationSuccess(lenderName, data);
 
     // Close modal
-    document.getElementById("applicationModal").remove();
+    modal.remove();
   } catch (error) {
     console.error("Application submission error:", error);
     messageEl.textContent =
