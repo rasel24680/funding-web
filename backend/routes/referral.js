@@ -169,6 +169,7 @@ router.get("/list", authMiddleware, async (req, res) => {
         r.reward_amount,
         r.reward_type,
         r.qualification_type,
+        r.paypal_email,
         r.qualified_at,
         r.rewarded_at,
         r.created_at,
@@ -191,9 +192,11 @@ router.get("/list", authMiddleware, async (req, res) => {
       rewardAmount: ref.reward_amount,
       rewardType: ref.reward_type,
       qualificationType: ref.qualification_type,
+      paypalEmail: ref.paypal_email || null,
       qualifiedAt: ref.qualified_at,
       rewardedAt: ref.rewarded_at,
       createdAt: ref.created_at,
+      referredEmail: ref.email.replace(/(.{2})(.*)(?=@)/, "$1***"),
       referredUser: {
         name: `${ref.first_name} ${ref.last_name.charAt(0)}.`,
         email: ref.email.replace(/(.{2})(.*)(?=@)/, "$1***"),
@@ -209,6 +212,52 @@ router.get("/list", authMiddleware, async (req, res) => {
   } catch (error) {
     console.error("Get referral list error:", error);
     res.status(500).json({ error: "Failed to get referral list" });
+  }
+});
+
+/**
+ * POST /api/referral/paypal-email/:id
+ * Submit PayPal receiving email for a qualified/rewarded referral
+ */
+router.post("/paypal-email/:id", authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { paypalEmail } = req.body;
+
+    if (!paypalEmail || !paypalEmail.includes("@")) {
+      return res
+        .status(400)
+        .json({ error: "Please enter a valid PayPal email address" });
+    }
+
+    // Verify the referral belongs to this user and is qualified or rewarded
+    const [referrals] = await db.query(
+      "SELECT * FROM referrals WHERE id = ? AND referrer_id = ?",
+      [id, req.userId],
+    );
+
+    if (referrals.length === 0) {
+      return res.status(404).json({ error: "Referral not found" });
+    }
+
+    if (!["qualified", "rewarded"].includes(referrals[0].status)) {
+      return res
+        .status(400)
+        .json({
+          error:
+            "Referral must be qualified or rewarded to submit PayPal email",
+        });
+    }
+
+    await db.query("UPDATE referrals SET paypal_email = ? WHERE id = ?", [
+      paypalEmail.trim(),
+      id,
+    ]);
+
+    res.json({ success: true, message: "PayPal email saved successfully" });
+  } catch (error) {
+    console.error("Submit PayPal email error:", error);
+    res.status(500).json({ error: "Failed to save PayPal email" });
   }
 });
 

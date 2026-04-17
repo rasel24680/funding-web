@@ -574,8 +574,8 @@ class MyPulseLender extends BaseLender {
       postcode: data.postcode || addressParts.postcode || "",
       residential_status:
         data.homeowner === "Yes" || data.homeowner === true
-          ? "Owner"
-          : "Tenant",
+          ? "owner"
+          : "tenant",
     };
 
     // Build request body
@@ -608,8 +608,8 @@ class MyPulseLender extends BaseLender {
           percent_of_control: data.percentOfControl || 100,
           role: data.role || "Director",
           guarantor: true,
-          send_ob_link: false,
-          send_oa_link: false,
+          send_ob_link: true,
+          send_oa_link: true,
         },
       ],
       company: {
@@ -646,7 +646,7 @@ class MyPulseLender extends BaseLender {
                 town: director.town || "",
                 postcode: director.postcode || "",
                 residential_status:
-                  director.homeowner === "Yes" ? "Owner" : "Tenant",
+                  director.homeowner === "Yes" ? "owner" : "tenant",
               },
             ],
             date_of_birth: director.dateOfBirth || "",

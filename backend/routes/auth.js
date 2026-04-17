@@ -129,7 +129,7 @@ router.post("/register", registerValidation, async (req, res) => {
     if (referrerId && validReferralCode) {
       await db.query(
         `INSERT INTO referrals (referrer_id, referred_id, referral_code, status, qualification_type)
-         VALUES (?, ?, ?, 'pending', 'open_banking')`,
+         VALUES (?, ?, ?, 'pending', 'bank_statement_upload')`,
         [referrerId, result.insertId, validReferralCode],
       );
     }

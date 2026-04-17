@@ -326,9 +326,14 @@ class BizcapLender extends BaseLender {
     // Map funding purpose to Bizcap loan purpose
     const loanPurposeMap = {
       Growth: "Expansion & Growth",
+      Expansion: "Expansion & Growth",
       Cashflow: "Working Capital / Cashflow",
+      "Working Capital": "Working Capital / Cashflow",
+      "Cash Flow": "Working Capital / Cashflow",
       Refinancing: "Paying off a Business Debt",
       "Asset Finance": "Equipment Purchase",
+      Equipment: "Equipment Purchase",
+      "Stock Purchase": "Inventory / Stock Purchase",
       Other: "Other",
     };
 
@@ -378,9 +383,13 @@ class BizcapLender extends BaseLender {
           parseFloat(
             applicationData.funding_amount || applicationData.fundingAmount,
           ) || undefined,
-        averageMonthlyTurnover: applicationData.annual_turnover
-          ? parseFloat(applicationData.annual_turnover) / 12
-          : undefined,
+        averageMonthlyTurnover:
+          applicationData.annualTurnover || applicationData.annual_turnover
+            ? parseFloat(
+                applicationData.annualTurnover ||
+                  applicationData.annual_turnover,
+              ) / 12
+            : undefined,
         loanPurpose:
           loanPurposeMap[
             applicationData.funding_purpose || applicationData.fundingPurpose

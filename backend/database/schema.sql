@@ -3,11 +3,13 @@
 -- JWT Authentication + Phone Verification
 -- =============================================
 
--- Use the database (change based on environment)
--- For Hostinger: USE u683316176_pellopay;
--- For local: USE pellopay;
+-- =============================================
+-- For Hostinger: uncomment the line below and comment out the local ones
+-- USE u683316176_pellopay;
+-- For local development:
 CREATE DATABASE IF NOT EXISTS pellopay;
 USE pellopay;
+-- =============================================
 
 
 -- =============================================
@@ -150,7 +152,7 @@ CREATE TABLE IF NOT EXISTS lender_submissions (
     lender_lead_id VARCHAR(255),
     lender_deal_id VARCHAR(255),
     status ENUM('pending', 'submitted', 'approved', 'declined', 'funded', 'error') DEFAULT 'pending',
-    response_data JSON,
+    response_data TEXT,
     error_message TEXT,
     submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -170,7 +172,7 @@ CREATE TABLE IF NOT EXISTS session_logs (
     action VARCHAR(100) NOT NULL,
     ip_address VARCHAR(45),
     user_agent TEXT,
-    details JSON,
+    details TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
@@ -195,8 +197,8 @@ CREATE TABLE IF NOT EXISTS funders (
     accepts_impaired_credit BOOLEAN DEFAULT FALSE,
     requires_homeowner BOOLEAN DEFAULT FALSE,
     min_trading_years INT DEFAULT 0,
-    funding_purposes JSON,
-    asset_types JSON,
+    funding_purposes TEXT,
+    asset_types TEXT,
     contact_email VARCHAR(255),
     website VARCHAR(255),
     is_active BOOLEAN DEFAULT TRUE,
@@ -235,8 +237,9 @@ CREATE TABLE IF NOT EXISTS referrals (
     referral_code VARCHAR(20) NOT NULL,
     status ENUM('pending', 'qualified', 'rewarded', 'expired') DEFAULT 'pending',
     reward_amount DECIMAL(10, 2) DEFAULT 200.00,
-    reward_type ENUM('amazon_voucher', 'cash', 'credit') DEFAULT 'amazon_voucher',
-    qualification_type ENUM('signup', 'open_banking', 'funded') DEFAULT 'open_banking',
+    reward_type ENUM('amazon_voucher', 'cash', 'credit') DEFAULT 'cash',
+    qualification_type ENUM('signup', 'open_banking', 'bank_statement_upload', 'funded') DEFAULT 'bank_statement_upload',
+    paypal_email VARCHAR(255) DEFAULT NULL,
     qualified_at DATETIME,
     rewarded_at DATETIME,
     notes TEXT,
@@ -272,4 +275,23 @@ CREATE TABLE IF NOT EXISTS referral_rewards (
     INDEX idx_referral_id (referral_id),
     INDEX idx_user_id (user_id),
     INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================
+-- User Documents Table (bank statements, financial docs)
+-- =============================================
+CREATE TABLE IF NOT EXISTS user_documents (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    category ENUM('bank-statements', 'financial-accounts', 'applicant-info') NOT NULL,
+    original_name VARCHAR(255) NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(500) NOT NULL,
+    file_size INT DEFAULT 0,
+    mime_type VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_id (user_id),
+    INDEX idx_category (category)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

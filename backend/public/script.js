@@ -1095,6 +1095,8 @@ async function handleLogin(form) {
 
     // SECURITY: Clear ALL previous user data before setting new user data
     // This prevents data leakage between users on shared browsers
+    // Preserve fundingFormData - it's the user's own search, needed for apply modal
+    const savedFundingForm = localStorage.getItem("fundingFormData");
     localStorage.removeItem("authToken");
     localStorage.removeItem("userEmail");
     localStorage.removeItem("userCompanyName");
@@ -1103,7 +1105,7 @@ async function handleLogin(form) {
     localStorage.removeItem("userPhone");
     localStorage.removeItem("userProfilePicture");
     localStorage.removeItem("applicationId");
-    localStorage.removeItem("fundingFormData"); // Clear previous user's form data
+    localStorage.removeItem("fundingFormData");
     localStorage.removeItem("pendingPhoneVerification");
 
     // Store auth token and user data for NEW logged-in user
@@ -1131,6 +1133,11 @@ async function handleLogin(form) {
 
     // Clear guest session ID
     localStorage.removeItem("guestSessionId");
+
+    // Restore funding form data (user's own search, safe across login)
+    if (savedFundingForm) {
+      localStorage.setItem("fundingFormData", savedFundingForm);
+    }
 
     showAuthMessage("Login successful! Redirecting...", "success", messageEl);
 
@@ -1691,6 +1698,12 @@ function handleForgotPassword(e) {
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize user navbar on all pages
   initializeUserNavbar();
+
+  // Initialize super admin page if on super admin page
+  if (document.getElementById("saLoginGate")) {
+    initializeSuperAdminPage();
+    return; // Super admin page is standalone, no other init needed
+  }
 
   // Initialize admin page if on admin page
   if (document.querySelector(".admin-section")) {
@@ -2527,7 +2540,7 @@ function showLenderDetailsModal(lender) {
 }
 
 // ===== Application Modal =====
-function showApplicationModal(lenderKey, lenderName) {
+async function showApplicationModal(lenderKey, lenderName) {
   // Check if phone is verified
   const isPhoneVerified = localStorage.getItem("isPhoneVerified") === "true";
   if (!isPhoneVerified) {
@@ -2540,284 +2553,220 @@ function showApplicationModal(lenderKey, lenderName) {
 
   // Get user data from localStorage
   const userData = JSON.parse(localStorage.getItem("userData") || "{}");
-  const formData = JSON.parse(localStorage.getItem("fundingFormData") || "{}");
+  let formData = JSON.parse(localStorage.getItem("fundingFormData") || "{}");
+
+  // If localStorage is missing funding data, fetch from database
+  if (!formData.fundingAmount) {
+    try {
+      const token = localStorage.getItem("authToken");
+      if (token) {
+        const resp = await fetch(`${API_BASE}/funding/my-applications`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await resp.json();
+        if (data.success && data.applications && data.applications.length > 0) {
+          const latest = data.applications[0];
+          formData = {
+            fundingAmount: latest.fundingAmount,
+            fundingPurpose: latest.fundingPurpose,
+            homeowner: latest.homeowner,
+            annualTurnover: latest.annualTurnover,
+            tradingYears: latest.tradingYears,
+            tradingMonths: latest.tradingMonths,
+            assetType: latest.assetType,
+            importance: latest.importance,
+          };
+          // Re-cache so we don't fetch again
+          localStorage.setItem("fundingFormData", JSON.stringify(formData));
+        }
+      }
+    } catch (e) {
+      // DB fetch failed, continue with whatever we have
+    }
+  }
 
   // Check if this is MyPulse (requires additional fields)
   const isMyPulse = lenderKey === "mypulse";
   const minAmount = isMyPulse ? 3000 : 1000;
   const maxAmount = isMyPulse ? 500000 : 5000000;
 
+  // Pre-fill values from form + profile
+  const prefillAmount = formData.fundingAmount
+    ? Math.min(formData.fundingAmount, maxAmount)
+    : "";
+  const prefillPurpose = formData.fundingPurpose || "";
+  const prefillHomeowner = formData.homeowner || "No";
+  const prefillTurnover = userData.turnover || formData.annualTurnover || "";
+  const hasFundingData = !!formData.fundingAmount;
+
   // Remove existing modal if present
   const existingModal = document.getElementById("applicationModal");
   if (existingModal) existingModal.remove();
+
+  // Build summary values
+  const displayName =
+    `${userData.firstName || ""} ${userData.lastName || ""}`.trim() || "—";
+  const displayEmail = userData.email || "—";
+  const displayPhone = userData.phone || "—";
+  const displayCompany = userData.companyName || "—";
+  const displayAmount = prefillAmount
+    ? `£${Number(prefillAmount).toLocaleString()}`
+    : "—";
+  const displayPurpose = prefillPurpose || "—";
+  const displayHomeowner = prefillHomeowner === "Yes" ? "Homeowner" : "Tenant";
+  const displayTurnover = prefillTurnover
+    ? `£${Number(prefillTurnover).toLocaleString()} turnover`
+    : "";
+  const maxDOB = new Date(new Date().setFullYear(new Date().getFullYear() - 18))
+    .toISOString()
+    .split("T")[0];
 
   const modal = document.createElement("div");
   modal.id = "applicationModal";
   modal.className = "application-modal-overlay";
   modal.innerHTML = `
-    <div class="application-modal">
+    <div class="application-modal compact-modal">
       <div class="modal-header">
-        <div class="header-content">
-          <h2>Apply to ${lenderName}</h2>
-          <div class="form-progress">
-            <span class="progress-step active" data-step="1">📋 Your Details</span>
-            <span class="progress-step" data-step="2">💼 Funding</span>
-            <span class="progress-step" data-step="3">✓ Review</span>
-          </div>
-        </div>
+        <h2>Apply to ${lenderName}</h2>
         <button class="modal-close-btn" id="closeApplicationModal">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
         </button>
       </div>
       <div class="modal-body">
-        <form id="applicationForm" class="application-form stepped-form">
-          <!-- STEP 1: Personal Details -->
-          <div class="form-step active" data-step="1">
-            <h3>Your Contact Details</h3>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label for="appFirstName">First Name *</label>
-                <input type="text" id="appFirstName" name="firstName" value="${userData.firstName || formData.firstName || ""}" pattern="[A-Za-z\\s\\-']+" title="Please enter a valid name (letters only)" required>
-              </div>
+        <form id="applicationForm" class="application-form">
+
+          <!-- READ-ONLY SUMMARY OF KNOWN DATA -->
+          <div class="app-summary-card">
+            <div class="summary-line">
+              <span class="summary-emoji">👤</span>
+              <span>${displayName}</span>
+              <span class="sdot">·</span>
+              <span>${displayEmail}</span>
+              <span class="sdot">·</span>
+              <span>${displayPhone}</span>
             </div>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label for="appLastName">Last Name *</label>
-                <input type="text" id="appLastName" name="lastName" value="${userData.lastName || formData.lastName || ""}" pattern="[A-Za-z\\s\\-']+" title="Please enter a valid name (letters only)" required>
-              </div>
+            <div class="summary-line">
+              <span class="summary-emoji">💰</span>
+              <span>${displayAmount}</span>
+              <span class="sdot">·</span>
+              <span>${displayPurpose}</span>
+              <span class="sdot">·</span>
+              <span>${displayHomeowner}</span>
+              ${displayTurnover ? `<span class="sdot">·</span><span>${displayTurnover}</span>` : ""}
             </div>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label for="appEmail">Email *</label>
-                <input type="email" id="appEmail" name="email" value="${userData.email || formData.email || ""}" required>
-              </div>
+          </div>
+
+          <!-- COMPANY SEARCH — replaces CRN + business name inputs -->
+          <div class="app-company-search">
+            <label for="appCompanySearch">🔍 Find Your Company</label>
+            <div class="company-search-row">
+              <input type="text" id="appCompanySearch" placeholder="Company name or CRN (e.g. 12345678)" autocomplete="off" value="${userData.companyName || ""}">
+              <button type="button" id="appSearchBtn" class="btn-search">
+                <span class="search-text">Search</span>
+                <span class="search-loading" style="display:none;">
+                  <svg class="spinner" width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="32" stroke-linecap="round"/></svg>
+                </span>
+              </button>
             </div>
-            
-            <div class="form-row">
+            <div id="appSearchResults" class="company-search-results" style="display:none;"></div>
+            <div id="appSearchStatus" class="company-search-status" style="display:none;"></div>
+          </div>
+
+          <!-- Hidden fields populated by company search -->
+          <input type="hidden" id="appBusinessName" value="${userData.companyName || ""}">
+          <input type="hidden" id="appCompanyNumber" value="">
+
+          ${
+            !hasFundingData
+              ? `
+          <!-- FUNDING DETAILS — shown when localStorage data is missing -->
+          <div class="app-extras">
+            <div class="app-grid-2">
               <div class="form-group">
-                <label for="appPhone">Phone * <small>(UK mobile/landline)</small></label>
-                <input type="tel" id="appPhone" name="phone" value="${userData.phone || formData.phone || ""}" pattern="[0-9]{10,11}" title="Please enter a valid UK phone number (10-11 digits)" required>
+                <label for="appFundingAmount">Funding Amount (£) *</label>
+                <input type="number" id="appFundingAmount" name="fundingAmount" min="${minAmount}" max="${maxAmount}" placeholder="e.g. 25000" required>
               </div>
-            </div>
-            
-            <div class="form-row">
               <div class="form-group">
-                <label for="appDateOfBirth">Date of Birth * <span class="badge-new">Required</span></label>
-                <input type="date" id="appDateOfBirth" name="dateOfBirth" value="${userData.dateOfBirth || formData.dateOfBirth || ""}" max="${new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split("T")[0]}" required>
-                <small class="field-hint">You must be 18 or over</small>
-              </div>
-            </div>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label for="appHomeowner">Residential Status</label>
-                <select id="appHomeowner" name="homeowner">
-                  <option value="No" ${formData.homeowner === "No" ? "selected" : ""}>Tenant/Renting</option>
-                  <option value="Yes" ${formData.homeowner === "Yes" ? "selected" : ""}>Homeowner</option>
+                <label for="appFundingPurpose">Purpose *</label>
+                <select id="appFundingPurpose" name="fundingPurpose" required>
+                  <option value="">Select...</option>
+                  <option value="Working Capital">Working Capital</option>
+                  <option value="Expansion">Expansion</option>
+                  <option value="Stock Purchase">Stock Purchase</option>
+                  <option value="Equipment">Equipment</option>
+                  <option value="Cash Flow">Cash Flow</option>
+                  <option value="Asset Finance">Asset Finance</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
             </div>
           </div>
+          `
+              : ""
+          }
 
-          <!-- STEP 2: Business & Funding -->
-          <div class="form-step" data-step="2">
-            <h3>Business & Funding Details</h3>
-
-            <div class="step-accordion" id="step2Accordion">
-              <details class="form-accordion" data-accordion="business" open>
-                <summary>1. Business Information</summary>
-                <div class="accordion-content">
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label for="appBusinessName">Business Name *</label>
-                      <input type="text" id="appBusinessName" name="businessName" value="${userData.companyName || formData.businessName || ""}" required>
-                    </div>
-                  </div>
-
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label for="appCompanyNumber">Company Registration Number ${isMyPulse ? "*" : ""}</label>
-                      <input type="text" id="appCompanyNumber" name="companyNumber" value="${userData.companyNumber || formData.companyNumber || ""}" placeholder="e.g. 12345678" ${isMyPulse ? "required" : ""}>
-                      <small class="field-hint">8-digit Companies House number</small>
-                    </div>
-                  </div>
-                </div>
-              </details>
-
-              ${
-                isMyPulse
-                  ? `
-              <details class="form-accordion" data-accordion="address">
-                <summary>2. Business Address</summary>
-                <div class="accordion-content">
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label for="appHouseNumber">House/Flat Number</label>
-                      <input type="text" id="appHouseNumber" name="houseNumber" value="${formData.houseNumber || ""}" placeholder="e.g. 33a">
-                    </div>
-                    <div class="form-group">
-                      <label for="appHouseName">House Name</label>
-                      <input type="text" id="appHouseName" name="houseName" value="${formData.houseName || ""}" placeholder="e.g. The Cottage">
-                    </div>
-                  </div>
-
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label for="appStreet">Street *</label>
-                      <input type="text" id="appStreet" name="street" value="${formData.street || ""}" required>
-                    </div>
-                  </div>
-
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label for="appTown">Town/City *</label>
-                      <input type="text" id="appTown" name="town" value="${formData.town || ""}" required>
-                    </div>
-                    <div class="form-group">
-                      <label for="appPostcode">Postcode *</label>
-                      <input type="text" id="appPostcode" name="postcode" value="${formData.postcode || ""}" placeholder="e.g. PR7 3HN" required>
-                    </div>
-                  </div>
-                </div>
-              </details>
-              `
-                  : ""
-              }
-
-              <details class="form-accordion" data-accordion="funding" ${isMyPulse ? "" : "open"}>
-                <summary>${isMyPulse ? "3" : "2"}. Funding Request</summary>
-                <div class="accordion-content">
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label for="appFundingAmount">Amount Required (£) *</label>
-                      <input type="number" id="appFundingAmount" name="fundingAmount" value="" min="${minAmount}" max="${maxAmount}" required>
-                      ${isMyPulse ? `<small class="field-hint">£3,000 – £500,000 for this lender</small>` : ""}
-                    </div>
-                    ${
-                      isMyPulse
-                        ? `
-                    <div class="form-group">
-                      <label for="appLoanTerm">Loan Term (months) *</label>
-                      <input type="number" id="appLoanTerm" name="loanTerm" value="${formData.loanTerm || ""}" min="6" max="60" placeholder="e.g. 36" required>
-                      <small class="field-hint">Typically 6-60 months</small>
-                    </div>
-                    `
-                        : ""
-                    }
-                  </div>
-
-                  ${
-                    isMyPulse
-                      ? `
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label for="appAnnualTurnover">Annual Turnover (£) *</label>
-                      <input type="number" id="appAnnualTurnover" name="annualTurnover" value="${userData.turnover || formData.annualTurnover || ""}" min="0" step="1000" placeholder="e.g. 123456" required>
-                    </div>
-                    <div class="form-group">
-                      <label for="appTradingYears">Years Trading *</label>
-                      <input type="number" id="appTradingYears" name="tradingYears" value="${userData.businessAge || formData.tradingYears || ""}" min="0" max="70" placeholder="e.g. 5" required>
-                    </div>
-                  </div>
-                  `
-                      : ""
-                  }
-
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label for="appFundingPurpose">Purpose *</label>
-                      <select id="appFundingPurpose" name="fundingPurpose" required>
-                        <option value="">Select a purpose</option>
-                        <option value="Growth" ${formData.fundingPurpose === "Growth" ? "selected" : ""}>Growth</option>
-                        <option value="Cashflow" ${formData.fundingPurpose === "Cashflow" ? "selected" : ""}>Cashflow</option>
-                        <option value="Refinancing" ${formData.fundingPurpose === "Refinancing" ? "selected" : ""}>Refinancing</option>
-                        <option value="Asset Finance" ${formData.fundingPurpose === "Asset Finance" ? "selected" : ""}>Asset Finance</option>
-                        <option value="Other" ${formData.fundingPurpose === "Other" ? "selected" : ""}>Other</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </details>
+          <!-- DATE OF BIRTH — only always-needed input -->
+          <div class="app-inline-field">
+            <div class="form-group">
+              <label for="appDateOfBirth">Date of Birth *</label>
+              <input type="date" id="appDateOfBirth" name="dateOfBirth" max="${maxDOB}" required>
             </div>
           </div>
 
-          <!-- STEP 3: Review & Consent -->
-          <div class="form-step" data-step="3">
-            <h3>Almost Done!</h3>
-            <p class="step-description">Please confirm your details and agree to proceed</p>
-            
-            <div class="review-summary">
-              <div class="summary-item">
-                <strong>Name:</strong> <span id="reviewName">-</span>
+          ${
+            isMyPulse
+              ? `
+          <!-- MYPULSE EXTRAS — loan term + address -->
+          <div class="app-extras">
+            <div class="app-grid-2">
+              <div class="form-group">
+                <label for="appLoanTerm">Loan Term (months) *</label>
+                <input type="number" id="appLoanTerm" name="loanTerm" min="6" max="60" placeholder="e.g. 36" required>
               </div>
-              <div class="summary-item">
-                <strong>Email:</strong> <span id="reviewEmail">-</span>
-              </div>
-              <div class="summary-item">
-                <strong>Phone:</strong> <span id="reviewPhone">-</span>
-              </div>
-              <div class="summary-item">
-                <strong>Business:</strong> <span id="reviewBusiness">-</span>
-              </div>
-              ${
-                isMyPulse
-                  ? `
-              <div class="summary-item">
-                <strong>Address:</strong> <span id="reviewAddress">-</span>
-              </div>
-              <div class="summary-item">
-                <strong>Annual Turnover:</strong> <span id="reviewTurnover">-</span>
-              </div>
-              <div class="summary-item">
-                <strong>Years Trading:</strong> <span id="reviewTrading">-</span>
-              </div>
-              `
-                  : ""
-              }
-              <div class="summary-item">
-                <strong>Amount:</strong> <span id="reviewAmount">-</span>
-              </div>
-              ${
-                isMyPulse
-                  ? `
-              <div class="summary-item">
-                <strong>Loan Term:</strong> <span id="reviewTerm">-</span>
-              </div>
-              `
-                  : ""
-              }
-              <div class="summary-item">
-                <strong>Purpose:</strong> <span id="reviewPurpose">-</span>
+              <div class="form-group">
+                <label for="appHouseNumber">House/Flat No.</label>
+                <input type="text" id="appHouseNumber" name="houseNumber" placeholder="e.g. 33a">
               </div>
             </div>
+            <div class="app-grid-3">
+              <div class="form-group">
+                <label for="appStreet">Street *</label>
+                <input type="text" id="appStreet" name="street" required>
+              </div>
+              <div class="form-group">
+                <label for="appTown">Town *</label>
+                <input type="text" id="appTown" name="town" required>
+              </div>
+              <div class="form-group">
+                <label for="appPostcode">Postcode *</label>
+                <input type="text" id="appPostcode" name="postcode" placeholder="PR7 3HN" required>
+              </div>
+            </div>
+          </div>
+          `
+              : ""
+          }
 
-            <div class="form-consent">
-              <label class="consent-checkbox">
-                <input type="checkbox" id="appConsent" name="consent" required>
-                <span>I agree to share my details with ${lenderName} and consent to being contacted about my funding application.</span>
-              </label>
-            </div>
+          <!-- CONSENT -->
+          <div class="form-consent compact-consent">
+            <label class="consent-checkbox">
+              <input type="checkbox" id="appConsent" name="consent" required>
+              <span>I agree to share my details with ${lenderName} and consent to credit and fraud checks.</span>
+            </label>
           </div>
 
           <div class="form-message" id="applicationMessage"></div>
         </form>
       </div>
       <div class="modal-footer">
-        <button class="btn-secondary" id="prevStepBtn" style="display:none;">← Previous</button>
         <button class="btn-secondary" id="cancelApplicationBtn">Cancel</button>
-        <button class="btn-primary" id="nextStepBtn">
-          <span class="btn-text">Next</span>
-        </button>
-        <button class="btn-primary" id="submitApplicationBtn" data-lender-key="${lenderKey}" style="display:none;">
+        <button class="btn-primary" id="submitApplicationBtn" data-lender-key="${lenderKey}">
           <span class="btn-text">Submit Application</span>
-          <span class="btn-loading" style="display: none;">
-            <svg class="spinner" width="20" height="20" viewBox="0 0 24 24">
+          <span class="btn-loading" style="display:none;">
+            <svg class="spinner" width="18" height="18" viewBox="0 0 24 24">
               <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="32" stroke-linecap="round"/>
             </svg>
             Submitting...
@@ -2826,183 +2775,224 @@ function showApplicationModal(lenderKey, lenderName) {
       </div>
     </div>`;
 
-  // Add stepped form class to modal
-  const modalDiv = modal.querySelector(".application-modal");
-  modalDiv.classList.add("stepped");
-
   document.body.appendChild(modal);
 
-  // Populate form fields from saved data
-  const fundingAmountField = modal.querySelector("#appFundingAmount");
-  if (fundingAmountField && formData.fundingAmount) {
-    fundingAmountField.value = Math.min(formData.fundingAmount, maxAmount);
-  }
-
-  // Stepped form functionality
-  let currentStep = 1;
-  const totalSteps = 3;
-
-  const formSteps = modal.querySelectorAll(".form-step");
-  const progressSteps = modal.querySelectorAll(".progress-step");
-  const nextBtn = modal.querySelector("#nextStepBtn");
-  const prevBtn = modal.querySelector("#prevStepBtn");
   const submitBtn = modal.querySelector("#submitApplicationBtn");
   const applicationForm = modal.querySelector("#applicationForm");
+  const searchInput = modal.querySelector("#appCompanySearch");
+  const searchBtn = modal.querySelector("#appSearchBtn");
+  const searchResults = modal.querySelector("#appSearchResults");
+  const searchStatus = modal.querySelector("#appSearchStatus");
 
-  const step2Accordions = modal.querySelectorAll(
-    '.form-step[data-step="2"] .form-accordion',
-  );
+  // ===== COMPANY SEARCH / AUTO-FILL =====
+  let searchDebounce = null;
 
-  step2Accordions.forEach((accordion) => {
-    accordion.addEventListener("toggle", () => {
-      if (accordion.open) {
-        step2Accordions.forEach((other) => {
-          if (other !== accordion) {
-            other.open = false;
-          }
-        });
-      }
-    });
+  searchBtn.addEventListener("click", () => {
+    const query = searchInput.value.trim();
+    if (query.length >= 2) performCompanySearch(query);
   });
 
-  function showStep(step) {
-    currentStep = step;
-
-    // Hide all steps
-    formSteps.forEach((s) => s.classList.remove("active"));
-
-    // Show current step
-    modal
-      .querySelector(`.form-step[data-step="${step}"]`)
-      .classList.add("active");
-
-    // Update progress indicators
-    progressSteps.forEach((p) => {
-      const stepNum = parseInt(p.dataset.step);
-      if (stepNum <= step) {
-        p.classList.add("active");
-      } else {
-        p.classList.remove("active");
-      }
-    });
-
-    // Update button visibility
-    prevBtn.style.display = step === 1 ? "none" : "block";
-    nextBtn.style.display = step === totalSteps ? "none" : "block";
-    submitBtn.style.display = step === totalSteps ? "block" : "none";
-
-    // Update review summary on final step
-    if (step === totalSteps) {
-      updateReviewSummary();
+  searchInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const query = searchInput.value.trim();
+      if (query.length >= 2) performCompanySearch(query);
     }
+  });
 
-    if (step === 2 && step2Accordions.length > 0) {
-      const hasOpenSection = Array.from(step2Accordions).some((d) => d.open);
-      if (!hasOpenSection) {
-        step2Accordions[0].open = true;
-      }
+  // Auto-search as user types (debounced)
+  searchInput.addEventListener("input", () => {
+    clearTimeout(searchDebounce);
+    const query = searchInput.value.trim();
+    if (query.length < 2) {
+      searchResults.style.display = "none";
+      searchStatus.style.display = "none";
+      return;
     }
+    searchDebounce = setTimeout(() => performCompanySearch(query), 500);
+  });
 
-    // Scroll to top of modal body
-    const modalBody = modal.querySelector(".modal-body");
-    modalBody.scrollTop = 0;
-  }
+  async function performCompanySearch(query) {
+    searchBtn.querySelector(".search-text").style.display = "none";
+    searchBtn.querySelector(".search-loading").style.display = "inline-flex";
+    searchBtn.disabled = true;
+    searchStatus.style.display = "none";
+    searchResults.style.display = "none";
 
-  function updateReviewSummary() {
-    modal.querySelector("#reviewName").textContent =
-      `${modal.querySelector("#appFirstName").value} ${modal.querySelector("#appLastName").value}`;
-    modal.querySelector("#reviewEmail").textContent =
-      modal.querySelector("#appEmail").value;
-    modal.querySelector("#reviewPhone").textContent =
-      modal.querySelector("#appPhone").value;
-    modal.querySelector("#reviewBusiness").textContent =
-      modal.querySelector("#appBusinessName").value;
+    try {
+      // Determine if CRN or name search
+      const isCRN = /^[A-Za-z0-9]{6,8}$/.test(query);
 
-    // MyPulse specific fields
-    if (isMyPulse) {
-      const houseNumber =
-        modal.querySelector("#appHouseNumber")?.value.trim() || "";
-      const houseName =
-        modal.querySelector("#appHouseName")?.value.trim() || "";
-      const street = modal.querySelector("#appStreet")?.value.trim() || "";
-      const town = modal.querySelector("#appTown")?.value.trim() || "";
-      const postcode = modal.querySelector("#appPostcode")?.value.trim() || "";
+      if (isCRN) {
+        // Direct CRN lookup via myPulse
+        const res = await fetch(
+          `${API_BASE}/company/lookup/${encodeURIComponent(query)}`,
+        );
+        const data = await res.json();
 
-      const addressParts = [
-        houseNumber || houseName,
-        street,
-        town,
-        postcode,
-      ].filter(Boolean);
-
-      modal.querySelector("#reviewAddress").textContent =
-        addressParts.join(", ");
-      modal.querySelector("#reviewTurnover").textContent =
-        `£${parseFloat(modal.querySelector("#appAnnualTurnover").value).toLocaleString()}`;
-      modal.querySelector("#reviewTrading").textContent =
-        `${modal.querySelector("#appTradingYears").value} years`;
-      modal.querySelector("#reviewTerm").textContent =
-        `${modal.querySelector("#appLoanTerm").value} months`;
-    }
-
-    modal.querySelector("#reviewAmount").textContent =
-      `£${parseFloat(modal.querySelector("#appFundingAmount").value).toLocaleString()}`;
-    modal.querySelector("#reviewPurpose").textContent =
-      modal.querySelector("#appFundingPurpose").value;
-  }
-
-  function validateCurrentStep() {
-    const currentStepEl = modal.querySelector(
-      `.form-step[data-step="${currentStep}"]`,
-    );
-    const inputs = currentStepEl.querySelectorAll(
-      "input[required], select[required]",
-    );
-
-    for (let input of inputs) {
-      if (!input.value.trim()) {
-        const parentAccordion = input.closest(".form-accordion");
-        if (parentAccordion) {
-          parentAccordion.open = true;
-          step2Accordions.forEach((other) => {
-            if (other !== parentAccordion) {
-              other.open = false;
-            }
-          });
+        if (data.success && data.company) {
+          applyCompanyData(data.company);
+          showSearchStatus(`Found: ${data.company.name}`, "success");
+          // Also fetch directors for auto-fill
+          fetchOfficers(data.company.crn);
+        } else {
+          showSearchStatus("Company not found with that CRN", "error");
         }
-        input.focus();
-        input.style.borderColor = "#dc3545";
-        return false;
+      } else {
+        // Name search via Companies House
+        const res = await fetch(
+          `${API_BASE}/company/search?q=${encodeURIComponent(query)}&limit=5`,
+        );
+        const data = await res.json();
+
+        if (data.success && data.companies && data.companies.length > 0) {
+          showCompanyResults(data.companies);
+        } else if (data.message) {
+          // Companies House API not configured, try as CRN fallback
+          showSearchStatus(
+            "Enter the 8-digit CRN for instant auto-fill",
+            "info",
+          );
+        } else {
+          showSearchStatus("No companies found. Try the CRN instead.", "info");
+        }
       }
-      // Validate date of birth if on step 1
-      if (currentStep === 1 && input.id === "appDateOfBirth" && !input.value) {
-        input.focus();
-        input.style.borderColor = "#dc3545";
-        return false;
-      }
+    } catch (err) {
+      showSearchStatus(
+        "Search failed. You can fill details manually.",
+        "error",
+      );
+    } finally {
+      searchBtn.querySelector(".search-text").style.display = "inline";
+      searchBtn.querySelector(".search-loading").style.display = "none";
+      searchBtn.disabled = false;
     }
-    return true;
   }
 
-  nextBtn.addEventListener("click", () => {
-    if (validateCurrentStep()) {
-      if (currentStep < totalSteps) {
-        showStep(currentStep + 1);
-      }
-    } else {
-      modal.querySelector("#applicationMessage").textContent =
-        "Please fill in all required fields";
-      modal.querySelector("#applicationMessage").className =
-        "form-message error";
-    }
-  });
+  function showCompanyResults(companies) {
+    searchResults.innerHTML = companies
+      .map(
+        (c) => `
+      <div class="company-result-item" data-crn="${c.crn}" data-name="${c.name}">
+        <div class="company-result-name">${c.name}</div>
+        <div class="company-result-meta">CRN: ${c.crn} · ${c.status || ""} ${c.address ? "· " + c.address : ""}</div>
+      </div>
+    `,
+      )
+      .join("");
+    searchResults.style.display = "block";
 
-  prevBtn.addEventListener("click", () => {
-    if (currentStep > 1) {
-      showStep(currentStep - 1);
-      modal.querySelector("#applicationMessage").textContent = "";
+    // Click handler for each result
+    searchResults.querySelectorAll(".company-result-item").forEach((item) => {
+      item.addEventListener("click", async () => {
+        const crn = item.dataset.crn;
+        const name = item.dataset.name;
+        searchResults.style.display = "none";
+        searchInput.value = name;
+        showSearchStatus("Loading company details...", "loading");
+
+        try {
+          const res = await fetch(
+            `${API_BASE}/company/lookup/${encodeURIComponent(crn)}`,
+          );
+          const data = await res.json();
+          if (data.success && data.company) {
+            applyCompanyData(data.company);
+            showSearchStatus(`Auto-filled: ${data.company.name}`, "success");
+            fetchOfficers(crn);
+          } else {
+            // Fallback: just use name and CRN from search result
+            modal.querySelector("#appBusinessName").value = name;
+            modal.querySelector("#appCompanyNumber").value = crn;
+            showSearchStatus(`Set: ${name} (${crn})`, "success");
+          }
+        } catch {
+          modal.querySelector("#appBusinessName").value = name;
+          modal.querySelector("#appCompanyNumber").value = crn;
+          showSearchStatus(`Set: ${name} (${crn})`, "success");
+        }
+      });
+    });
+  }
+
+  function applyCompanyData(company) {
+    modal.querySelector("#appBusinessName").value = company.name || "";
+    modal.querySelector("#appCompanyNumber").value = company.crn || "";
+
+    // Update search input to show found company name
+    searchInput.value = company.name || searchInput.value;
+
+    // Auto-fill address for MyPulse
+    if (isMyPulse && company.address) {
+      const addr = company.address;
+      const houseNum = modal.querySelector("#appHouseNumber");
+      const streetEl = modal.querySelector("#appStreet");
+      const townEl = modal.querySelector("#appTown");
+      const postcodeEl = modal.querySelector("#appPostcode");
+
+      if (houseNum && addr.line1) {
+        const match = addr.line1.match(/^(\d+\w*)\s+(.*)/);
+        if (match) {
+          houseNum.value = match[1];
+          if (streetEl) streetEl.value = match[2];
+        } else {
+          if (streetEl) streetEl.value = addr.line1;
+        }
+      }
+      if (addr.line2 && streetEl && !streetEl.value) {
+        streetEl.value = addr.line2;
+      }
+      if (townEl) townEl.value = addr.city || "";
+      if (postcodeEl) postcodeEl.value = addr.postcode || "";
     }
-  });
+
+    // Calculate trading years from incorporation date
+    if (company.incorporationDate) {
+      const incDate = new Date(company.incorporationDate);
+      if (!isNaN(incDate.getTime())) {
+        const years = Math.floor(
+          (Date.now() - incDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000),
+        );
+        modal.dataset.tradingYears = years;
+      }
+    }
+  }
+
+  async function fetchOfficers(crn) {
+    try {
+      const res = await fetch(
+        `${API_BASE}/company/officers/${encodeURIComponent(crn)}`,
+      );
+      const data = await res.json();
+      if (data.success && data.officers && data.officers.length > 0) {
+        const director =
+          data.officers.find(
+            (o) =>
+              o.Officer_Role?.toLowerCase().includes("director") &&
+              !o.Resigned_On,
+          ) || data.officers[0];
+
+        if (director) {
+          // Auto-fill DOB if available and empty
+          const dobEl = modal.querySelector("#appDateOfBirth");
+          if (dobEl && !dobEl.value && director.Date_Of_Birth) {
+            const dob = new Date(director.Date_Of_Birth);
+            if (!isNaN(dob.getTime())) {
+              dobEl.value = dob.toISOString().split("T")[0];
+            }
+          }
+        }
+      }
+    } catch {
+      // Officers lookup is optional - fail silently
+    }
+  }
+
+  function showSearchStatus(msg, type) {
+    searchStatus.textContent = msg;
+    searchStatus.className = "company-search-status " + type;
+    searchStatus.style.display = "block";
+  }
 
   // Close handlers
   modal
@@ -3028,8 +3018,12 @@ function showApplicationModal(lenderKey, lenderName) {
     });
   });
 
-  // Initialize first step
-  showStep(1);
+  // Close search results when clicking outside
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".app-company-search")) {
+      searchResults.style.display = "none";
+    }
+  });
 }
 
 // ===== Submit Application to Lender =====
@@ -3049,135 +3043,90 @@ async function submitApplication(lenderKey, lenderName, modal) {
     return;
   }
 
-  // Gather form data using modal context
+  // Pull pre-filled data from localStorage (user already entered during signup/funding form)
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+  const formData = JSON.parse(localStorage.getItem("fundingFormData") || "{}");
+  const isMyPulse = lenderKey === "mypulse";
+  const maxAmount = isMyPulse ? 500000 : 5000000;
+  const minAmount = isMyPulse ? 3000 : 1000;
+  // Read amount: prefer localStorage, fall back to modal input
+  const modalAmountEl = modal.querySelector("#appFundingAmount");
+  const modalPurposeEl = modal.querySelector("#appFundingPurpose");
+  const rawAmount =
+    parseFloat(
+      formData.fundingAmount || (modalAmountEl ? modalAmountEl.value : "0"),
+    ) || 0;
+
+  if (rawAmount <= 0) {
+    messageEl.textContent = "Please enter a funding amount";
+    messageEl.className = "form-message error";
+    if (modalAmountEl) modalAmountEl.style.borderColor = "#e74c3c";
+    return;
+  }
+
+  const clampedAmount = Math.max(minAmount, Math.min(rawAmount, maxAmount));
+
+  // Gather data: localStorage for pre-filled, modal for user-entered fields
   const applicationData = {
-    businessName: modal.querySelector("#appBusinessName")?.value.trim() || "",
+    // From localStorage (already captured)
+    firstName: userData.firstName || "",
+    lastName: userData.lastName || "",
+    email: userData.email || "",
+    phone: userData.phone || "",
+    homeowner: formData.homeowner || "No",
+    fundingAmount: clampedAmount,
+    fundingPurpose:
+      formData.fundingPurpose || (modalPurposeEl ? modalPurposeEl.value : ""),
+    annualTurnover:
+      parseFloat(formData.annualTurnover || userData.turnover || "0") || 0,
+    tradingYears: parseInt(
+      modal.dataset.tradingYears || formData.tradingYears || "0",
+    ),
+
+    // From modal (company search hidden inputs)
+    businessName:
+      modal.querySelector("#appBusinessName")?.value.trim() ||
+      userData.companyName ||
+      "",
     companyNumber: modal.querySelector("#appCompanyNumber")?.value.trim() || "",
-    firstName: modal.querySelector("#appFirstName")?.value.trim() || "",
-    lastName: modal.querySelector("#appLastName")?.value.trim() || "",
-    email: modal.querySelector("#appEmail")?.value.trim() || "",
-    phone: modal.querySelector("#appPhone")?.value.trim() || "",
+
+    // From modal (user input)
     dateOfBirth: modal.querySelector("#appDateOfBirth")?.value || "",
-    homeowner: modal.querySelector("#appHomeowner")?.value || "No",
+
+    // myPulse address + loan fields (from modal if present)
     houseNumber: modal.querySelector("#appHouseNumber")?.value.trim() || "",
-    houseName: modal.querySelector("#appHouseName")?.value.trim() || "",
+    houseName: "",
     street: modal.querySelector("#appStreet")?.value.trim() || "",
     town: modal.querySelector("#appTown")?.value.trim() || "",
     postcode: modal.querySelector("#appPostcode")?.value.trim() || "",
-    fundingAmount: parseFloat(
-      modal.querySelector("#appFundingAmount")?.value || "0",
-    ),
-    fundingPurpose: modal.querySelector("#appFundingPurpose")?.value || "",
     loanTerm: parseInt(modal.querySelector("#appLoanTerm")?.value || "0"),
-    annualTurnover:
-      parseFloat(modal.querySelector("#appAnnualTurnover")?.value || "0") || 0,
-    tradingYears: parseInt(
-      modal.querySelector("#appTradingYears")?.value || "0",
-    ),
     lenderKey: lenderKey,
   };
 
-  // Validate required fields exist and have values
-  if (
-    !applicationData.firstName ||
-    !applicationData.lastName ||
-    !applicationData.email ||
-    !applicationData.phone
-  ) {
-    messageEl.textContent =
-      "Please fill in all required contact details (Name, Email, Phone)";
-    messageEl.className = "form-message error";
-    console.error("Missing required fields:", {
-      firstName: applicationData.firstName,
-      lastName: applicationData.lastName,
-      email: applicationData.email,
-      phone: applicationData.phone,
-    });
-    return;
-  }
-
-  // Validate funding amount
-  if (!applicationData.fundingAmount || applicationData.fundingAmount <= 0) {
-    messageEl.textContent = "Please enter a valid funding amount";
+  // Validate — only fields the user can actually fill in the modal
+  if (!applicationData.dateOfBirth) {
+    messageEl.textContent = "Please enter your date of birth";
     messageEl.className = "form-message error";
     return;
   }
 
-  // Validate funding purpose
-  if (!applicationData.fundingPurpose) {
-    messageEl.textContent = "Please select a funding purpose";
-    messageEl.className = "form-message error";
-    return;
-  }
-
-  // MyPulse: validate address - need either house number/flat number or house name
-  if (lenderKey === "mypulse") {
-    if (!applicationData.houseNumber && !applicationData.houseName) {
-      messageEl.textContent =
-        "Please enter either a house/flat number or house name";
-      messageEl.className = "form-message error";
-      return;
-    }
-
-    if (!applicationData.street) {
-      messageEl.textContent = "Please enter the street address";
-      messageEl.className = "form-message error";
-      return;
-    }
-
-    if (!applicationData.town) {
-      messageEl.textContent = "Please enter the town/city";
-      messageEl.className = "form-message error";
-      return;
-    }
-
-    if (!applicationData.postcode) {
-      messageEl.textContent = "Please enter the postcode";
-      messageEl.className = "form-message error";
-      return;
-    }
-
+  // MyPulse: validate address + loan term
+  if (isMyPulse) {
     if (
-      !applicationData.annualTurnover ||
-      applicationData.annualTurnover <= 0
+      !applicationData.street ||
+      !applicationData.town ||
+      !applicationData.postcode
     ) {
-      messageEl.textContent = "Please enter a valid annual turnover";
+      messageEl.textContent =
+        "Please fill in the address fields (street, town, postcode)";
       messageEl.className = "form-message error";
       return;
     }
-
-    if (!applicationData.tradingYears || applicationData.tradingYears < 0) {
-      messageEl.textContent = "Please enter the number of years trading";
-      messageEl.className = "form-message error";
-      return;
-    }
-
     if (!applicationData.loanTerm || applicationData.loanTerm <= 0) {
       messageEl.textContent = "Please enter a valid loan term";
       messageEl.className = "form-message error";
       return;
     }
-  }
-
-  // Client-side validation for names (letters only)
-  const nameRegex = /^[A-Za-z\s\-']+$/;
-  if (!nameRegex.test(applicationData.firstName)) {
-    messageEl.textContent = "First name must contain only letters";
-    messageEl.className = "form-message error";
-    return;
-  }
-  if (!nameRegex.test(applicationData.lastName)) {
-    messageEl.textContent = "Last name must contain only letters";
-    messageEl.className = "form-message error";
-    return;
-  }
-
-  // Validate phone format (10-11 digits)
-  const phoneDigits = applicationData.phone.replace(/\D/g, "");
-  if (phoneDigits.length < 10 || phoneDigits.length > 11) {
-    messageEl.textContent = "Phone number must be 10-11 digits";
-    messageEl.className = "form-message error";
-    return;
   }
 
   // Show loading state
@@ -3210,7 +3159,7 @@ async function submitApplication(lenderKey, lenderName, modal) {
     }
 
     // Success - show confirmation
-    showApplicationSuccess(lenderName, data);
+    showApplicationSuccess(lenderName, applicationData.fundingAmount);
 
     // Close modal
     modal.remove();
@@ -3227,11 +3176,11 @@ async function submitApplication(lenderKey, lenderName, modal) {
 }
 
 // ===== Application Success Modal =====
-function showApplicationSuccess(lenderName, responseData) {
+function showApplicationSuccess(lenderName, fundingAmount) {
   const existingModal = document.getElementById("successModal");
   if (existingModal) existingModal.remove();
 
-  const leadId = responseData.results?.[0]?.data?.leadId || "N/A";
+  const amount = parseFloat(fundingAmount) || 0;
 
   const modal = document.createElement("div");
   modal.id = "successModal";
@@ -3245,17 +3194,7 @@ function showApplicationSuccess(lenderName, responseData) {
         </svg>
       </div>
       <h2>Application Submitted!</h2>
-      <p class="success-message">Your application has been sent to <strong>${lenderName}</strong>.</p>
-      <div class="success-details">
-        <div class="detail-row">
-          <span class="label">Reference:</span>
-          <span class="value">${leadId}</span>
-        </div>
-        <div class="detail-row">
-          <span class="label">Amount:</span>
-          <span class="value">£${Number(responseData.applicationData?.fundingAmount || 0).toLocaleString()}</span>
-        </div>
-      </div>
+      <p class="success-message">Your application for <strong>£${Number(amount).toLocaleString()}</strong> has been sent to <strong>${lenderName}</strong>.</p>
       <p class="next-steps">The lender will review your application and contact you within 24-48 hours. Check your email for updates.</p>
       <div class="success-actions">
         <button class="btn-secondary" onclick="window.location.href='dashboard.html'">Go to Dashboard</button>
@@ -4025,6 +3964,827 @@ async function loadSimpleReferralCode() {
   }
 }
 
+// =============================================
+// Super Admin Panel Functions
+// =============================================
+let saAllReferrals = [];
+let saCurrentPage = 1;
+let saTotalPages = 1;
+let saDebounceTimer = null;
+
+function initializeSuperAdminPage() {
+  const loginGate = document.getElementById("saLoginGate");
+  const panel = document.getElementById("saPanel");
+  const loginForm = document.getElementById("saLoginForm");
+
+  // Check if already authenticated
+  const saToken = localStorage.getItem("superAdminToken");
+  if (saToken) {
+    // Verify token is still valid by making a test request
+    verifySuperAdminToken(saToken).then((valid) => {
+      if (valid) {
+        loginGate.style.display = "none";
+        panel.style.display = "block";
+        loadSuperAdminData();
+      } else {
+        localStorage.removeItem("superAdminToken");
+      }
+    });
+  }
+
+  // Login form
+  loginForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    handleSuperAdminLogin();
+  });
+
+  // Logout
+  document.getElementById("saLogoutBtn").addEventListener("click", function () {
+    localStorage.removeItem("superAdminToken");
+    panel.style.display = "none";
+    loginGate.style.display = "flex";
+    document.getElementById("saPasswordInput").value = "";
+    document.getElementById("saLoginError").textContent = "";
+  });
+
+  // Export
+  document.getElementById("saExportBtn").addEventListener("click", saExportCSV);
+
+  // Filters
+  document
+    .getElementById("saStatusFilter")
+    .addEventListener("change", function () {
+      saCurrentPage = 1;
+      loadSuperAdminReferrals();
+    });
+
+  document
+    .getElementById("saSearchInput")
+    .addEventListener("input", function () {
+      clearTimeout(saDebounceTimer);
+      saDebounceTimer = setTimeout(function () {
+        saCurrentPage = 1;
+        loadSuperAdminReferrals();
+      }, 400);
+    });
+
+  // Detail modal close
+  document
+    .getElementById("saCloseDetail")
+    .addEventListener("click", function () {
+      document.getElementById("saDetailModal").style.display = "none";
+    });
+  document
+    .getElementById("saDetailModal")
+    .addEventListener("click", function (e) {
+      if (e.target === this) this.style.display = "none";
+    });
+
+  // Reward modal close
+  document
+    .getElementById("saCloseReward")
+    .addEventListener("click", function () {
+      document.getElementById("saRewardModal").style.display = "none";
+    });
+  document
+    .getElementById("saCancelReward")
+    .addEventListener("click", function () {
+      document.getElementById("saRewardModal").style.display = "none";
+    });
+  document
+    .getElementById("saRewardModal")
+    .addEventListener("click", function (e) {
+      if (e.target === this) this.style.display = "none";
+    });
+
+  // Toggle voucher field visibility based on reward type
+  document
+    .getElementById("saRewardType")
+    .addEventListener("change", function () {
+      document.getElementById("saVoucherGroup").style.display =
+        this.value === "amazon_voucher" ? "block" : "none";
+    });
+
+  // Reward form submit
+  document
+    .getElementById("saRewardForm")
+    .addEventListener("submit", function (e) {
+      e.preventDefault();
+      saProcessReward();
+    });
+}
+
+async function verifySuperAdminToken(token) {
+  try {
+    const response = await fetch(`${API_BASE}/superadmin/stats`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function handleSuperAdminLogin() {
+  const passwordInput = document.getElementById("saPasswordInput");
+  const errorEl = document.getElementById("saLoginError");
+  const loginBtn = document.getElementById("saLoginBtn");
+  const btnText = loginBtn.querySelector(".btn-text");
+  const btnLoading = loginBtn.querySelector(".btn-loading");
+
+  const password = passwordInput.value.trim();
+  if (!password) {
+    errorEl.textContent = "Please enter the password";
+    return;
+  }
+
+  btnText.style.display = "none";
+  btnLoading.style.display = "inline-flex";
+  loginBtn.disabled = true;
+  errorEl.textContent = "";
+
+  try {
+    const response = await fetch(`${API_BASE}/superadmin/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Authentication failed");
+    }
+
+    localStorage.setItem("superAdminToken", data.token);
+
+    document.getElementById("saLoginGate").style.display = "none";
+    document.getElementById("saPanel").style.display = "block";
+
+    loadSuperAdminData();
+  } catch (error) {
+    errorEl.textContent = error.message;
+  } finally {
+    btnText.style.display = "inline";
+    btnLoading.style.display = "none";
+    loginBtn.disabled = false;
+  }
+}
+
+async function loadSuperAdminData() {
+  await Promise.all([loadSuperAdminStats(), loadSuperAdminReferrals()]);
+}
+
+async function loadSuperAdminStats() {
+  try {
+    const token = localStorage.getItem("superAdminToken");
+    const response = await fetch(`${API_BASE}/superadmin/stats`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.status === 401) {
+      saHandleAuthError();
+      return;
+    }
+
+    const data = await response.json();
+    if (!data.success) return;
+
+    const s = data.stats;
+    document.getElementById("saTotalReferrals").textContent = s.totalReferrals;
+    document.getElementById("saPendingReferrals").textContent = s.pending;
+    document.getElementById("saQualifiedReferrals").textContent = s.qualified;
+    document.getElementById("saTotalPaid").textContent =
+      `£${s.totalPaid.toLocaleString()}`;
+    document.getElementById("saPendingPayout").textContent =
+      `£${s.pendingPayout.toLocaleString()}`;
+    document.getElementById("saTotalUsers").textContent = s.totalUsers;
+  } catch (error) {
+    console.error("Error loading super admin stats:", error);
+  }
+}
+
+async function loadSuperAdminReferrals() {
+  const tableBody = document.getElementById("saTableBody");
+  tableBody.innerHTML =
+    '<tr><td colspan="7" class="sa-loading-row">Loading referrals...</td></tr>';
+
+  try {
+    const token = localStorage.getItem("superAdminToken");
+    const status = document.getElementById("saStatusFilter").value;
+    const search = document.getElementById("saSearchInput").value.trim();
+
+    const params = new URLSearchParams({
+      page: saCurrentPage,
+      limit: 25,
+    });
+    if (status !== "all") params.append("status", status);
+    if (search) params.append("search", search);
+
+    const response = await fetch(`${API_BASE}/superadmin/referrals?${params}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.status === 401) {
+      saHandleAuthError();
+      return;
+    }
+
+    const data = await response.json();
+    if (!data.success) throw new Error("Failed to load referrals");
+
+    saAllReferrals = data.referrals;
+    saTotalPages = data.pagination.pages;
+    saCurrentPage = data.pagination.page;
+
+    saRenderTable(saAllReferrals);
+    saRenderPagination(data.pagination);
+  } catch (error) {
+    console.error("Error loading referrals:", error);
+    tableBody.innerHTML =
+      '<tr><td colspan="8" class="sa-empty-row">Error loading referrals</td></tr>';
+  }
+}
+
+function saRenderTable(referrals) {
+  const tableBody = document.getElementById("saTableBody");
+
+  if (!referrals || referrals.length === 0) {
+    tableBody.innerHTML =
+      '<tr><td colspan="8" class="sa-empty-row">No referrals found</td></tr>';
+    return;
+  }
+
+  tableBody.innerHTML = referrals
+    .map(function (ref) {
+      const statusClass = "sa-status-" + ref.status;
+      const createdDate = ref.createdAt
+        ? new Date(ref.createdAt).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })
+        : "-";
+
+      let actionsHtml = "";
+      if (ref.status === "pending") {
+        actionsHtml = `
+          <button class="sa-action-btn sa-btn-qualify" onclick="saQualifyReferral(${ref.id})">Qualify</button>
+          <button class="sa-action-btn sa-btn-expire" onclick="saExpireReferral(${ref.id})">Expire</button>
+        `;
+      } else if (ref.status === "qualified") {
+        actionsHtml = `
+          <button class="sa-action-btn sa-btn-reward" onclick="saOpenRewardModal(${ref.id}, ${ref.rewardAmount})">Reward</button>
+          <button class="sa-action-btn sa-btn-expire" onclick="saExpireReferral(${ref.id})">Expire</button>
+        `;
+      } else if (ref.status === "rewarded") {
+        actionsHtml =
+          '<span class="sa-completed-badge">&#10003; Completed</span>';
+      } else if (ref.status === "expired") {
+        actionsHtml = '<span class="sa-expired-badge">Expired</span>';
+      }
+
+      return (
+        "<tr>" +
+        "<td>#" +
+        ref.id +
+        "</td>" +
+        '<td><div class="sa-user-cell">' +
+        '<span class="sa-user-name">' +
+        saEscape(ref.referrer.name) +
+        "</span>" +
+        '<span class="sa-user-email">' +
+        saEscape(ref.referrer.email) +
+        "</span>" +
+        (ref.referrer.businessName
+          ? '<span class="sa-user-business">' +
+            saEscape(ref.referrer.businessName) +
+            "</span>"
+          : "") +
+        "</div></td>" +
+        '<td><div class="sa-user-cell">' +
+        '<span class="sa-user-name">' +
+        saEscape(ref.referred.name) +
+        "</span>" +
+        '<span class="sa-user-email">' +
+        saEscape(ref.referred.email) +
+        "</span>" +
+        (ref.referred.businessName
+          ? '<span class="sa-user-business">' +
+            saEscape(ref.referred.businessName) +
+            "</span>"
+          : "") +
+        (ref.referred.phoneVerified
+          ? '<span style="color:#059669;font-size:0.72rem;">&#10003; Phone verified</span>'
+          : '<span style="color:#94a3b8;font-size:0.72rem;">Phone not verified</span>') +
+        "</div></td>" +
+        "<td>" +
+        createdDate +
+        "</td>" +
+        '<td><span class="sa-status ' +
+        statusClass +
+        '">' +
+        ref.status.charAt(0).toUpperCase() +
+        ref.status.slice(1) +
+        "</span></td>" +
+        "<td>" +
+        (ref.paypalEmail
+          ? '<span class="sa-paypal-provided" title="' +
+            saEscape(ref.paypalEmail) +
+            '">' +
+            saEscape(ref.paypalEmail) +
+            "</span>"
+          : '<span class="sa-paypal-missing">Not provided</span>') +
+        "</td>" +
+        "<td>£" +
+        (ref.rewardAmount || 0) +
+        "</td>" +
+        '<td><div class="sa-actions">' +
+        '<button class="sa-action-btn sa-btn-detail" onclick="saViewDetail(' +
+        ref.id +
+        ')">View</button>' +
+        actionsHtml +
+        "</div></td>" +
+        "</tr>"
+      );
+    })
+    .join("");
+}
+
+function saRenderPagination(pagination) {
+  const container = document.getElementById("saPagination");
+  if (!pagination || pagination.pages <= 1) {
+    container.innerHTML = "";
+    return;
+  }
+
+  let html = "";
+
+  html +=
+    '<button class="sa-page-btn" ' +
+    (pagination.page <= 1 ? "disabled" : "") +
+    ' onclick="saGoToPage(' +
+    (pagination.page - 1) +
+    ')">&laquo; Prev</button>';
+
+  const startPage = Math.max(1, pagination.page - 2);
+  const endPage = Math.min(pagination.pages, pagination.page + 2);
+
+  for (let i = startPage; i <= endPage; i++) {
+    html +=
+      '<button class="sa-page-btn ' +
+      (i === pagination.page ? "active" : "") +
+      '" onclick="saGoToPage(' +
+      i +
+      ')">' +
+      i +
+      "</button>";
+  }
+
+  html +=
+    '<button class="sa-page-btn" ' +
+    (pagination.page >= pagination.pages ? "disabled" : "") +
+    ' onclick="saGoToPage(' +
+    (pagination.page + 1) +
+    ')">Next &raquo;</button>';
+
+  container.innerHTML = html;
+}
+
+function saGoToPage(page) {
+  saCurrentPage = page;
+  loadSuperAdminReferrals();
+}
+
+async function saQualifyReferral(referralId) {
+  if (
+    !confirm(
+      "Mark referral #" +
+        referralId +
+        " as qualified?\n\nThis means the referral conditions have been met and the referrer is eligible for a reward.",
+    )
+  )
+    return;
+
+  try {
+    const token = localStorage.getItem("superAdminToken");
+    const response = await fetch(
+      `${API_BASE}/superadmin/qualify/${referralId}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ notes: "Qualified via super admin panel" }),
+      },
+    );
+
+    if (response.status === 401) {
+      saHandleAuthError();
+      return;
+    }
+
+    const data = await response.json();
+    if (!response.ok)
+      throw new Error(data.error || "Failed to qualify referral");
+
+    saShowToast(
+      "Referral #" + referralId + " qualified successfully",
+      "success",
+    );
+    loadSuperAdminData();
+  } catch (error) {
+    saShowToast(error.message, "error");
+  }
+}
+
+function saOpenRewardModal(referralId, currentAmount) {
+  document.getElementById("saRewardReferralId").value = referralId;
+  document.getElementById("saRewardAmount").value = currentAmount || 200;
+  document.getElementById("saRewardType").value = "cash";
+  document.getElementById("saVoucherCode").value = "";
+  document.getElementById("saRewardNotes").value = "";
+  document.getElementById("saVoucherGroup").style.display = "none";
+  document.getElementById("saRewardModal").style.display = "flex";
+}
+
+async function saProcessReward() {
+  const referralId = document.getElementById("saRewardReferralId").value;
+  const rewardType = document.getElementById("saRewardType").value;
+  const rewardAmount = parseFloat(
+    document.getElementById("saRewardAmount").value,
+  );
+  const voucherCode = document.getElementById("saVoucherCode").value.trim();
+  const notes = document.getElementById("saRewardNotes").value.trim();
+
+  if (!rewardAmount || rewardAmount <= 0) {
+    saShowToast("Please enter a valid reward amount", "error");
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem("superAdminToken");
+    const response = await fetch(
+      `${API_BASE}/superadmin/reward/${referralId}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ rewardType, rewardAmount, voucherCode, notes }),
+      },
+    );
+
+    if (response.status === 401) {
+      saHandleAuthError();
+      return;
+    }
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Failed to process reward");
+
+    document.getElementById("saRewardModal").style.display = "none";
+    saShowToast(
+      "Reward of £" + rewardAmount + " processed for referral #" + referralId,
+      "success",
+    );
+    loadSuperAdminData();
+  } catch (error) {
+    saShowToast(error.message, "error");
+  }
+}
+
+async function saExpireReferral(referralId) {
+  if (
+    !confirm(
+      "Expire referral #" +
+        referralId +
+        "?\n\nThis action cannot be undone for rewarded referrals.",
+    )
+  )
+    return;
+
+  try {
+    const token = localStorage.getItem("superAdminToken");
+    const response = await fetch(
+      `${API_BASE}/superadmin/expire/${referralId}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ notes: "Expired via super admin panel" }),
+      },
+    );
+
+    if (response.status === 401) {
+      saHandleAuthError();
+      return;
+    }
+
+    const data = await response.json();
+    if (!response.ok)
+      throw new Error(data.error || "Failed to expire referral");
+
+    saShowToast("Referral #" + referralId + " expired", "success");
+    loadSuperAdminData();
+  } catch (error) {
+    saShowToast(error.message, "error");
+  }
+}
+
+async function saViewDetail(referralId) {
+  const modal = document.getElementById("saDetailModal");
+  const body = document.getElementById("saDetailBody");
+  body.innerHTML =
+    '<p style="text-align:center;color:#94a3b8;padding:2rem;">Loading...</p>';
+  modal.style.display = "flex";
+
+  try {
+    const token = localStorage.getItem("superAdminToken");
+    const response = await fetch(
+      `${API_BASE}/superadmin/referral/${referralId}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+
+    if (response.status === 401) {
+      saHandleAuthError();
+      return;
+    }
+
+    const data = await response.json();
+    if (!data.success) throw new Error("Failed to load details");
+
+    const r = data.referral;
+    const createdDate = r.createdAt
+      ? new Date(r.createdAt).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "-";
+    const qualifiedDate = r.qualifiedAt
+      ? new Date(r.qualifiedAt).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+      : "-";
+    const rewardedDate = r.rewardedAt
+      ? new Date(r.rewardedAt).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+      : "-";
+    const referrerJoined = r.referrer.joinedAt
+      ? new Date(r.referrer.joinedAt).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+      : "-";
+    const referredJoined = r.referred.joinedAt
+      ? new Date(r.referred.joinedAt).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+      : "-";
+
+    let appsHtml = "";
+    if (r.referred.applications && r.referred.applications.length > 0) {
+      appsHtml =
+        '<div class="sa-detail-apps">' +
+        r.referred.applications
+          .map(function (app) {
+            return (
+              '<div class="sa-detail-app-item">' +
+              "<span>£" +
+              parseFloat(app.funding_amount).toLocaleString() +
+              " - " +
+              saEscape(app.funding_purpose) +
+              "</span>" +
+              '<span class="sa-detail-app-status" style="background:#e0f2fe;color:#0369a1;">' +
+              app.status +
+              "</span>" +
+              "</div>"
+            );
+          })
+          .join("") +
+        "</div>";
+    } else {
+      appsHtml =
+        '<p style="color:#94a3b8;font-size:0.85rem;margin-top:0.5rem;">No applications yet</p>';
+    }
+
+    let bankStatementsHtml = "";
+    if (r.referred.bankStatements && r.referred.bankStatements.length > 0) {
+      bankStatementsHtml =
+        '<div class="sa-detail-apps">' +
+        r.referred.bankStatements
+          .map(function (bs) {
+            const uploadDate = bs.uploadedAt
+              ? new Date(bs.uploadedAt).toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })
+              : "";
+            const fileSize = bs.size ? (bs.size / 1024).toFixed(1) + " KB" : "";
+            return (
+              '<div class="sa-detail-app-item">' +
+              "<span>" +
+              saEscape(bs.name) +
+              ' <small style="color:#94a3b8;">(' +
+              fileSize +
+              " - " +
+              uploadDate +
+              ")</small></span>" +
+              '<a href="' +
+              API_BASE +
+              "/superadmin/document/" +
+              bs.id +
+              '" target="_blank" class="sa-action-btn sa-btn-detail" style="text-decoration:none;font-size:0.75rem;padding:0.25rem 0.6rem;" download>Download</a>' +
+              "</div>"
+            );
+          })
+          .join("") +
+        "</div>";
+    } else {
+      bankStatementsHtml =
+        '<p style="color:#94a3b8;font-size:0.85rem;margin-top:0.5rem;">No bank statements uploaded yet</p>';
+    }
+
+    body.innerHTML =
+      '<div class="sa-detail-grid">' +
+      '<div class="sa-detail-section">' +
+      "<h4>Referrer (Gets Reward)</h4>" +
+      '<div class="sa-detail-row"><span class="sa-detail-label">Name</span><span class="sa-detail-value">' +
+      saEscape(r.referrer.name) +
+      "</span></div>" +
+      '<div class="sa-detail-row"><span class="sa-detail-label">Email</span><span class="sa-detail-value">' +
+      saEscape(r.referrer.email) +
+      "</span></div>" +
+      '<div class="sa-detail-row"><span class="sa-detail-label">Phone</span><span class="sa-detail-value">' +
+      saEscape(r.referrer.phone || "N/A") +
+      "</span></div>" +
+      '<div class="sa-detail-row"><span class="sa-detail-label">Business</span><span class="sa-detail-value">' +
+      saEscape(r.referrer.businessName || "N/A") +
+      "</span></div>" +
+      '<div class="sa-detail-row"><span class="sa-detail-label">Joined</span><span class="sa-detail-value">' +
+      referrerJoined +
+      "</span></div>" +
+      "</div>" +
+      '<div class="sa-detail-section">' +
+      "<h4>Referred User (Used Code)</h4>" +
+      '<div class="sa-detail-row"><span class="sa-detail-label">Name</span><span class="sa-detail-value">' +
+      saEscape(r.referred.name) +
+      "</span></div>" +
+      '<div class="sa-detail-row"><span class="sa-detail-label">Email</span><span class="sa-detail-value">' +
+      saEscape(r.referred.email) +
+      "</span></div>" +
+      '<div class="sa-detail-row"><span class="sa-detail-label">Phone</span><span class="sa-detail-value">' +
+      saEscape(r.referred.phone || "N/A") +
+      "</span></div>" +
+      '<div class="sa-detail-row"><span class="sa-detail-label">Business</span><span class="sa-detail-value">' +
+      saEscape(r.referred.businessName || "N/A") +
+      "</span></div>" +
+      '<div class="sa-detail-row"><span class="sa-detail-label">Joined</span><span class="sa-detail-value">' +
+      referredJoined +
+      "</span></div>" +
+      '<div class="sa-detail-row"><span class="sa-detail-label">Phone Verified</span><span class="sa-detail-value">' +
+      (r.referred.phoneVerified ? "&#10003; Yes" : "&#10007; No") +
+      "</span></div>" +
+      "</div>" +
+      '<div class="sa-detail-section sa-detail-section-full">' +
+      "<h4>Referral Info</h4>" +
+      '<div class="sa-detail-row"><span class="sa-detail-label">Referral ID</span><span class="sa-detail-value">#' +
+      r.id +
+      "</span></div>" +
+      '<div class="sa-detail-row"><span class="sa-detail-label">Code</span><span class="sa-detail-value">' +
+      saEscape(r.referralCode) +
+      "</span></div>" +
+      '<div class="sa-detail-row"><span class="sa-detail-label">Status</span><span class="sa-detail-value"><span class="sa-status sa-status-' +
+      r.status +
+      '">' +
+      r.status.charAt(0).toUpperCase() +
+      r.status.slice(1) +
+      "</span></span></div>" +
+      '<div class="sa-detail-row"><span class="sa-detail-label">Reward</span><span class="sa-detail-value">£' +
+      r.rewardAmount +
+      " (" +
+      saEscape(r.rewardType.replace(/_/g, " ")) +
+      ")</span></div>" +
+      '<div class="sa-detail-row"><span class="sa-detail-label">Qualification</span><span class="sa-detail-value">' +
+      saEscape(r.qualificationType.replace(/_/g, " ")) +
+      "</span></div>" +
+      '<div class="sa-detail-row"><span class="sa-detail-label">PayPal Email</span><span class="sa-detail-value">' +
+      (r.paypalEmail
+        ? '<span style="color:#059669;font-weight:500;">' +
+          saEscape(r.paypalEmail) +
+          "</span>"
+        : '<span style="color:#dc2626;">Not provided yet</span>') +
+      "</span></div>" +
+      '<div class="sa-detail-row"><span class="sa-detail-label">Created</span><span class="sa-detail-value">' +
+      createdDate +
+      "</span></div>" +
+      '<div class="sa-detail-row"><span class="sa-detail-label">Qualified</span><span class="sa-detail-value">' +
+      qualifiedDate +
+      "</span></div>" +
+      '<div class="sa-detail-row"><span class="sa-detail-label">Rewarded</span><span class="sa-detail-value">' +
+      rewardedDate +
+      "</span></div>" +
+      (r.notes
+        ? '<div class="sa-detail-notes">' + saEscape(r.notes) + "</div>"
+        : "") +
+      "</div>" +
+      '<div class="sa-detail-section sa-detail-section-full">' +
+      "<h4>Referred User's Applications</h4>" +
+      appsHtml +
+      "</div>" +
+      '<div class="sa-detail-section sa-detail-section-full">' +
+      "<h4>Bank Statements</h4>" +
+      bankStatementsHtml +
+      "</div>" +
+      "</div>";
+  } catch (error) {
+    body.innerHTML =
+      '<p style="text-align:center;color:#dc2626;padding:2rem;">Failed to load details</p>';
+  }
+}
+
+async function saExportCSV() {
+  try {
+    const token = localStorage.getItem("superAdminToken");
+    const status = document.getElementById("saStatusFilter").value;
+
+    const params = new URLSearchParams();
+    if (status !== "all") params.append("status", status);
+
+    const response = await fetch(`${API_BASE}/superadmin/export?${params}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.status === 401) {
+      saHandleAuthError();
+      return;
+    }
+
+    if (!response.ok) throw new Error("Export failed");
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "referrals-" + new Date().toISOString().split("T")[0] + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+
+    saShowToast("CSV exported successfully", "success");
+  } catch (error) {
+    saShowToast(error.message || "Failed to export", "error");
+  }
+}
+
+function saHandleAuthError() {
+  localStorage.removeItem("superAdminToken");
+  document.getElementById("saPanel").style.display = "none";
+  document.getElementById("saLoginGate").style.display = "flex";
+  document.getElementById("saLoginError").textContent =
+    "Session expired. Please login again.";
+}
+
+function saShowToast(message, type) {
+  const existing = document.querySelector(".sa-toast");
+  if (existing) existing.remove();
+
+  const toast = document.createElement("div");
+  toast.className = "sa-toast sa-toast-" + type;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+
+  setTimeout(function () {
+    toast.remove();
+  }, 3500);
+}
+
+function saEscape(str) {
+  if (!str) return "";
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 function showCopyFeedback(button) {
   const originalHTML = button.innerHTML;
   button.textContent = "Copied!";
@@ -4501,18 +5261,90 @@ function renderReferralList(referrals) {
   }
 
   referralList.innerHTML = referrals
-    .map(
-      (ref) => `
-    <div class="referral-item">
+    .map((ref) => {
+      let paypalHtml = "";
+      if (["qualified", "rewarded"].includes(ref.status)) {
+        if (ref.paypalEmail) {
+          paypalHtml = `
+              <div class="referral-paypal-submitted">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>PayPal: ${maskEmail(ref.paypalEmail)}</span>
+              </div>`;
+        } else {
+          paypalHtml = `
+              <div class="referral-paypal-prompt" id="paypalPrompt-${ref.id}">
+                <p class="paypal-prompt-text">🎉 Your referral is approved! Enter your PayPal email to receive your <strong>£200</strong> reward:</p>
+                <div class="paypal-input-row">
+                  <input type="email" id="paypalInput-${ref.id}" class="paypal-email-input" placeholder="your@paypal-email.com" />
+                  <button class="paypal-submit-btn" onclick="submitPaypalEmail(${ref.id})">Submit</button>
+                </div>
+                <span class="paypal-error" id="paypalError-${ref.id}"></span>
+              </div>`;
+        }
+      }
+      return `
+    <div class="referral-item ${["qualified", "rewarded"].includes(ref.status) && !ref.paypalEmail ? "referral-item-action-needed" : ""}">
       <div class="referral-item-info">
         <span class="referral-item-email">${maskEmail(ref.referredEmail)}</span>
         <span class="referral-item-date">Referred on ${formatDate(ref.createdAt)}</span>
       </div>
       <span class="referral-status ${ref.status}">${ref.status.charAt(0).toUpperCase() + ref.status.slice(1)}</span>
+      ${paypalHtml}
     </div>
-  `,
-    )
+  `;
+    })
     .join("");
+}
+
+async function submitPaypalEmail(referralId) {
+  const input = document.getElementById("paypalInput-" + referralId);
+  const errorEl = document.getElementById("paypalError-" + referralId);
+  const paypalEmail = input ? input.value.trim() : "";
+
+  if (!paypalEmail || !paypalEmail.includes("@")) {
+    errorEl.textContent = "Please enter a valid PayPal email";
+    return;
+  }
+
+  errorEl.textContent = "";
+  const btn = input.parentElement.querySelector(".paypal-submit-btn");
+  btn.disabled = true;
+  btn.textContent = "Saving...";
+
+  try {
+    const authToken = localStorage.getItem("authToken");
+    const response = await fetch(
+      `${API_BASE}/referral/paypal-email/${referralId}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ paypalEmail }),
+      },
+    );
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Failed to save");
+
+    // Replace prompt with success message
+    const prompt = document.getElementById("paypalPrompt-" + referralId);
+    if (prompt) {
+      prompt.innerHTML =
+        '<div class="referral-paypal-submitted"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><span>PayPal: ' +
+        maskEmail(paypalEmail) +
+        "</span></div>";
+    }
+    showAlert(
+      "PayPal email saved! You'll receive your £200 reward soon.",
+      "success",
+    );
+  } catch (error) {
+    errorEl.textContent = error.message;
+    btn.disabled = false;
+    btn.textContent = "Submit";
+  }
 }
 
 function maskEmail(email) {

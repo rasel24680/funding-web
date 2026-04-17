@@ -54,6 +54,7 @@ app.use("/api/lenders", require("./routes/lenders"));
 app.use("/api/company", require("./routes/company"));
 app.use("/api/referral", require("./routes/referral"));
 app.use("/api/documents", require("./routes/documents"));
+app.use("/api/superadmin", require("./routes/superadmin"));
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {

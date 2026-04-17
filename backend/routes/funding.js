@@ -275,6 +275,7 @@ router.post("/soft-inquiry", async (req, res) => {
       tradingYears,
       tradingMonths,
       homeowner,
+      loanTerm,
 
       // Optional: specific lender
       lenderKey,
@@ -331,6 +332,7 @@ router.post("/soft-inquiry", async (req, res) => {
       annualTurnover: parseFloat(annualTurnover) || 0,
       tradingMonths: totalTradingMonths,
       homeowner: homeowner,
+      loanTerm: parseInt(loanTerm) || 12,
     };
 
     // Create or get funding application for database tracking
@@ -395,8 +397,9 @@ router.post("/soft-inquiry", async (req, res) => {
       for (const result of results) {
         try {
           const lenderName = result.lender || lenderKey || "unknown";
-          const leadId =
-            result.success && result.data ? result.data.leadId || null : null;
+          const leadId = result.success
+            ? result.leadId || result.applicationId || null
+            : null;
 
           await db.query(
             `INSERT INTO lender_submissions 
@@ -407,7 +410,7 @@ router.post("/soft-inquiry", async (req, res) => {
               lenderName,
               leadId,
               result.success ? "submitted" : "error",
-              result.success ? JSON.stringify(result.data || {}) : null,
+              result.success ? JSON.stringify(result) : null,
               result.success ? null : result.error,
             ],
           );

@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Super Admin - Pellopay</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Login Gate -->
+    <div class="sa-login-gate" id="saLoginGate">
+      <div class="sa-login-card">
+        <div class="sa-login-logo">
+          <img src="assets/logo.png" alt="Pellopay" class="logo-img" />
+        </div>
+        <h2>Super Admin Access</h2>
+        <p>Enter the super admin password to continue</p>
+        <form id="saLoginForm" autocomplete="off">
+          <div class="sa-input-group">
+            <input
+              type="password"
+              id="saPasswordInput"
+              placeholder="Enter password"
+              autocomplete="new-password"
+              required
+            />
+            <button type="submit" class="sa-login-btn" id="saLoginBtn">
+              <span class="btn-text">Access Panel</span>
+              <span class="btn-loading" style="display: none">
+                <svg class="spinner" width="20" height="20" viewBox="0 0 24 24">
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="3"
+                    fill="none"
+                    stroke-dasharray="32"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </span>
+            </button>
+          </div>
+          <div class="sa-login-error" id="saLoginError"></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Super Admin Panel (hidden until authenticated) -->
+    <div class="sa-panel" id="saPanel" style="display: none">
+      <!-- Top Bar -->
+      <header class="sa-topbar">
+        <div class="sa-topbar-left">
+          <img src="assets/logo.png" alt="Pellopay" class="sa-logo" />
+          <span class="sa-badge">Super Admin</span>
+        </div>
+        <div class="sa-topbar-right">
+          <button class="sa-export-btn" id="saExportBtn" title="Export CSV">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Export
+          </button>
+          <button class="sa-logout-btn" id="saLogoutBtn">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"
+              />
+            </svg>
+            Logout
+          </button>
+        </div>
+      </header>
+
+      <!-- Stats Cards -->
+      <div class="sa-stats-grid" id="saStatsGrid">
+        <div class="sa-stat-card sa-stat-total">
+          <div class="sa-stat-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 00-3-3.87" />
+              <path d="M16 3.13a4 4 0 010 7.75" />
+            </svg>
+          </div>
+          <div class="sa-stat-info">
+            <span class="sa-stat-value" id="saTotalReferrals">0</span>
+            <span class="sa-stat-label">Total Referrals</span>
+          </div>
+        </div>
+        <div class="sa-stat-card sa-stat-pending">
+          <div class="sa-stat-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </div>
+          <div class="sa-stat-info">
+            <span class="sa-stat-value" id="saPendingReferrals">0</span>
+            <span class="sa-stat-label">Pending Review</span>
+          </div>
+        </div>
+        <div class="sa-stat-card sa-stat-qualified">
+          <div class="sa-stat-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+          </div>
+          <div class="sa-stat-info">
+            <span class="sa-stat-value" id="saQualifiedReferrals">0</span>
+            <span class="sa-stat-label">Qualified (Awaiting Reward)</span>
+          </div>
+        </div>
+        <div class="sa-stat-card sa-stat-rewarded">
+          <div class="sa-stat-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+            </svg>
+          </div>
+          <div class="sa-stat-info">
+            <span class="sa-stat-value" id="saTotalPaid">£0</span>
+            <span class="sa-stat-label">Total Paid Out</span>
+          </div>
+        </div>
+        <div class="sa-stat-card sa-stat-payout">
+          <div class="sa-stat-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+              <line x1="1" y1="10" x2="23" y2="10" />
+            </svg>
+          </div>
+          <div class="sa-stat-info">
+            <span class="sa-stat-value" id="saPendingPayout">£0</span>
+            <span class="sa-stat-label">Pending Payout</span>
+          </div>
+        </div>
+        <div class="sa-stat-card sa-stat-users">
+          <div class="sa-stat-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4-4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          </div>
+          <div class="sa-stat-info">
+            <span class="sa-stat-value" id="saTotalUsers">0</span>
+            <span class="sa-stat-label">Total Users</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters & Table -->
+      <div class="sa-table-section">
+        <div class="sa-table-header">
+          <h2>Referral Management</h2>
+          <div class="sa-filters">
+            <select id="saStatusFilter" class="sa-filter-select">
+              <option value="all">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="qualified">Qualified</option>
+              <option value="rewarded">Rewarded</option>
+              <option value="expired">Expired</option>
+            </select>
+            <input
+              type="text"
+              id="saSearchInput"
+              class="sa-filter-input"
+              placeholder="Search by name, email, business..."
+            />
+          </div>
+        </div>
+
+        <div class="sa-table-wrapper">
+          <table class="sa-table" id="saReferralTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Referrer</th>
+                <th>Referred User</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>PayPal Email</th>
+                <th>Reward</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="saTableBody">
+              <tr>
+                <td colspan="8" class="sa-loading-row">Loading referrals...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="sa-pagination" id="saPagination"></div>
+      </div>
+
+      <!-- Referral Detail Modal -->
+      <div class="sa-modal-overlay" id="saDetailModal" style="display: none">
+        <div class="sa-modal">
+          <div class="sa-modal-header">
+            <h3>Referral Details</h3>
+            <button class="sa-modal-close" id="saCloseDetail">&times;</button>
+          </div>
+          <div class="sa-modal-body" id="saDetailBody">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Reward Modal -->
+      <div class="sa-modal-overlay" id="saRewardModal" style="display: none">
+        <div class="sa-modal sa-modal-sm">
+          <div class="sa-modal-header">
+            <h3>Process Reward</h3>
+            <button class="sa-modal-close" id="saCloseReward">&times;</button>
+          </div>
+          <div class="sa-modal-body">
+            <form id="saRewardForm">
+              <input type="hidden" id="saRewardReferralId" />
+              <div class="sa-form-group">
+                <label>Reward Type</label>
+                <select id="saRewardType">
+                  <option value="cash" selected>Cash (PayPal)</option>
+                  <option value="amazon_voucher">Amazon Voucher</option>
+                  <option value="credit">Credit</option>
+                </select>
+              </div>
+              <div class="sa-form-group">
+                <label>Reward Amount (£)</label>
+                <input
+                  type="number"
+                  id="saRewardAmount"
+                  value="200"
+                  min="1"
+                  step="0.01"
+                />
+              </div>
+              <div class="sa-form-group" id="saVoucherGroup">
+                <label>Voucher Code (optional)</label>
+                <input
+                  type="text"
+                  id="saVoucherCode"
+                  placeholder="e.g. AMZN-XXXX-XXXX"
+                />
+              </div>
+              <div class="sa-form-group">
+                <label>Notes (optional)</label>
+                <textarea
+                  id="saRewardNotes"
+                  rows="2"
+                  placeholder="Add any notes..."
+                ></textarea>
+              </div>
+              <div class="sa-form-actions">
+                <button
+                  type="button"
+                  class="sa-btn-secondary"
+                  id="saCancelReward"
+                >
+                  Cancel
+                </button>
+                <button type="submit" class="sa-btn-primary">
+                  Confirm Reward
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
